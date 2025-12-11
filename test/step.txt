@@ -1,0 +1,387 @@
+=== PROJET WEBSERV - PLAN DÉTAILLÉ ===
+
+PHASE 1: STRUCTURE DU PROJET
+============================
+
+□ 1.1 Créer l'arborescence
+   webserv/
+   ├── src/
+   │   ├── main.cpp
+   │   ├── Server.hpp/.cpp
+   │   ├── Config.hpp/.cpp  
+   │   ├── Request.hpp/.cpp
+   │   ├── Response.hpp/.cpp
+   │   ├── Location.hpp/.cpp
+   │   └── Utils.hpp/.cpp
+   ├── config/
+   │   ├── default.conf
+   │   └── test.conf
+   ├── html/
+   │   ├── index.html
+   │   ├── about.html
+   │   └── error/
+   │       ├── 404.html
+   │       ├── 500.html
+   │       └── 403.html
+   ├── uploads/
+   ├── cgi-bin/
+   │   └── test.py
+   ├── Makefile
+   └── README.md
+
+□ 1.2 Créer le Makefile
+   - Flags: -Wall -Wextra -Werror -std=c++98
+   - Rules: all, clean, fclean, re
+   - Nom de l'exécutable: webserv
+
+PHASE 2: CONFIGURATION
+======================
+
+□ 2.1 Créer la classe Config
+   - Parsing du fichier .conf
+   - Support des blocs server { }
+   - Support des blocs location { }
+   - Gestion des erreurs de syntaxe
+
+□ 2.2 Directives obligatoires à parser:
+   - listen (port)
+   - server_name
+   - root (répertoire racine)
+   - index (fichier par défaut)
+   - error_page
+   - client_max_body_size
+   - allowed_methods (GET/POST/DELETE)
+   - autoindex (on/off)
+   - upload_path
+   - cgi_extension
+   - return (redirections)
+
+□ 2.3 Créer un fichier de config de test
+   server {
+       listen 8080;
+       server_name localhost;
+       root ./html;
+       index index.html;
+       client_max_body_size 1M;
+       error_page 404 ./html/error/404.html;
+       
+       location / {
+           allowed_methods GET POST DELETE;
+           autoindex off;
+       }
+   }
+
+□ 2.4 Tests du parser
+   - Config valide
+   - Config avec erreurs
+   - Plusieurs serveurs
+   - Valeurs par défaut
+
+PHASE 3: REQUÊTES HTTP
+======================
+
+□ 3.1 Créer la classe Request
+   - Parser la première ligne (méthode, URI, version)
+   - Parser les headers
+   - Parser le body
+   - Gestion du chunked transfer encoding
+   - Validation de la requête
+
+□ 3.2 Méthodes à implémenter:
+   - getMethod() -> string
+   - getUri() -> string
+   - getVersion() -> string
+   - getHeaders() -> map<string, string>
+   - getBody() -> string
+   - isValid() -> bool
+
+□ 3.3 Tests de parsing:
+   - GET / HTTP/1.1
+   - POST /upload HTTP/1.1 avec body
+   - Headers multiples
+   - Requêtes malformées
+
+PHASE 4: RÉPONSES HTTP
+======================
+
+□ 4.1 Créer la classe Response
+   - Status codes (200, 404, 500, etc.)
+   - Headers standards
+   - Body HTML/text/binaire
+   - Méthode toString()
+
+□ 4.2 Méthodes à implémenter:
+   - setStatus(int code)
+   - setHeader(string key, string value)
+   - setBody(string content)
+   - serveFile(string path)
+   - serveError(int code)
+   - toString() -> string complet HTTP
+
+□ 4.3 Types de réponses:
+   - Pages statiques HTML
+   - Fichiers CSS/JS/images
+   - Pages d'erreur
+   - Redirections
+   - Réponses CGI
+
+PHASE 5: SERVEUR DE BASE
+========================
+
+□ 5.1 Refactoriser tuto_server.cpp en classe Server
+   - Constructor avec ServerConfig
+   - start() -> créer socket, bind, listen
+   - run() -> boucle accept infinie
+   - handleClient(int fd) -> traiter une connexion
+
+□ 5.2 Gestion des connections:
+   - Un client à la fois d'abord
+   - Lecture complète de la requête
+   - Génération de la réponse
+   - Envoi et fermeture
+
+□ 5.3 Test avec navigateur:
+   - http://localhost:8080/
+   - Vérifier les logs
+   - Tester avec curl
+
+PHASE 6: MÉTHODE GET
+====================
+
+□ 6.1 Servir des fichiers statiques
+   - Résolution du chemin (root + URI)
+   - Vérification d'existence
+   - Lecture du fichier
+   - Content-Type approprié
+   - Content-Length
+
+□ 6.2 Gestion des répertoires
+   - Index automatique si défini
+   - Autoindex si activé
+   - Erreur 403 si interdit
+
+□ 6.3 Sécurité:
+   - Interdire ../ (directory traversal)
+   - Vérifier les permissions
+   - Limiter aux extensions autorisées
+
+□ 6.4 Tests GET:
+   - /index.html
+   - /dossier/
+   - /inexistant (404)
+   - /../etc/passwd (403)
+
+PHASE 7: MULTI-SERVEURS
+=======================
+
+□ 7.1 Implémenter select() ou poll()
+   - Surveiller plusieurs sockets
+   - Non-blocking I/O
+   - Timeout approprié
+   - Gestion des erreurs
+
+□ 7.2 Classe WebServer principale:
+   - vector<Server> servers
+   - Boucle principale avec select()
+   - Dispatch vers le bon serveur
+   - Gestion des événements
+
+□ 7.3 Tests multi-serveurs:
+   - Port 8080 et 8081 simultanément
+   - server_name différents
+   - Configurations différentes
+
+PHASE 8: MÉTHODE POST
+=====================
+
+□ 8.1 Reception du body:
+   - Content-Length
+   - Chunked encoding
+   - Limite client_max_body_size
+   - Timeout de lecture
+
+□ 8.2 Upload de fichiers:
+   - Parsing multipart/form-data
+   - Sauvegarde dans upload_path
+   - Noms de fichiers sécurisés
+   - Gestion des erreurs
+
+□ 8.3 Tests POST:
+   - Formulaire simple
+   - Upload de fichier
+   - Body trop gros (413)
+   - Content-Type invalide
+
+PHASE 9: CGI
+============
+
+□ 9.1 Exécution de scripts:
+   - fork() + execve()
+   - Variables d'environnement CGI
+   - Communication par pipes
+   - Timeout d'exécution
+
+□ 9.2 Variables CGI obligatoires:
+   - REQUEST_METHOD
+   - QUERY_STRING
+   - CONTENT_TYPE
+   - CONTENT_LENGTH
+   - SCRIPT_NAME
+   - PATH_INFO
+
+□ 9.3 Scripts de test:
+   - Python simple
+   - Script avec paramètres
+   - Script qui plante
+   - Script lent (timeout)
+
+□ 9.4 Tests CGI:
+   - /cgi-bin/test.py
+   - GET avec query string
+   - POST avec données
+   - Erreurs 500
+
+PHASE 10: MÉTHODE DELETE
+========================
+
+□ 10.1 Suppression de fichiers:
+    - Vérifier les permissions
+    - Vérifier l'existence
+    - unlink() système
+    - Réponse appropriée
+
+□ 10.2 Sécurité DELETE:
+    - Interdire certains dossiers
+    - Vérifier dans upload_path uniquement
+    - Log des suppressions
+
+□ 10.3 Tests DELETE:
+    - DELETE /uploads/test.txt
+    - DELETE /system_file (403)
+    - DELETE /inexistant (404)
+
+PHASE 11: FONCTIONNALITÉS AVANCÉES
+===================================
+
+□ 11.1 Redirections:
+    - return 301/302
+    - Location header
+    - Redirections internes vs externes
+
+□ 11.2 Autoindex:
+    - Génération HTML automatique
+    - Listing des fichiers/dossiers
+    - Liens cliquables
+    - Taille et date
+
+□ 11.3 Pages d'erreur personnalisées:
+    - Mapping code -> fichier HTML
+    - Variables dans les templates
+    - Fallback par défaut
+
+PHASE 12: GESTION D'ERREURS
+===========================
+
+□ 12.1 Codes de statut à implémenter:
+    - 200 OK
+    - 201 Created (POST)
+    - 204 No Content (DELETE)
+    - 301/302 Redirections
+    - 400 Bad Request
+    - 403 Forbidden
+    - 404 Not Found
+    - 405 Method Not Allowed
+    - 413 Request Entity Too Large
+    - 500 Internal Server Error
+    - 505 HTTP Version Not Supported
+
+□ 12.2 Robustesse:
+    - Requêtes malformées
+    - Connections interrompues
+    - Fichiers corrompus
+    - Débordements mémoire
+
+PHASE 13: OPTIMISATIONS
+=======================
+
+□ 13.1 Performance:
+    - Cache des fichiers statiques
+    - Keep-alive connections
+    - Compression gzip
+    - Optimisation des I/O
+
+□ 13.2 Monitoring:
+    - Logs détaillés
+    - Statistiques de performance
+    - Détection de surcharge
+
+PHASE 14: TESTS FINAUX
+======================
+
+□ 14.1 Tests navigateurs:
+    - Chrome/Firefox
+    - Images, CSS, JS
+    - Formulaires
+    - Navigation
+
+□ 14.2 Tests stress:
+    - siege -c50 -r10 http://localhost:8080/
+    - ab -n1000 -c10 http://localhost:8080/
+    - Tests de charge
+
+□ 14.3 Tests conformité HTTP:
+    - Différentes versions HTTP
+    - Headers obligatoires
+    - Validation protocole
+
+□ 14.4 Tests edge cases:
+    - Requêtes de 0 octet
+    - Headers très longs
+    - URI avec caractères spéciaux
+    - Connections simultanées
+
+PHASE 15: FINITION
+==================
+
+□ 15.1 Code cleanup:
+    - Respect de la norme 42
+    - Pas de fuites mémoire (valgrind)
+    - Gestion des exceptions
+    - Documentation
+
+□ 15.2 Makefile final:
+    - Compilation sans warnings
+    - Dépendances correctes
+    - Clean rules
+
+□ 15.3 Tests de validation:
+    - Tester avec le testeur officiel
+    - Vérifier tous les cas d'usage
+    - Performance acceptable
+
+=== ORDRE DE PRIORITÉ ===
+
+CRITIQUE (faire en premier):
+1. Structure projet + Config parser
+2. Classes Request/Response  
+3. Serveur GET basique
+4. Multi-serveurs avec select()
+
+IMPORTANT:
+5. POST et uploads
+6. CGI basique
+7. DELETE
+8. Gestion d'erreurs robuste
+
+BONUS:
+9. Optimisations
+10. Features avancées
+11. Tests poussés
+
+=== ESTIMATION TEMPS ===
+- Phase 1-4: 1 semaine
+- Phase 5-7: 1 semaine  
+- Phase 8-10: 1 semaine
+- Phase 11-15: 1 semaine
+
+TOTAL: ~4 semaines de dev

@@ -1,0 +1,87 @@
+## Étapes du projet WebServ
+
+**1. Compréhension du protocole HTTP**
+- HTTP/1.1 (RFC 2616 et RFC 7230-7235)
+- Structure des requêtes (méthodes GET, POST, DELETE)
+- Structure des réponses (codes status, headers, body)
+- Méthodes de transfert (chunked, content-length)
+- Keep-alive et connexions persistantes
+
+**2. Architecture réseau en C++**
+- Sockets TCP/IP (`socket()`, `bind()`, `listen()`, `accept()`)
+- Modèle I/O non-bloquant avec `select()`, `poll()` ou `epoll()`
+- Gestion de multiples connexions simultanées
+- Architecture event-driven (boucle d'événements)
+
+**3. Parsing et traitement**
+- Parser de requêtes HTTP (méthode, URI, headers, body)
+- Gestion des CGI (Common Gateway Interface)
+- Parsing du fichier de configuration
+- Gestion des chunks et du body
+
+**4. Gestion des ressources**
+- Lecture/écriture de fichiers
+- Listing de répertoires (autoindex)
+- Upload de fichiers
+- Pages d'erreur personnalisées
+- Gestion des types MIME
+
+**5. Configuration**
+- Virtual hosts (plusieurs serveurs)
+- Routes et locations
+- Redirections
+- Taille maximale du body
+- Méthodes HTTP autorisées par route
+
+**6. Gestion d'erreurs et sécurité**
+- Codes d'erreur HTTP appropriés
+- Timeout des connexions
+- Protection contre les attaques basiques
+- Gestion de la mémoire (pas de leaks)
+
+## Notions techniques à maîtriser
+
+**Programmation système**
+- File descriptors
+- Signaux (SIGPIPE notamment)
+- Processus et fork() pour les CGI
+- Variables d'environnement
+
+**Programmation réseau**
+- Modèle client-serveur
+- TCP vs UDP
+- Big-endian vs little-endian
+- Structure sockaddr_in
+
+**C++ avancé**
+- STL (map, vector, string)
+- Gestion d'exceptions
+- Classes et encapsulation
+- RAII pour la gestion des ressources
+
+**Outils de développement**
+- Makefile
+- Valgrind (détection de leaks)
+- GDB (debugging)
+- Telnet/netcat/curl pour tester
+- Navigateurs web
+
+## Ordre de développement recommandé
+
+1. Socket serveur basique acceptant une connexion
+2. I/O multiplexing avec select/poll
+3. Parser de requêtes HTTP simples
+4. Réponses HTTP basiques (fichiers statiques)
+5. Fichier de configuration
+6. Méthodes GET, POST, DELETE
+7. CGI
+8. Virtual hosts et routes complexes
+9. Upload de fichiers
+10. Tests et optimisations
+
+## Ressources utiles
+
+- RFC HTTP/1.1
+- Beej's Guide to Network Programming
+- `man` pages: socket, select, poll, accept, bind, listen
+- Tester avec: `curl -v`, navigateurs, siege/ab pour le stress test
