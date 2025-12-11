@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 		{
 			std::string s(argv[1]);
 			Config conf(s);
-			std::cout << conf.getFilename() << std::endl;
+			// std::cout << conf.getFilename() << std::endl;
 
 			conf.readConfig();
-			std::cout << conf.getConfig() << std::endl;
+			// std::cout << conf.getConfig() << std::endl;
 
 			conf.parseConfig();
 		}

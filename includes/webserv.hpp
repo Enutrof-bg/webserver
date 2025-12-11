@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <stdexcept>
 
+#include <vector>
+#include <map>
 
 #include "Config.hpp"
 
