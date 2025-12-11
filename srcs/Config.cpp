@@ -133,7 +133,7 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 	server._config_server_name = "localhost";
 	server._config_root = "./html";
 	server._config_index = "index.html";
-	server._config_client_max = 1048576;
+	server._config_client_max_body_size = 1048576;
 
 	std::string token;
 	while (str >> token)
@@ -148,10 +148,25 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 			str >> server._config_listen;
 			std::cout << server._config_listen << std::endl;
 		}
-		else if (token == "host")
+		else if (token == "server_name")
 		{
 			str >> server._config_server_name;
 			std::cout << server._config_server_name << std::endl;
+		}
+		else if (token == "root")
+		{
+			str >> server._config_root;
+			std::cout << server._config_root << std::endl;
+		}
+		else if (token == "index")
+		{
+			str >> server._config_index;
+			std::cout << server._config_index << std::endl;
+		}
+		else if (token == "client_max_body_size")
+		{
+			str >> server._config_client_max_body_size;
+			std::cout << server._config_client_max_body_size << std::endl;
 		}
 	}
 }

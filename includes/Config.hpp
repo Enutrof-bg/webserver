@@ -19,7 +19,7 @@ struct ServerConfig
 	std::string 				_config_server_name;
 	std::string 				_config_root;
 	std::string 				_config_index;
-	size_t 						_config_client_max;
+	size_t 						_config_client_max_body_size;
 	std::map<int, std::string> 	_config_error_page;
 	std::vector<Location> 		_config_location;
 };
