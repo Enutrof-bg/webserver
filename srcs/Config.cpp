@@ -131,16 +131,44 @@ std::string Config::readConfig()
 void Config::parseLocation(std::istringstream &str, Location &location)
 {
 	std::string token;
+	// std::cout << "ENtry" << std::endl;
 	while (str >> token)
 	{
+		// std::cout << "ENtry2" << std::endl;
 		if (token == "}")
 		{
+			// std::cout << "ENtry3" << std::endl;
 			break;
 		}
 		else if (token == "autoindex")
 		{
-			str >> location._config_autoindex;
+			std::cout << "ENtry4" << std::endl;
+			std:: string temp;
+			str >> temp;
+			// std::cout << temp << std::endl;
+			location._config_autoindex = (temp == "on;");
 			std::cout << location._config_autoindex << std::endl;
+		}
+		else if (token == "allowed_methods")
+		{
+			// std::cout << "ENtry5" << std::endl;
+			std::string method;
+            while (str >> method)
+			{
+                if (method == "}" || method == "autoindex" || method == "upload_path" || 
+                    method == "cgi_pass" || method == "return")
+				{
+                    str.putback(' ');
+                    for (int i = method.length() - 1; i >= 0; --i)
+					{
+                        str.putback(method[i]);
+                    }
+                    break;
+                }
+                location._config_allowed_methods.push_back(method);
+				std::cout << method << std::endl;
+			}
+			// std::cout << str << std::endl;
 		}
 	}
 }
@@ -199,6 +227,8 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 		{
 			std::string path;
 			str >> path >> token;
+			// std::cout << "path:" <<path<< std::endl;
+			// std::cout << "token:" << token << std::endl;
 			if (token == "{")
 			{
 				Location location;
