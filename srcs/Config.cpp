@@ -168,6 +168,15 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 			str >> server._config_client_max_body_size;
 			std::cout << server._config_client_max_body_size << std::endl;
 		}
+		else if (token == "error_page")
+		{
+			int code;
+			std::string page;
+			str >> code;
+			str >> page;
+			server._config_error_page[code] = page;
+			std::cout << code << ":" << server._config_error_page[code] << std::endl;
+		}
 	}
 }
 
