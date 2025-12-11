@@ -88,6 +88,6 @@ public:
 	//tokenize()
 
 	void parseServer(std::istringstream &str, ServerConfig &server);
-
+	void parseLocation(std::istringstream &str, Location &location);
 	void parseConfig();
 };

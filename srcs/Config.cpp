@@ -127,6 +127,24 @@ std::string Config::readConfig()
 	infile.close();
 	return (_config);
 }
+
+void Config::parseLocation(std::istringstream &str, Location &location)
+{
+	std::string token;
+	while (str >> token)
+	{
+		if (token == "}")
+		{
+			break;
+		}
+		else if (token == "autoindex")
+		{
+			str >> location._config_autoindex;
+			std::cout << location._config_autoindex << std::endl;
+		}
+	}
+}
+
 void Config::parseServer(std::istringstream &str, ServerConfig &server)
 {
 	server._config_listen = 80;
@@ -176,6 +194,19 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 			str >> page;
 			server._config_error_page[code] = page;
 			std::cout << code << ":" << server._config_error_page[code] << std::endl;
+		}
+		else if (token == "location")
+		{
+			std::string path;
+			str >> path >> token;
+			if (token == "{")
+			{
+				Location location;
+				location._config_path = path;
+				location._config_autoindex = false;
+				parseLocation(str, location);
+				server._config_location.push_back(location);
+			}
 		}
 	}
 }
