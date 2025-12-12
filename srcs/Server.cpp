@@ -23,6 +23,10 @@ void Server::setup()
 		serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 		_server_address.push_back(serverAddress);
 
+		int opt = 1;
+		if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+    		throw std::runtime_error("setsockopt failed");
+
 		bind(_server_listen_socket[i], (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 
 		listen(_server_listen_socket[i], 10);
