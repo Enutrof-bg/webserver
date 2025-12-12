@@ -1,4 +1,6 @@
 #include "../includes/webserv.hpp"
+#include "../includes/Config.hpp"
+#include "../includes/Server.hpp"
 
 int main(int argc, char **argv)
 {
@@ -14,11 +16,14 @@ int main(int argc, char **argv)
 			std::string s(argv[1]);
 			Config conf(s);
 			// std::cout << conf.getFilename() << std::endl;
-
 			conf.readConfig();
 			// std::cout << conf.getConfig() << std::endl;
-
 			conf.parseConfig();
+			conf.printConfig();
+
+			Server serv(conf);
+			serv.setup();
+			serv.run();
 		}
 		catch(std::exception &e)
 		{

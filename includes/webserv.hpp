@@ -15,8 +15,10 @@
 
 #include <vector>
 #include <map>
+#include <map>
 
 #include "Config.hpp"
+#include "Server.hpp"
 
 #define SERVER_PORT 18000
 #define MAXLINE 4096
