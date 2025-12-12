@@ -41,6 +41,8 @@ void Server::run()
 			printf("Waiting for connection on port %d\n", _server[i]._config_listen);
 
 			int connfd = accept(_server_listen_socket[i], NULL, NULL);
+			
+			printf("test1\n");
 
 			memset(recvline, 0, 4096);
 
@@ -53,6 +55,9 @@ void Server::run()
 
 				memset(recvline, 0, MAXLINE);
 			}
+
+			printf("test2\n");
+
 			const char* html = 
 			"<!DOCTYPE html>\n"
 			"<html>\n"
@@ -82,7 +87,11 @@ void Server::run()
 			// snprintf((char*)buff, sizeof(buff), "HTTP/1.0 200 OK\r\n\r\n%s", strlen(html), html);
 
 			write(connfd, (char *)buff, strlen((char *)buff));
+
+			printf("test3\n");
 			close(connfd);
+
+			printf("test4\n");
 		}
 	}
 }
