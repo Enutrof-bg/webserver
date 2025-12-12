@@ -89,7 +89,7 @@ void Server::run()
 				{
 					char buffer[4096];
 					int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
-
+					printf("{%s}", buffer);
 					if (n <= 0)
 					{
 						close(pollfds[i].fd);
@@ -122,10 +122,19 @@ void Server::run()
 						"	</ul>\n"
 						"</body>\n"
 						"</html>\n";
-					write(pollfds[i].fd, response, strlen(response));
 
+					char buffer[8192];
+					snprintf(buffer, sizeof(buffer),
+						"HTTP/1.1 200 OK\r\n"
+						"Content-Type: text/html; charset=UTF-8\r\n"
+						"Content-Length: %zu\r\n"
+						"Connection: close\r\n"
+						"\r\n"
+						"%s",
+						strlen(response), response);
+					
+					write(pollfds[i].fd, buffer, strlen(buffer));
 					close(pollfds[i].fd);
-
 					pollfds.erase(pollfds.begin() + i);
 					i--;
 				}
