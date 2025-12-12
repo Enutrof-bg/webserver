@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <stdexcept>
+#include <poll.h>
+
 
 #include <vector>
 #include <map>

@@ -33,69 +33,166 @@ void Server::setup()
 	}
 }
 
+bool Server::is_listen_socket(int fd)
+{
+	for (size_t i = 0; i < _server_listen_socket.size(); i++)
+	{
+		if (_server_listen_socket[i] == fd)
+			return true;
+	}
+	return false;
+}
+
 void Server::run()
 {
-	int n;
-	uint8_t recvline[4096+1];
-	uint8_t buff[MAXLINE+1];
-	for (;;)
+	// int n;
+	// uint8_t recvline[4096+1];
+	// uint8_t buff[MAXLINE+1];
+
+	std::vector<pollfd> pollfds;
+	for (size_t i = 0; i < _server_listen_socket.size(); i++)
 	{
-		for(size_t i = 0; i < _server.size(); i++)
+		pollfd temp;
+		temp.fd = _server_listen_socket[i];
+		temp.events = POLLIN;
+		temp.revents = 0;
+		pollfds.push_back(temp);
+	}
+
+	while(true)
+	{
+		int ret = poll(pollfds.data(), pollfds.size(), -1);
+		if (ret < 0)
+			throw std::runtime_error("Error: poll failed");
+		
+		for(size_t i = 0; i < pollfds.size(); i++)
 		{
-			printf("Waiting for connection on port %d\n", _server[i]._config_listen);
+			if (pollfds[i].revents == 0)
+				continue;
 
-			int connfd = accept(_server_listen_socket[i], NULL, NULL);
-			
-			printf("test1\n");
-
-			memset(recvline, 0, 4096);
-
-			while ((n = read(connfd, recvline, MAXLINE -1)) > 0)
+			if (is_listen_socket(pollfds[i].fd))
 			{
-				printf("{%s}", recvline);
+				if (pollfds[i].revents & POLLIN)
+				{
+					int client_fd = accept(pollfds[i].fd, NULL, NULL);
 
-				if (recvline[n -1] == '\n')
-					break;
+					pollfd client_pfd;
+					client_pfd.fd = client_fd;
+					client_pfd.events = POLLIN;
+					client_pfd.revents = 0;
+					pollfds.push_back(client_pfd);
+				}
+			}
+			else
+			{
+				if (pollfds[i].revents & POLLIN)
+				{
+					char buffer[4096];
+					int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
 
-				memset(recvline, 0, MAXLINE);
+					if (n <= 0)
+					{
+						close(pollfds[i].fd);
+						pollfds.erase(pollfds.begin() + i);
+						i--;
+					}
+					else
+					{
+						pollfds[i].events = POLLOUT;
+					}
+
+				} 
+
+				if (pollfds[i].revents & POLLOUT)
+				{
+					const char* response = 
+						"<!DOCTYPE html>\n"
+						"<html>\n"
+						"<head>\n"
+						"	<meta charset='UTF-8'>\n"
+						"	<title>SilkRoad</title>\n"
+						"</head>\n"
+						"<body>\n"
+						"	<h1>Bonjour du serveur!</h1>\n"
+						"	<p>Ceci est une reponse HTML</p>\n"
+						"	<ul>\n"
+						"		<li>Port: 18000</li>\n"
+						"		<li>Status: OK</li>\n"
+						"		<li>c: 50e/g</li>\n"
+						"	</ul>\n"
+						"</body>\n"
+						"</html>\n";
+					write(pollfds[i].fd, response, strlen(response));
+
+					close(pollfds[i].fd);
+
+					pollfds.erase(pollfds.begin() + i);
+					i--;
+				}
+
+				if (pollfds[i].revents & (POLLHUP | POLLERR))
+				{
+					close(pollfds[i].fd);
+					pollfds.erase(pollfds.begin() + i);
+					i--;
+				}
 			}
 
-			printf("test2\n");
-
-			const char* html = 
-			"<!DOCTYPE html>\n"
-			"<html>\n"
-			"<head>\n"
-			"	<meta charset='UTF-8'>\n"
-			"	<title>SilkRoad</title>\n"
-			"</head>\n"
-			"<body>\n"
-			"	<h1>Bonjour du serveur!</h1>\n"
-			"	<p>Ceci est une reponse HTML</p>\n"
-			"	<ul>\n"
-			"		<li>Port: 18000</li>\n"
-			"		<li>Status: OK</li>\n"
-			"		<li>c: 50e/g</li>\n"
-			"	</ul>\n"
-			"</body>\n"
-			"</html>\n";
-		
-			 snprintf((char*)buff, sizeof(buff), 
-			"HTTP/1.1 200 OK\r\n"
-			"Content-Type: text/html; charset=UTF-8\r\n"
-			"Content-Length: %zu\r\n"
-			"Connection: close\r\n"
-			"\r\n"
-			"%s", 
-			strlen(html), html);
-			// snprintf((char*)buff, sizeof(buff), "HTTP/1.0 200 OK\r\n\r\n%s", strlen(html), html);
-
-			write(connfd, (char *)buff, strlen((char *)buff));
-
-			printf("test3\n");
-			close(connfd);
-
-			printf("test4\n");
 		}
+		// for(size_t i = 0; i < _server.size(); i++)
+		// 	printf("Waiting for connection on port %d\n", _server[i]._config_listen);
+
+		// 	int connfd = accept(_server_listen_socket[i], NULL, NULL);
+			
+		// 	printf("test1\n");
+
+		// 	memset(recvline, 0, 4096);
+
+		// 	while ((n = read(connfd, recvline, MAXLINE -1)) > 0)
+		// 	{
+		// 		printf("{%s}", recvline);
+
+		// 		if (recvline[n -1] == '\n')
+		// 			break;
+
+		// 		memset(recvline, 0, MAXLINE);
+		// 	}
+
+		// 	printf("test2\n");
+
+		// 	const char* html = 
+		// 	"<!DOCTYPE html>\n"
+		// 	"<html>\n"
+		// 	"<head>\n"
+		// 	"	<meta charset='UTF-8'>\n"
+		// 	"	<title>SilkRoad</title>\n"
+		// 	"</head>\n"
+		// 	"<body>\n"
+		// 	"	<h1>Bonjour du serveur!</h1>\n"
+		// 	"	<p>Ceci est une reponse HTML</p>\n"
+		// 	"	<ul>\n"
+		// 	"		<li>Port: 18000</li>\n"
+		// 	"		<li>Status: OK</li>\n"
+		// 	"		<li>c: 50e/g</li>\n"
+		// 	"	</ul>\n"
+		// 	"</body>\n"
+		// 	"</html>\n";
+		
+		// 	 snprintf((char*)buff, sizeof(buff), 
+		// 	"HTTP/1.1 200 OK\r\n"
+		// 	"Content-Type: text/html; charset=UTF-8\r\n"
+		// 	"Content-Length: %zu\r\n"
+		// 	"Connection: close\r\n"
+		// 	"\r\n"
+		// 	"%s", 
+		// 	strlen(html), html);
+		// 	// snprintf((char*)buff, sizeof(buff), "HTTP/1.0 200 OK\r\n\r\n%s", strlen(html), html);
+
+		// 	write(connfd, (char *)buff, strlen((char *)buff));
+
+		// 	printf("test3\n");
+		// 	close(connfd);
+
+		// 	printf("test4\n");
 	}
 }
