@@ -4,7 +4,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 HEADER = includes/webserv.hpp
 
-FILE = main.cpp Config.cpp
+FILE = main.cpp Config.cpp Server.cpp
 
 NAME = webserv
 

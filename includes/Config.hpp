@@ -42,18 +42,18 @@ private:
 	// std::map<int, std::string> _config_error_page;
 	// bool _config_autoindex;
 	// std::vector<std::string> _config_allowed_methods;
-	std::string _config_upload_path;
-	std::string _config_redirect;
+	// std::string _config_upload_path;
+	// std::string _config_redirect;
 	// std::string _config_cgi_pass;
 
 public:
 	//Constructor
 	Config(std::string filename);
-
+	~Config();
 	//Getter
 	std::string getFilename() const;
 	std::string getConfig() const;
-
+	std::vector<ServerConfig> getServer() const;
 	// std::string getConfig_listen() const;
 	// std::string getConfig_server_name() const;
 	// std::string getConfig_name() const;
@@ -90,4 +90,6 @@ public:
 	void parseServer(std::istringstream &str, ServerConfig &server);
 	void parseLocation(std::istringstream &str, Location &location);
 	void parseConfig();
+
+	void printConfig() const;
 };

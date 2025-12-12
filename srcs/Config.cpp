@@ -3,6 +3,10 @@
 Config::Config(std::string filename): _filename(filename)
 {
 }
+Config::~Config()
+{
+
+}
 
 std::string Config::getFilename() const
 {
@@ -11,6 +15,10 @@ std::string Config::getFilename() const
 std::string Config::getConfig() const
 {
 	return _config;
+}
+std::vector<ServerConfig> Config::getServer() const
+{
+	return _server;
 }
 // std::string Config::getConfig_listen() const
 // {
@@ -261,4 +269,38 @@ void Config::parseConfig()
 			}
 		}
 	}
+}
+
+
+void Config::printConfig() const
+{
+	std::vector<ServerConfig>::iterator it;
+	// for (it = _server.begin(); it != _server.end(); it++)
+	//  for (size_t i = 0; i < this->_server.size(); ++i)
+	// {
+	// }
+    for (size_t i = 0; i < this->_server.size(); ++i)
+	{
+        const ServerConfig& server = this->_server[i];
+        std::cout << "Server " << i + 1 << ":" << std::endl;
+        std::cout << "  Port: " << server._config_listen << std::endl;
+        std::cout << "  Server name: " << server._config_server_name << std::endl;
+        std::cout << "  Root: " << server._config_root << std::endl;
+        std::cout << "  Index: " << server._config_index << std::endl;
+        std::cout << "  Max body size: " << server._config_client_max_body_size << std::endl;
+        
+        for (size_t j = 0; j < server._config_location.size(); ++j)
+		{
+            const Location& loc = server._config_location[j];
+            std::cout << "  Location " << loc._config_path << ":" << std::endl;
+            std::cout << "    Methods: ";
+            for (size_t k = 0; k < loc._config_allowed_methods.size(); ++k)
+			{
+                std::cout << loc._config_allowed_methods[k] << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "    Autoindex: " << (loc._config_autoindex ? "on" : "off") << std::endl;
+        }
+        std::cout << std::endl;
+    }
 }
