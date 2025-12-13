@@ -44,7 +44,15 @@ Response parseRequest(const std::string &request)
 
 std::string getPath(const std::string &url, const ServerConfig &server)
 {
+	// return "asd";
+	if (url.empty())
+		std::cout << "ERREUR" << std::endl;
+	std::cout << url << std::endl;
+	// std::cout << path << std::endl;
 	std::string path = server._config_root;
+
+	std::cout << path << std::endl;
+
 	if (url == "/" || url[url.length() - 1] == '/')
 	{
 		path = path + url + server._config_index;
@@ -59,7 +67,9 @@ std::string getPath(const std::string &url, const ServerConfig &server)
 std::string getRequest(const Response &rep, const ServerConfig &server)
 {
 	//error a gerer check method
-	(void)server;
+	// (void)server;
+	// return "caca1";
+	// std::cout << rep.url << std::endl;
 	std::string path = getPath(rep.url, server);
 	// return "caca";
 	if (rep.method == "GET")
@@ -71,9 +81,14 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 std::string handleGET(const std::string &path, const ServerConfig &server)
 {
 	(void)server;
+	std::cout << path << std::endl;
+	// a changer
 	std::ifstream file(path.c_str(), std::ios::binary);
+	if (!file)
+		throw std::runtime_error("Error: html file open failed");
 	//protec
 
+	//a changer
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	file.close();
 

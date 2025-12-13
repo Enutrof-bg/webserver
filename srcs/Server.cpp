@@ -31,7 +31,7 @@ void Server::setup()
 
 		int opt = 1;
 		if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-    		throw std::runtime_error("setsockopt failed");
+			throw std::runtime_error("setsockopt failed");
 
 		bind(_server_listen_socket[i], (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 
@@ -56,7 +56,7 @@ void Server::printListenPorts()
 	for (size_t i = 0; i < _server.size(); i++)
 	{
 		std::cout << "  - Port " << _server[i]._config_listen 
-		          << " (fd=" << _server_listen_socket[i] << ")";
+				  << " (fd=" << _server_listen_socket[i] << ")";
 		if (!_server[i]._config_server_name.empty())
 			std::cout << " [" << _server[i]._config_server_name << "]";
 		std::cout << std::endl;
@@ -104,6 +104,15 @@ void Server::run()
 					client_pfd.events = POLLIN;
 					client_pfd.revents = 0;
 					pollfds.push_back(client_pfd);
+
+					for (size_t j = 0; j < _server_listen_socket.size(); j++)
+					{
+		  				if (_server_listen_socket[j] == pollfds[i].fd)
+						{
+			   				_client_to_server[client_fd] = j;
+			 				break;
+		 				}
+	   				}
 				}
 			}
 			else
@@ -123,9 +132,15 @@ void Server::run()
 					{
 						Response rep = parseRequest(buffer);
 
-						// std::string response = getRequest(rep, _server[i]);
+						std::string response_temp = "test";
+						std::cout << "tset" << std::endl;
 
-						// _client_responses[pollfds[i].fd] = response;
+						size_t server_index = _client_to_server[pollfds[i].fd];
+						ServerConfig& server = _server[server_index];
+
+						std::string response = getRequest(rep, server);
+						std::cout << response << std::endl;
+						_client_responses[pollfds[i].fd] = response_temp;
 						pollfds[i].events = POLLOUT;
 					}
 
@@ -161,7 +176,7 @@ void Server::run()
 						"%s",
 						strlen(response), response);
 					
-					// std::string response = _client_responses[pollfds[i].fd];
+					std::string response_2 = _client_responses[pollfds[i].fd];
 					// write(pollfds[i].fd, response.c_str(), strlen(response.c_str()));
 					 write(pollfds[i].fd, buffer, strlen(buffer));
 					close(pollfds[i].fd);
