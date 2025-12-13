@@ -121,6 +121,8 @@ void Server::run()
 					}
 					else
 					{
+						Response rep = parseRequest(buffer);
+						
 						pollfds[i].events = POLLOUT;
 					}
 
