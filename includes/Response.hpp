@@ -13,6 +13,8 @@ struct Response
 };
 
 Response parseRequest(const std::string &request);
+std::string getPath(const std::string &url, const const ServerConfig &server);
+
 // {
 // 	Response rep;
 // 	std::istringstream stream(request);
