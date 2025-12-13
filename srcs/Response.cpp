@@ -41,3 +41,17 @@ Response parseRequest(const std::string &request)
 	std::cout << rep.body << std::endl;
 	return rep;
 }
+
+std::string getPath(const std::string &url, const const ServerConfig &server)
+{
+	std::string path = server._config_root;
+	if (url == "/" || url[url.length() - 1] == "/")
+	{
+		path = path + url + server._config_index;
+	}
+	else
+	{
+		path = path + url;
+	}
+	return path;
+}
