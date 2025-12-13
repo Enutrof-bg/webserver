@@ -15,7 +15,13 @@ void Server::setup()
 	{
 		// _server[i]._config_listen
 		int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+		if (listenfd < 0)
+		{
+			strerror(errno);
+			continue;
+		}
 		_server_listen_socket.push_back(listenfd);
+		std::cout << listenfd << std::endl;
 
 		sockaddr_in serverAddress;
 		serverAddress.sin_family = AF_INET;
@@ -43,11 +49,28 @@ bool Server::is_listen_socket(int fd)
 	return false;
 }
 
+void Server::printListenPorts()
+{
+	std::cout << "=== Serveur démarré ===" << std::endl;
+	std::cout << "Ports d'écoute disponibles :" << std::endl;
+	for (size_t i = 0; i < _server.size(); i++)
+	{
+		std::cout << "  - Port " << _server[i]._config_listen 
+		          << " (fd=" << _server_listen_socket[i] << ")";
+		if (!_server[i]._config_server_name.empty())
+			std::cout << " [" << _server[i]._config_server_name << "]";
+		std::cout << std::endl;
+	}
+	std::cout << "En attente de connexions..." << std::endl << std::endl;
+}
+
 void Server::run()
 {
 	// int n;
 	// uint8_t recvline[4096+1];
 	// uint8_t buff[MAXLINE+1];
+
+	printListenPorts();
 
 	std::vector<pollfd> pollfds;
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)

@@ -17,3 +17,5 @@ optlen : taille de cette valeur.
 demande au kernel d'activer SO_REUSEADDR, si ca fonctionne, setsockopt renvoie 0 et on peut ensuite faire le bind correctement, sinon renvoie -1
 
 appliquer setsockopt juste après socket() et vérifier les retours, sinon le bind suivant peut échouer
+
+port 443 et 80 sans permissions
