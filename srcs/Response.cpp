@@ -17,8 +17,14 @@ Response parseRequest(const std::string &request)
 	std::cout << "URL:" << rep.url << std::endl;
 	std::cout << "VERSION:" << rep.version << std::endl;
 
-	while (std::getline(stream, line) && line != "/r")
+	while (std::getline(stream, line))
 	{
+		if (!line.empty() && line[line.length()-1] == '\r')
+			line.erase(line.length()-1);
+		
+		if (line.empty())
+			break;
+
 		size_t pos = line.find(':');
 		if (pos != std::string::npos)
 		{
