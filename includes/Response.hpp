@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Config.hpp"
+#include "Server.hpp"
 #include "webserv.hpp"
+
+struct ServerConfig;
 
 struct Response
 {
@@ -13,7 +16,9 @@ struct Response
 };
 
 Response parseRequest(const std::string &request);
-std::string getPath(const std::string &url, const const ServerConfig &server);
+std::string getPath(const std::string &url, const ServerConfig &server);
+std::string getRequest(const Response &rep, const ServerConfig &server);
+std::string handleGET(const std::string &path, const ServerConfig &server);
 
 // {
 // 	Response rep;

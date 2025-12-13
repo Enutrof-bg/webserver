@@ -42,10 +42,10 @@ Response parseRequest(const std::string &request)
 	return rep;
 }
 
-std::string getPath(const std::string &url, const const ServerConfig &server)
+std::string getPath(const std::string &url, const ServerConfig &server)
 {
 	std::string path = server._config_root;
-	if (url == "/" || url[url.length() - 1] == "/")
+	if (url == "/" || url[url.length() - 1] == '/')
 	{
 		path = path + url + server._config_index;
 	}
@@ -54,4 +54,36 @@ std::string getPath(const std::string &url, const const ServerConfig &server)
 		path = path + url;
 	}
 	return path;
+}
+
+std::string getRequest(const Response &rep, const ServerConfig &server)
+{
+	//error a gerer check method
+	(void)server;
+	std::string path = getPath(rep.url, server);
+	// return "caca";
+	if (rep.method == "GET")
+	{
+		return handleGET(path, server);
+	}
+	return "test";
+}
+std::string handleGET(const std::string &path, const ServerConfig &server)
+{
+	(void)server;
+	std::ifstream file(path.c_str(), std::ios::binary);
+	//protec
+
+	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	file.close();
+
+	std::ostringstream response;
+	response << "HTTP/1.1 200 OK\r\n"
+			<<"Content-Type: text/html; charset=UTF-8\r\n"
+			<<"Content-Length: " << content.length()<<"\r\n"
+			<<"Connection: close\r\n"
+			<<"\r\n"
+			<< content;
+
+	return (response.str());
 }

@@ -21,6 +21,7 @@ private:
 
 	std::vector<struct pollfd> _server_poll;
 	// std::map<int, Client> _client;
+	std::map<int, std::string> _client_responses;
 
 public:
 	Server(const Config &conf);

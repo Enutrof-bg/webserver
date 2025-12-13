@@ -122,7 +122,10 @@ void Server::run()
 					else
 					{
 						Response rep = parseRequest(buffer);
-						
+
+						// std::string response = getRequest(rep, _server[i]);
+
+						// _client_responses[pollfds[i].fd] = response;
 						pollfds[i].events = POLLOUT;
 					}
 
@@ -158,7 +161,9 @@ void Server::run()
 						"%s",
 						strlen(response), response);
 					
-					write(pollfds[i].fd, buffer, strlen(buffer));
+					// std::string response = _client_responses[pollfds[i].fd];
+					// write(pollfds[i].fd, response.c_str(), strlen(response.c_str()));
+					 write(pollfds[i].fd, buffer, strlen(buffer));
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					i--;
