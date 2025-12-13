@@ -132,15 +132,15 @@ void Server::run()
 					{
 						Response rep = parseRequest(buffer);
 
-						std::string response_temp = "test";
-						std::cout << "tset" << std::endl;
+						// std::string response_temp = "test";
+						// std::cout << "tset" << std::endl;
 
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
 
 						std::string response = getRequest(rep, server);
-						std::cout << response << std::endl;
-						_client_responses[pollfds[i].fd] = response_temp;
+						// std::cout << response << std::endl;
+						_client_responses[pollfds[i].fd] = response;
 						pollfds[i].events = POLLOUT;
 					}
 
@@ -148,37 +148,40 @@ void Server::run()
 
 				if (pollfds[i].revents & POLLOUT)
 				{
-					const char* response = 
-						"<!DOCTYPE html>\n"
-						"<html>\n"
-						"<head>\n"
-						"	<meta charset='UTF-8'>\n"
-						"	<title>SilkRoad</title>\n"
-						"</head>\n"
-						"<body>\n"
-						"	<h1>Bonjour du serveur!</h1>\n"
-						"	<p>Ceci est une reponse HTML</p>\n"
-						"	<ul>\n"
-						"		<li>Port: 18000</li>\n"
-						"		<li>Status: OK</li>\n"
-						"		<li>c: 50e/g</li>\n"
-						"	</ul>\n"
-						"</body>\n"
-						"</html>\n";
+					// const char* response = 
+					// 	"<!DOCTYPE html>\n"
+					// 	"<html>\n"
+					// 	"<head>\n"
+					// 	"	<meta charset='UTF-8'>\n"
+					// 	"	<title>SilkRoad</title>\n"
+					// 	"</head>\n"
+					// 	"<body>\n"
+					// 	"	<h1>Bonjour du serveur!</h1>\n"
+					// 	"	<p>Ceci est une reponse HTML</p>\n"
+					// 	"	<ul>\n"
+					// 	"		<li>Port: 18000</li>\n"
+					// 	"		<li>Status: OK</li>\n"
+					// 	"		<li>c: 50e/g</li>\n"
+					// 	"	</ul>\n"
+					// 	"</body>\n"
+					// 	"</html>\n";
 
-					char buffer[8192];
-					snprintf(buffer, sizeof(buffer),
-						"HTTP/1.1 200 OK\r\n"
-						"Content-Type: text/html; charset=UTF-8\r\n"
-						"Content-Length: %zu\r\n"
-						"Connection: close\r\n"
-						"\r\n"
-						"%s",
-						strlen(response), response);
+					// char buffer[8192];
+					// snprintf(buffer, sizeof(buffer),
+					// 	"HTTP/1.1 200 OK\r\n"
+					// 	"Content-Type: text/html; charset=UTF-8\r\n"
+					// 	"Content-Length: %zu\r\n"
+					// 	"Connection: close\r\n"
+					// 	"\r\n"
+					// 	"%s",
+					// 	strlen(response), response);
 					
 					std::string response_2 = _client_responses[pollfds[i].fd];
-					// write(pollfds[i].fd, response.c_str(), strlen(response.c_str()));
-					 write(pollfds[i].fd, buffer, strlen(buffer));
+					write(pollfds[i].fd, response_2.c_str(), strlen(response_2.c_str()));
+					//  write(pollfds[i].fd, buffer, strlen(buffer));
+					_client_responses.erase(pollfds[i].fd);
+					_client_to_server.erase(pollfds[i].fd);
+					
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					i--;
