@@ -90,7 +90,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 	std::cout << path << std::endl;
 	// a changer
 	std::ifstream file(path.c_str(), std::ios::binary);
-	if (!file)
+	if (!file.is_open())
 		throw std::runtime_error("Error: html file open failed");
 	//protec
 
