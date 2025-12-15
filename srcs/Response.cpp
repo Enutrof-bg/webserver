@@ -87,11 +87,57 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 std::string handleGET(const std::string &path, const ServerConfig &server)
 {
 	(void)server;
-	std::cout << path << std::endl;
-	// a changer
+	std::cout << "Chemin apth: " << path << std::endl;
+	
 	std::ifstream file(path.c_str(), std::ios::binary);
 	if (!file.is_open())
-		throw std::runtime_error("Error: html file open failed");
+	{
+		std::cout << "Fichier not found: " << path << std::endl;
+		
+		std::map<int, std::string>::const_iterator it = server._config_error_page.find(404);
+		std::string body;
+		
+		if (it != server._config_error_page.end() && !it->second.empty())
+		{
+			std::string path_error = it->second;
+			std::cout << "Page erreur:" << path_error << std::endl;
+			
+			std::ifstream error_file(path_error.c_str(), std::ios::binary);
+			if (error_file.is_open())
+			{
+				body = std::string((std::istreambuf_iterator<char>(error_file)), 
+				                    std::istreambuf_iterator<char>());
+				error_file.close();
+
+				std::cout << "--------------asdasd----" << std::endl;
+				std::cout << body << std::endl;
+			}
+		}
+		
+	
+		if (body.empty())
+		{
+			body = 
+				"<!DOCTYPE html>\n"
+				"<html>\n"
+				"<head><title>404 Not Found</title></head>\n"
+				"<body>\n"
+				"<h1>404 Not Found</h1>\n"
+				"<p>Le fichier demandé n'existe pas.</p>\n"
+				"</body>\n"
+				"</html>\n";
+		}
+		
+		std::ostringstream response;
+		response << "HTTP/1.1 404 Not Found\r\n"
+				 << "Content-Type: text/html; charset=UTF-8\r\n"
+				 << "Content-Length: " << body.length() << "\r\n"
+				 << "Connection: close\r\n"
+				 << "\r\n"
+				 << body;
+		
+		return response.str();
+	}
 	//protec
 
 	//a changer
