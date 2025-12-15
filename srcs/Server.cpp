@@ -177,7 +177,7 @@ void Server::run()
 					// 	strlen(response), response);
 					
 					std::string response_2 = _client_responses[pollfds[i].fd];
-					std::cout << "RESPONSE2" << std::endl;
+					std::cout << "----RESPONSE2-WRITEFD----" << std::endl;
 					std::cout << response_2 << std::endl;
 					write(pollfds[i].fd, response_2.c_str(), strlen(response_2.c_str()));
 					//  write(pollfds[i].fd, buffer, strlen(buffer));
