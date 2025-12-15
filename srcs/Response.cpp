@@ -110,7 +110,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 			if (error_file.is_open())
 			{
 				body = std::string((std::istreambuf_iterator<char>(error_file)), 
-				                    std::istreambuf_iterator<char>());
+									std::istreambuf_iterator<char>());
 				error_file.close();
 
 				std::cout << "--------------asdasd----" << std::endl;
@@ -195,27 +195,28 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	//create html 
 	std::ostringstream newbody;
 	newbody << "<!DOCTYPE html>\n"
-         << "<html>\n<head><title>POST reçu</title></head>\n"
-         << "<body>\n"
-         << "<h1>Données reçues</h1>\n"
-         << "<ul>\n";
+		<< "<html>\n<head><title>POST reçu</title></head>\n"
+		<< "<body>\n"
+		<< "<h1>Données reçues</h1>\n"
+		<< "<ul>\n";
 
 	for (std::map<std::string, std::string>::iterator it = data.begin();
 		it != data.end(); it++)
 		{
-			newbody << "  <li><b>" << it->first << "</b>: " << it->second << "</li>\n";
+			newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
 		}
 		newbody << "</ul>\n"
-         << "<p>Body brut: <code>" << rep.body << "</code></p>\n"
-         << "</body>\n</html>\n";
+		<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
+		<< "<br><p><a title=\"Motherfucking Website\" href=\"index.html\">go back</a></p></br>\n"
+		<< "</body>\n</html>\n";
 
 	std::ostringstream response;
-    response << "HTTP/1.1 200 OK\r\n"
-             << "Content-Type: text/html; charset=UTF-8\r\n"
-             << "Content-Length: " << newbody.str().length() << "\r\n"
-             << "Connection: close\r\n"
-             << "\r\n"
-             << newbody.str();
+	response << "HTTP/1.1 200 OK\r\n"
+			<< "Content-Type: text/html; charset=UTF-8\r\n"
+			<< "Content-Length: " << newbody.str().length() << "\r\n"
+			<< "Connection: close\r\n"
+			<< "\r\n"
+			<< newbody.str();
 
 	return response.str();
 }
