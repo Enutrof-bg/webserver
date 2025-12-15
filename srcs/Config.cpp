@@ -114,6 +114,31 @@ void Config::setConfig(std::string &config)
 // 	_config_cgi_pass = config;
 // }
 
+inline std::string& rtrim(std::string& s, const char* t)
+{
+	size_t pos = s.find_last_not_of(t);
+	if (pos != std::string::npos)
+		s.erase(pos + 1);
+	else
+		s.clear();
+    return s;
+}
+
+inline std::string& ltrim(std::string& s, const char* t)
+{
+	size_t pos = s.find_first_not_of(t);
+	if (pos != std::string::npos)
+		s.erase(0, pos);
+	else
+		s.clear();
+    return s;
+}
+
+inline std::string& trim(std::string& s, const char* t)
+{
+    return ltrim(rtrim(s, t), t);
+}
+
 std::string Config::readConfig()
 {
 	std::ifstream infile;
@@ -200,26 +225,36 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 		else if (token == "listen")
 		{
 			str >> server._config_listen;
+			// server._config_listen = rtrim(server._config_listen, " \t");
+			// server._config_listen = rtrim(server._config_listen, ";");
 			std::cout << server._config_listen << std::endl;
 		}
 		else if (token == "server_name")
 		{
 			str >> server._config_server_name;
+			server._config_server_name = rtrim(server._config_server_name, " \t");
+			server._config_server_name = rtrim(server._config_server_name, ";");
 			std::cout << server._config_server_name << std::endl;
 		}
 		else if (token == "root")
 		{
 			str >> server._config_root;
-			std::cout << server._config_root << std::endl;
+			server._config_root = rtrim(server._config_root, " \t");
+			server._config_root = rtrim(server._config_root, ";");
+			std::cout << "{" <<server._config_root << "}"<<std::endl;
 		}
 		else if (token == "index")
 		{
 			str >> server._config_index;
+			server._config_index = rtrim(server._config_index, " \t");
+			server._config_index = rtrim(server._config_index, ";");
 			std::cout << server._config_index << std::endl;
 		}
 		else if (token == "client_max_body_size")
 		{
 			str >> server._config_client_max_body_size;
+			// server._config_root = rtrim(server._config_root, " \t");
+			// server._config_root = rtrim(server._config_root, ";");
 			std::cout << server._config_client_max_body_size << std::endl;
 		}
 		else if (token == "error_page")
@@ -228,6 +263,8 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 			std::string page;
 			str >> code;
 			str >> page;
+			page = rtrim(page, " \t");
+			page = rtrim(page, ";");
 			server._config_error_page[code] = page;
 			std::cout << code << ":" << server._config_error_page[code] << std::endl;
 		}
