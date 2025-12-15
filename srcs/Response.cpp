@@ -82,6 +82,10 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	{
 		return handleGET(path, server);
 	}
+	else if (rep.method == "POST")
+	{
+		return handlePOST(rep, server);
+	}
 	return "test";
 }
 std::string handleGET(const std::string &path, const ServerConfig &server)
@@ -117,6 +121,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 	
 		if (body.empty())
 		{
+			//default page si error404.html nest pas defini
 			body = 
 				"<!DOCTYPE html>\n"
 				"<html>\n"
@@ -153,4 +158,64 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 			<< content;
 
 	return (response.str());
+}
+
+std::string handlePOST(const Response &rep, const ServerConfig &server)
+{
+	(void)rep;
+	(void)server;
+	std::cout << "----------POST_BODY-------" <<std::endl;
+	std::cout << rep.body  << std::endl;
+	//check rep.length or error413
+	std::map<std::string, std::string>::const_iterator it = rep.header.find("Content-Length");
+	if (it != rep.header.end())
+	{
+		size_t content_length = atoi(it->second.c_str());
+		std::cout << "content_length:"<< content_length << std::endl;
+	}
+	// for (it = rep.header.begin(); it != rep.header.end(); it++)
+	// {
+
+	// }
+	//parsing body
+	std::istringstream stream(rep.body);
+	std::string line;
+	std::map<std::string, std::string> data;
+	while (std::getline(stream, line, '&'))
+	{
+		std::cout << line << std::endl;
+		size_t pos = line.find('=');
+		if (pos != std::string::npos)
+		{
+			std::string key = line.substr(0, pos);
+			std::string value = line.substr(pos + 1);
+			data[key] = value;
+		}
+	}
+	//create html 
+	std::ostringstream newbody;
+	newbody << "<!DOCTYPE html>\n"
+         << "<html>\n<head><title>POST reçu</title></head>\n"
+         << "<body>\n"
+         << "<h1>Données reçues</h1>\n"
+         << "<ul>\n";
+
+	for (std::map<std::string, std::string>::iterator it = data.begin();
+		it != data.end(); it++)
+		{
+			newbody << "  <li><b>" << it->first << "</b>: " << it->second << "</li>\n";
+		}
+		newbody << "</ul>\n"
+         << "<p>Body brut: <code>" << rep.body << "</code></p>\n"
+         << "</body>\n</html>\n";
+
+	std::ostringstream response;
+    response << "HTTP/1.1 200 OK\r\n"
+             << "Content-Type: text/html; charset=UTF-8\r\n"
+             << "Content-Length: " << newbody.str().length() << "\r\n"
+             << "Connection: close\r\n"
+             << "\r\n"
+             << newbody.str();
+
+	return response.str();
 }
