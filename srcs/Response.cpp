@@ -97,6 +97,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 	(void)server;
 	std::cout << "Chemin apth: " << path << std::endl;
 	
+	std::string line;
 	std::ifstream file(path.c_str(), std::ios::binary);
 	if (!file.is_open())
 	{
@@ -115,6 +116,10 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 			{
 				body = std::string((std::istreambuf_iterator<char>(error_file)), 
 									std::istreambuf_iterator<char>());
+				// while (getline(error_file, line))
+				// {
+				// 	body << line;
+				// }
 				error_file.close();
 
 				std::cout << "--------------asdasd----" << std::endl;
@@ -256,7 +261,7 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 		newbody << "<!DOCTYPE html>\n"
 			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
 			<< "<body>\n"
-			<< "<h1>fail deleted "<< rep.url <<" </h1>\n"
+			<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
 			<< "<ul>\n";
 	}
 	else
