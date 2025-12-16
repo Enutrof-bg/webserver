@@ -86,7 +86,11 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	{
 		return handlePOST(rep, server);
 	}
-	return "test";
+	else if (rep.method == "DELETE")
+	{
+		return handleDELETE(rep, server);
+	}
+	return "no method found";
 }
 std::string handleGET(const std::string &path, const ServerConfig &server)
 {
@@ -195,9 +199,9 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	//create html 
 	std::ostringstream newbody;
 	newbody << "<!DOCTYPE html>\n"
-		<< "<html>\n<head><title>POST reçu</title></head>\n"
+		<< "<html>\n<head><title>POST recu</title></head>\n"
 		<< "<body>\n"
-		<< "<h1>Données reçues</h1>\n"
+		<< "<h1>Donnees recue</h1>\n"
 		<< "<ul>\n";
 
 	for (std::map<std::string, std::string>::iterator it = data.begin();
@@ -219,4 +223,60 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 			<< newbody.str();
 
 	return response.str();
+}
+
+std::string handleDELETE(const Response &rep, const ServerConfig &server)
+{
+	(void)rep;
+	(void)server;
+	//path
+	std::cout << "URL1:" <<rep.url.c_str() << std::endl;
+	std::string path = getPath(rep.url.c_str(), server);
+	std::cout << "URL2:" << path << std::endl;
+	// path = "../" + path;
+	// std::cout << "URL3:" << path << std::endl;
+	std::ostringstream newbody;
+
+	//check path if exist
+	// std::ifstream test(path.c_str());
+	// if (!test.good())
+	// {
+	// 	std::cout << "good" << std::endl;
+	// }
+	// else
+	// {
+	// 	std::cout << "badasdasd" << std::endl;
+	// }
+
+	// test.close();
+	// close(test);
+	//delete file
+	if (std::remove(path.c_str()))
+	{
+		newbody << "<!DOCTYPE html>\n"
+			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
+			<< "<body>\n"
+			<< "<h1>fail deleted "<< rep.url <<" </h1>\n"
+			<< "<ul>\n";
+	}
+	else
+	{
+		newbody << "<!DOCTYPE html>\n"
+			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
+			<< "<body>\n"
+			<< "<h1>deleted "<< rep.url <<" </h1>\n"
+			<< "<ul>\n";
+	}
+
+	std::ostringstream response;
+	response << "HTTP/1.1 200 OK\r\n"
+			<< "Content-Type: text/html; charset=UTF-8\r\n"
+			<< "Content-Length: " << newbody.str().length() << "\r\n"
+			<< "Connection: close\r\n"
+			<< "\r\n"
+			<< newbody.str();
+
+	return response.str();
+
+	// return "DELETEtest";
 }
