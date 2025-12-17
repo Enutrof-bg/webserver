@@ -168,6 +168,7 @@ void Config::parseLocation(std::istringstream &str, Location &location)
 	while (str >> token)
 	{
 		// std::cout << "ENtry2" << std::endl;
+		std::cout << "[" << token << "]";
 		if (token == "}")
 		{
 			// std::cout << "ENtry3" << std::endl;
@@ -176,31 +177,43 @@ void Config::parseLocation(std::istringstream &str, Location &location)
 		else if (token == "autoindex")
 		{
 			std::cout << "ENtry4" << std::endl;
-			std:: string temp;
+			std::string temp;
 			str >> temp;
 			// std::cout << temp << std::endl;
 			location._config_autoindex = (temp == "on;");
 			std::cout << location._config_autoindex << std::endl;
 		}
-		else if (token == "allowed_methods")
+		else if (token == "allowed_methods" || token == "allow_methods")
 		{
-			// std::cout << "ENtry5" << std::endl;
+			std::cout << "ENtry5" << std::endl;
 			std::string method;
-            while (str >> method)
+			//allowed_method a refaire, ne fonctionne pas correctement
+			getline(str, method);
+			std::cout << "METHOD:" <<method << std::endl;
+
+			std::stringstream ss(method);
+			std::string temp;
+
+			while (ss >> temp)
 			{
-                if (method == "}" || method == "autoindex" || method == "upload_path" || 
-                    method == "cgi_pass" || method == "return")
-				{
-                    str.putback(' ');
-                    for (int i = method.length() - 1; i >= 0; --i)
-					{
-                        str.putback(method[i]);
-                    }
-                    break;
-                }
-                location._config_allowed_methods.push_back(method);
-				std::cout << method << std::endl;
+				location._config_allowed_methods.push_back(temp);
+				std::cout << "TEMP:"<< temp << std::endl;
 			}
+            // while (str >> method)
+			// {
+            //     if (method == "}" || method == "autoindex" || method == "upload_path" || 
+            //         method == "cgi_pass" || method == "return")
+			// 	{
+            //         str.putback(' ');
+            //         for (int i = method.length() - 1; i >= 0; --i)
+			// 		{
+            //             str.putback(method[i]);
+            //         }
+            //         break;
+            //     }
+            //     location._config_allowed_methods.push_back(method);
+			// 	std::cout << method << std::endl;
+			// }
 			// std::cout << str << std::endl;
 		}
 	}
@@ -217,7 +230,7 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 	std::string token;
 	while (str >> token)
 	{
-		// std::cout << token << std::endl;
+		std::cout << "[" <<token << "]";
 		if (token == "}")
 		{
 			break;
