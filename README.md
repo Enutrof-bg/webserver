@@ -2,7 +2,9 @@
 BONHOMME
 
 
+#INFO EN VRAC:
 
+##setsockopt
 int opt = 1;
 if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 	throw std::runtime_error("setsockopt failed");
@@ -19,3 +21,11 @@ demande au kernel d'activer SO_REUSEADDR, si ca fonctionne, setsockopt renvoie 0
 appliquer setsockopt juste après socket() et vérifier les retours, sinon le bind suivant peut échouer
 
 port 443 et 80 sans permissions
+
+#Ressource:
+CGI:
+https://web.developpez.com/cgic.htm
+https://www.snv.jussieu.fr/manual/fr/howto/cgi.html
+
+infos utiles(peut etre(jsp?)):
+https://stackoverflow.com/questions/26137190/what-happens-when-you-go-back-with-the-browser
