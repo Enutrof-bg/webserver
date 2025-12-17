@@ -25,6 +25,7 @@ port 443 et 80 sans permissions
 # Ressource:
 CGI:
 https://web.developpez.com/cgic.htm
+
 https://www.snv.jussieu.fr/manual/fr/howto/cgi.html
 
 infos utiles(peut etre(jsp?)):
