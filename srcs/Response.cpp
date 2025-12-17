@@ -6,6 +6,7 @@ Response parseRequest(const std::string &request)
 	std::istringstream stream(request);
 	std::string line;
 
+	std::cout << "-------------------PARSE REQUEST------------------------" << std::endl;
 	std::getline(stream, line);
 	std::cout << "[" << line << "]" << std::endl;
 	std::cout << "TESTCACA" << std::endl;
@@ -33,7 +34,7 @@ Response parseRequest(const std::string &request)
 			rep.header[key] = value;
 		}
 	}
-	std::cout <<"HEADER" << std::endl;
+	std::cout <<"----HEADER------" << std::endl;
 	std::map<std::string, std::string>::iterator it;
 	for (it = rep.header.begin(); it != rep.header.end(); it++)
 	{
@@ -43,8 +44,9 @@ Response parseRequest(const std::string &request)
 	{
 		rep.body += line;
 	}
-	std::cout << "BODY" << std::endl;
+	std::cout << "----BODY------" << std::endl;
 	std::cout << rep.body << std::endl;
+	std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
 	return rep;
 }
 
@@ -95,6 +97,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 std::string handleGET(const std::string &path, const ServerConfig &server)
 {
 	(void)server;
+	std::cout << "-----------------------------------HANDLE_GET----------------" <<std::endl;
 	std::cout << "Chemin apth: " << path << std::endl;
 	
 	std::string line;
@@ -165,7 +168,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server)
 			<<"Connection: close\r\n"
 			<<"\r\n"
 			<< content;
-
+	std::cout << "-----------------------------------HANDLE_GET-FIN-------------" <<std::endl;
 	return (response.str());
 }
 
@@ -173,14 +176,20 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 {
 	(void)rep;
 	(void)server;
-	std::cout << "----------POST_BODY-------" <<std::endl;
+	std::cout << "-----------------------------------HANDLE_POST_BODY----------------" <<std::endl;
 	std::cout << rep.body  << std::endl;
 	//check rep.length or error413
-	std::map<std::string, std::string>::const_iterator it = rep.header.find("Content-Length");
-	if (it != rep.header.end())
+	std::map<std::string, std::string>::const_iterator it_len = rep.header.find("Content-Length");
+	if (it_len != rep.header.end())
 	{
-		size_t content_length = atoi(it->second.c_str());
+		size_t content_length = atoi(it_len->second.c_str());
 		std::cout << "content_length:"<< content_length << std::endl;
+	}
+
+	std::map<std::string, std::string>::const_iterator it_type = rep.header.find("Content-Type");
+	if (it_type != rep.header.end())
+	{
+		std::cout << "content-type: " <<it_type->second << std::endl;
 	}
 	// for (it = rep.header.begin(); it != rep.header.end(); it++)
 	// {
@@ -226,7 +235,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 			<< "Connection: close\r\n"
 			<< "\r\n"
 			<< newbody.str();
-
+	std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
 	return response.str();
 }
 
@@ -235,6 +244,7 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 	(void)rep;
 	(void)server;
 	//path
+	std::cout << "-----------------------------------HANDLE_DELETE-------------" <<std::endl;
 	std::cout << "URL1:" <<rep.url.c_str() << std::endl;
 	std::string path = getPath(rep.url.c_str(), server);
 	std::cout << "URL2:" << path << std::endl;
@@ -280,7 +290,7 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 			<< "Connection: close\r\n"
 			<< "\r\n"
 			<< newbody.str();
-
+	std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
 	return response.str();
 
 	// return "DELETEtest";
