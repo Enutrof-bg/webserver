@@ -29,4 +29,5 @@ https://web.developpez.com/cgic.htm
 https://www.snv.jussieu.fr/manual/fr/howto/cgi.html
 
 infos utiles(peut etre(jsp?)):
+
 https://stackoverflow.com/questions/26137190/what-happens-when-you-go-back-with-the-browser
