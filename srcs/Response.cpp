@@ -8,8 +8,8 @@ Response parseRequest(const std::string &request)
 
 	std::cout << "-------------------PARSE REQUEST------------------------" << std::endl;
 	std::getline(stream, line);
-	std::cout << "[" << line << "]" << std::endl;
-	std::cout << "TESTCACA" << std::endl;
+	// std::cout << "[" << line << "]" << std::endl;
+	// std::cout << "TESTCACA" << std::endl;
 
 	std::istringstream temp(line);
 	temp >> rep.method >> rep.url >> rep.version;
@@ -178,65 +178,90 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	(void)server;
 	std::cout << "-----------------------------------HANDLE_POST_BODY----------------" <<std::endl;
 	std::cout << rep.body  << std::endl;
+	std::string post_content_type;
 	//check rep.length or error413
 	std::map<std::string, std::string>::const_iterator it_len = rep.header.find("Content-Length");
 	if (it_len != rep.header.end())
 	{
 		size_t content_length = atoi(it_len->second.c_str());
-		std::cout << "content_length:"<< content_length << std::endl;
+		std::cout << "content_length_test:"<< content_length << std::endl;
 	}
 
 	std::map<std::string, std::string>::const_iterator it_type = rep.header.find("Content-Type");
 	if (it_type != rep.header.end())
 	{
-		std::cout << "content-type: " <<it_type->second << std::endl;
+		std::cout << "content-type_test: " <<it_type->second << std::endl;
+		post_content_type = it_type->second;
 	}
 	// for (it = rep.header.begin(); it != rep.header.end(); it++)
 	// {
 
 	// }
 	//parsing body
-	std::istringstream stream(rep.body);
-	std::string line;
-	std::map<std::string, std::string> data;
-	while (std::getline(stream, line, '&'))
+	// std::map<std::string, std::string>::const_iterator it_type;
+	if (post_content_type == "application/x-www-form-urlencoded")
 	{
-		std::cout << line << std::endl;
-		size_t pos = line.find('=');
-		if (pos != std::string::npos)
+		std::istringstream stream(rep.body);
+		std::string line;
+		std::map<std::string, std::string> data;
+		while (std::getline(stream, line, '&'))
 		{
-			std::string key = line.substr(0, pos);
-			std::string value = line.substr(pos + 1);
-			data[key] = value;
+			std::cout << line << std::endl;
+			size_t pos = line.find('=');
+			if (pos != std::string::npos)
+			{
+				std::string key = line.substr(0, pos);
+				std::string value = line.substr(pos + 1);
+				data[key] = value;
+			}
 		}
+		//create html 
+		std::ostringstream newbody;
+		newbody << "<!DOCTYPE html>\n"
+			<< "<html>\n<head><title>POST recu</title></head>\n"
+			<< "<body>\n"
+			<< "<h1>Donnees recue</h1>\n"
+			<< "<ul>\n";
+
+		for (std::map<std::string, std::string>::iterator it = data.begin();
+			it != data.end(); it++)
+			{
+				newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
+			}
+			newbody << "</ul>\n"
+			<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
+			<< "<br><p><a title=\"Motherfucking Website\" href=\"index.html\">go back</a></p></br>\n"
+			<< "</body>\n</html>\n";
+
+		std::ostringstream response;
+		response << "HTTP/1.1 201 Created\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << newbody.str().length() << "\r\n"
+				<< "Connection: close\r\n"
+				<< "\r\n"
+				<< newbody.str();
+		std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
+		return response.str();
 	}
-	//create html 
-	std::ostringstream newbody;
-	newbody << "<!DOCTYPE html>\n"
-		<< "<html>\n<head><title>POST recu</title></head>\n"
-		<< "<body>\n"
-		<< "<h1>Donnees recue</h1>\n"
-		<< "<ul>\n";
+	std::cout << "TEST:"<<post_content_type << std::endl;
+	// size_t it_content_type = post_content_type.find("multipart/form-data");
+	// if (it_content_type != post_content_type.end())
+	// {
 
-	for (std::map<std::string, std::string>::iterator it = data.begin();
-		it != data.end(); it++)
-		{
-			newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
-		}
-		newbody << "</ul>\n"
-		<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
-		<< "<br><p><a title=\"Motherfucking Website\" href=\"index.html\">go back</a></p></br>\n"
-		<< "</body>\n</html>\n";
-
-	std::ostringstream response;
-	response << "HTTP/1.1 200 OK\r\n"
-			<< "Content-Type: text/html; charset=UTF-8\r\n"
-			<< "Content-Length: " << newbody.str().length() << "\r\n"
-			<< "Connection: close\r\n"
-			<< "\r\n"
-			<< newbody.str();
-	std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
-	return response.str();
+	// }
+	if (post_content_type.find("multipart/form-data;") != std::string::npos)
+	{
+		return ("CACA");
+	}
+	// else if (post_content_type == "multipart/form-data")
+	// else if (post_content_type.find("multipart/form-data"))
+	// {
+	// 	return ("CACA");
+	// }
+	// else
+	// {
+		return "ENORMECACA";
+	// }
 }
 
 std::string handleDELETE(const Response &rep, const ServerConfig &server)
@@ -284,7 +309,7 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 	}
 
 	std::ostringstream response;
-	response << "HTTP/1.1 200 OK\r\n"
+	response << "HTTP/1.1 204 No Content\r\n"
 			<< "Content-Type: text/html; charset=UTF-8\r\n"
 			<< "Content-Length: " << newbody.str().length() << "\r\n"
 			<< "Connection: close\r\n"
