@@ -38,4 +38,7 @@ https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status (http status 
 
 https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work (file upload)
 
+multipart/form-data:
 https://medium.com/@muhebollah.diu/understanding-multipart-form-data-the-ultimate-guide-for-beginners-fd039c04553d (multipart/form-data)
+
+https://stackoverflow.com/questions/16958448/what-is-http-multipart-request

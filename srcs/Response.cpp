@@ -251,7 +251,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	// }
 	if (post_content_type.find("multipart/form-data;") != std::string::npos)
 	{
-		return ("CACA");
+		return ("DANTON");
 	}
 	// else if (post_content_type == "multipart/form-data")
 	// else if (post_content_type.find("multipart/form-data"))
@@ -260,7 +260,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	// }
 	// else
 	// {
-		return "ENORMECACA";
+		return "PROUST";
 	// }
 }
 
