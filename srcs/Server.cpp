@@ -121,7 +121,11 @@ void Server::run()
 				{
 					char buffer[4096];
 					int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
-					printf("{%s}", buffer);
+					std::cout << "=============REQUEST-IN============" << std::endl;
+					printf("{%s}\n", buffer);
+					std::cout << "=============END-REQUEST-IN=========" << std::endl;
+					std::cout << "===================================" << std::endl;
+
 					if (n <= 0)
 					{
 						close(pollfds[i].fd);
@@ -177,9 +181,12 @@ void Server::run()
 					// 	strlen(response), response);
 					
 					std::string response_2 = _client_responses[pollfds[i].fd];
-					std::cout << "----RESPONSE2-WRITEFD----" << std::endl;
+					std::cout << "============================================================" << std::endl;
+					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;
 					std::cout << response_2 << std::endl;
 					write(pollfds[i].fd, response_2.c_str(), strlen(response_2.c_str()));
+					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;
+					std::cout << "============================================================\n\n\n\n\n" << std::endl;
 					//  write(pollfds[i].fd, buffer, strlen(buffer));
 					_client_responses.erase(pollfds[i].fd);
 					_client_to_server.erase(pollfds[i].fd);

@@ -33,3 +33,9 @@ infos utiles(peut etre(jsp?)):
 https://stackoverflow.com/questions/26137190/what-happens-when-you-go-back-with-the-browser
 
 https://www.youtube.com/watch?v=RpR_jEoAlxw (cgi tuto)
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status (http status code response)
+
+https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work (file upload)
+
+https://medium.com/@muhebollah.diu/understanding-multipart-form-data-the-ultimate-guide-for-beginners-fd039c04553d (multipart/form-data)
