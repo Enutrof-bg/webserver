@@ -40,12 +40,17 @@ Response parseRequest(const std::string &request)
 	{
 		std::cout << "First: " <<it->first << " | "<<"Second: "<<it->second << std::endl;
 	}
-	while (std::getline(stream ,line))
-	{
-		rep.body += line;
-	}
 	std::cout << "----BODY------" << std::endl;
-	std::cout << rep.body << std::endl;
+	// while (std::getline(stream ,line))
+	// {
+	// 	std::cout << "TESTBODY line:" <<line << std::endl;
+	// 	rep.body.append(line);
+	// }
+	std::string remaining((std::istreambuf_iterator<char>(stream)),
+                           std::istreambuf_iterator<char>());
+    rep.body = remaining;
+	
+	std::cout << "-------------rep.body:\n" <<rep.body << std::endl;
 	std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
 	return rep;
 }
@@ -251,6 +256,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	// }
 	if (post_content_type.find("multipart/form-data;") != std::string::npos)
 	{
+		std::cout << "TEST:"<<post_content_type << std::endl;
 		return ("DANTON");
 	}
 	// else if (post_content_type == "multipart/form-data")
