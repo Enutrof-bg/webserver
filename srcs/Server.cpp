@@ -119,6 +119,7 @@ void Server::run()
 			{
 				if (pollfds[i].revents & POLLIN)
 				{
+
 					char buffer[4096];
 					int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
 					std::cout << "=============REQUEST-IN============" << std::endl;
@@ -126,6 +127,35 @@ void Server::run()
 					std::cout << "=============END-REQUEST-IN=========" << std::endl;
 					std::cout << "===================================" << std::endl;
 
+					// std::string request;
+					// char buffer[4096];
+					// ssize_t n;
+					// while ((n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0)) > 0)
+					// {
+					// 	request.append(buffer, n);
+					// 	size_t header_end = request.find("\r\n\r\n");
+					// 	if (header_end != std::string::npos)
+					// 	{
+					// 		size_t cl_pos = request.find("Content-Length:");
+					// 		if (cl_pos != std::string::npos)
+					// 		{
+					// 			size_t cl_end = request.find("\r\n", cl_pos);
+					// 			std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
+					// 			size_t content_length = std::atoi(cl_str.c_str());
+								
+					// 			size_t total_expected = header_end + 4 + content_length;
+								
+					// 			while (request.length() < total_expected)
+					// 			{
+					// 				n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
+					// 				if (n <= 0)
+					// 					break;
+					// 				request.append(buffer, n);
+					// 			}
+					// 			break;
+					// 		}
+					// 	}
+					// }
 					if (n <= 0)
 					{
 						close(pollfds[i].fd);
