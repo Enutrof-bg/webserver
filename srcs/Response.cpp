@@ -257,7 +257,92 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	if (post_content_type.find("multipart/form-data;") != std::string::npos)
 	{
 		std::cout << "TEST:"<<post_content_type << std::endl;
-		return ("DANTON");
+		//extraire boundary
+		size_t pos_boundary = post_content_type.find("boundary=");
+		std::string boundary = post_content_type.substr(pos_boundary + 9);
+		std::string delimiter = "--" + boundary;
+		std::cout << "==========BOUNDARY_TEST:==============" << std::endl;
+		std::cout << boundary << std::endl;
+		std::cout << delimiter << std::endl;
+		std::cout << "==========BOUNDARY_TEST_end:==========\n\n"  << std::endl;
+		
+		//parser body grace au boundary
+		size_t pos = 0;
+		while ((pos = rep.body.find(delimiter, pos)) != std::string::npos)
+		{
+			pos += delimiter.length();
+			size_t end_pos = rep.body.find(delimiter, pos);
+			// if (end_pos == std::string::npos)
+				// break;
+			
+			std::string newbody = rep.body.substr(pos, end_pos - pos);
+			std::cout << "=====TEST_PRINT_BOUNDARY_BODY========" << std::endl;
+			std::cout << newbody << std::endl;
+			std::cout << "=====TEST_PRINT_BOUNDARY_BODY_END====\n\n" << std::endl;
+
+			//separer header et contenu
+			std::cout << "=====TEST_PRINT_separete_BODY========" << std::endl;
+			size_t pos_header = newbody.find("\r\n\r\n");
+			if (pos_header == std::string::npos)
+			{	
+				std::cout << "continue... (/r/n/r/n not found)" << std::endl;
+				continue;
+			}
+
+			std::string part_header = newbody.substr(0, pos_header);
+			std::string part_body = newbody.substr(pos_header + 4);
+
+			std::cout << "-------------part_header_boundary----------" <<std::endl;
+			std::cout << part_header << std::endl;
+			std::cout << "-------------part_body_boundary----------" <<std::endl;
+			std::cout << part_body << std::endl;
+			std::cout << "part_body_length:"<< part_body.length() << std::endl;
+			std::cout << "=====TEST_PRINT_separete_BODY_end========" << std::endl;
+
+			if (part_header.find("filename=") != std::string::npos)
+			{
+				size_t filename_pos = part_header.find("filename=\"");
+				size_t filename_pos_end = part_header.find("\"", filename_pos + 10);
+				std::string new_filename = part_header.substr(filename_pos + 10, filename_pos_end - (filename_pos + 10));
+				std::cout << "test_test_new_filename:"<<  new_filename << std::endl;
+
+				if (!part_body.empty() && part_body[part_body.length() - 1] == '\n')
+				{
+					part_body = part_body.substr(0, part_body.length() - 1);
+				}
+				std::cout << "-------------part_body_boundary----------" <<std::endl; 
+				std::cout << part_body << std::endl;
+				std::string upload_path = "./uploads/" + new_filename;
+				std::cout << "test_test_new_filename:"<<  upload_path << std::endl;
+
+				std::ofstream output(upload_path.c_str(), std::ios::binary);
+				if (output.is_open())
+				{
+					output.write(part_body.c_str(), part_body.length());
+					output.close();
+				}
+			}
+
+			//extraire filename si present
+			//
+
+		}
+
+		//extraire filename avec COntenDispoitiotn
+		//lire le sdonne binaire
+		//ecrire dans un fichier dans /upload ?
+		//retourner 201 Created avec le chemin du fichier?
+		std::ostringstream body;
+		body << "<body><h1>Upload réussi!</h1>"
+			 << "<p><a title=\"Retour\" href=\"index.html\">go back</a></p></body>";
+
+		std::ostringstream response;
+		response << "HTTP/1.1 201 Created\r\n"
+             << "Content-Type: text/html; charset=UTF-8\r\n"
+             << "Content-Length: " << body.str().length() <<"\r\n"
+             << "\r\n"
+			 << body.str();
+		return (response.str());
 	}
 	// else if (post_content_type == "multipart/form-data")
 	// else if (post_content_type.find("multipart/form-data"))
