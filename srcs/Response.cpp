@@ -3,11 +3,25 @@
 Response parseRequest(const std::string &request)
 {
 	Response rep;
-	std::istringstream stream(request);
-	std::string line;
+	// std::istringstream stream(request);
+	// std::string line;
 
 	std::cout << "-------------------PARSE REQUEST------------------------" << std::endl;
+	size_t header_end = request.find("\r\n\r\n");
+	if (header_end == std::string::npos)
+	{
+		std::cerr << "Erreur: header imcomplet" << std::endl;
+		return rep;
+	}
+	std::string part_header = request.substr(0, header_end);
+	rep.body = request.substr(header_end + 4);
+	
+
+	std::istringstream stream(part_header);
+	std::string line;
 	std::getline(stream, line);
+	if (!line.empty() && line[line.length() - 1] == '\r')
+		line.erase(line.length() - 1);
 	// std::cout << "[" << line << "]" << std::endl;
 	// std::cout << "TESTCACA" << std::endl;
 
@@ -46,9 +60,9 @@ Response parseRequest(const std::string &request)
 	// 	std::cout << "TESTBODY line:" <<line << std::endl;
 	// 	rep.body.append(line);
 	// }
-	std::string remaining((std::istreambuf_iterator<char>(stream)),
-                           std::istreambuf_iterator<char>());
-    rep.body = remaining;
+	// std::string remaining((std::istreambuf_iterator<char>(stream)),
+    //                        std::istreambuf_iterator<char>());
+    // rep.body = remaining;
 	
 	std::cout << "-------------rep.body:\n" <<rep.body << std::endl;
 	std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
@@ -306,9 +320,11 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 				std::string new_filename = part_header.substr(filename_pos + 10, filename_pos_end - (filename_pos + 10));
 				std::cout << "test_test_new_filename:"<<  new_filename << std::endl;
 
-				if (!part_body.empty() && part_body[part_body.length() - 1] == '\n')
+				if (part_body.length() >=2
+					&& part_body[part_body.length() - 1] == '\n'
+					&& part_body[part_body.length() - 2] == '\r')
 				{
-					part_body = part_body.substr(0, part_body.length() - 1);
+					part_body = part_body.substr(0, part_body.length() - 2);
 				}
 				std::cout << "-------------part_body_boundary----------" <<std::endl; 
 				std::cout << part_body << std::endl;
