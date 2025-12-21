@@ -45,6 +45,8 @@ Response parseRequest(const std::string &request)
 		{
 			std::string key = line.substr(0, pos);
 			std::string value = line.substr(pos + 2);
+			// if (!value.empty() && value[0] == ' ')
+				// value = value.substr(1);
 			rep.header[key] = value;
 		}
 	}
@@ -64,7 +66,8 @@ Response parseRequest(const std::string &request)
     //                        std::istreambuf_iterator<char>());
     // rep.body = remaining;
 	
-	std::cout << "-------------rep.body:\n" <<rep.body << std::endl;
+	// std::cout << "-------------rep.body:\n" <<rep.body << std::endl;
+	std::cout << "-------------rep.body:\n" <<rep.body.length() << std::endl;
 	std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
 	return rep;
 }
