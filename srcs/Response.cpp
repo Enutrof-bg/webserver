@@ -5,6 +5,13 @@ Response parseRequest(const std::string &request)
 	Response rep;
 	// std::istringstream stream(request);
 	// std::string line;
+// std::cout << "Premiers octets (hex): ";
+// for (size_t i = 0; i <request.length(); i++)
+// {
+// 	printf("%02X ", (unsigned char)request[i]);
+// 	// printf(":%zu | ", i);
+// }
+std::cout << std::endl;
 
 	std::cout << "-------------------PARSE REQUEST------------------------" << std::endl;
 	size_t header_end = request.find("\r\n\r\n");
@@ -314,6 +321,16 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 			std::cout << "-------------part_body_boundary----------" <<std::endl;
 			std::cout << part_body << std::endl;
 			std::cout << "part_body_length:"<< part_body.length() << std::endl;
+
+			std::cout << "Taille du fichier: " << part_body.length() << " octets" << std::endl;
+			std::cout << "Premiers octets (hex): ";
+			for (size_t i = 0; i < 20 && i < part_body.length(); i++)
+			{
+				printf("%02X ", (unsigned char)part_body[i]);
+			}
+			std::cout << std::endl;
+
+
 			std::cout << "=====TEST_PRINT_separete_BODY_end========" << std::endl;
 
 			if (part_header.find("filename=") != std::string::npos)
