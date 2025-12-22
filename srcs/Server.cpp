@@ -167,7 +167,7 @@ void Server::run()
 								
 								while (request.length() < total_expected)
 								{
-									n = read(pollfds[i].fd, buffer, sizeof(buffer));
+									n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
 									if (n <= 0)
 										break;
 									request.append(buffer, n);

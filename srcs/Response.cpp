@@ -109,6 +109,12 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	// std::cout << rep.url << std::endl;
 	std::string path = getPath(rep.url, server);
 	// return "caca";
+	if (rep.url.find("cgi-bin") != std::string::npos
+		|| rep.url.find(".py") != std::string::npos
+		|| rep.url.find(".php") != std::string::npos)
+	{
+		return handleCGI(rep, server);
+	}
 	if (rep.method == "GET")
 	{
 		return handleGET(path, server);
@@ -447,3 +453,11 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 
 	// return "DELETEtest";
 }
+
+std::string handleCGI(const Response &rep, const ServerConfig &server)
+{
+	(void)rep;
+	(void)server;
+	return ("caca");
+}
+

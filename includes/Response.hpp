@@ -22,6 +22,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server);
 std::string handleGET(const std::string &path, const ServerConfig &server);
 std::string handlePOST(const Response &rep, const ServerConfig &server);
 std::string handleDELETE(const Response &rep, const ServerConfig &server);
+std::string handleCGI(const Response &rep, const ServerConfig &server);
 // {
 // 	Response rep;
 // 	std::istringstream stream(request);
