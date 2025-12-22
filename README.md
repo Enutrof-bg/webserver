@@ -23,6 +23,8 @@ appliquer setsockopt juste après socket() et vérifier les retours, sinon le bi
 port 443 et 80 sans permissions
 
 # Ressource:
+https://www.garshol.priv.no/download/text/http-tut.html
+
 CGI:
 https://web.developpez.com/cgic.htm
 
