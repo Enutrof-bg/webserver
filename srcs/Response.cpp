@@ -113,7 +113,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 		|| rep.url.find(".py") != std::string::npos
 		|| rep.url.find(".php") != std::string::npos)
 	{
-		return handleCGI(rep, server);
+		return handleCGI(rep, server, path);
 	}
 	if (rep.method == "GET")
 	{
@@ -454,10 +454,28 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 	// return "DELETEtest";
 }
 
-std::string handleCGI(const Response &rep, const ServerConfig &server)
+std::string handleCGI(const Response &rep, const ServerConfig &server, const std::string &path)
 {
 	(void)rep;
 	(void)server;
+	(void)path;
+	//check le path script si existe
+
+	//pipe
+	//pipe pour body
+	//fork
+	//processus enfant
+		//redir stdout vers pipe
+		//redir stdin post
+		//def envp du cgi
+		//executer le script
+	//parent
+		//envoyer le body au script si post
+		//lire sortie du script
+		//wait processus enfant
+		//script doit return header
+		//
+		
 	return ("caca");
 }
 
