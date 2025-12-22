@@ -1,4 +1,5 @@
 #include "../includes/Server.hpp"
+#include <fcntl.h>
 
 Server::Server(const Config &conf): _server(conf.getServer())
 {
@@ -98,7 +99,8 @@ void Server::run()
 				if (pollfds[i].revents & POLLIN)
 				{
 					int client_fd = accept(pollfds[i].fd, NULL, NULL);
-
+					//cmd non bloquante
+					// fcntl(client_fd, F_SETFL, O_NONBLOCK);
 					pollfd client_pfd;
 					client_pfd.fd = client_fd;
 					client_pfd.events = POLLIN;
@@ -120,42 +122,61 @@ void Server::run()
 				if (pollfds[i].revents & POLLIN)
 				{
 
-					char buffer[4096];
-					int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
-					std::cout << "=============REQUEST-IN============" << std::endl;
-					printf("{%s}\n", buffer);
-					std::cout << "=============END-REQUEST-IN=========" << std::endl;
-					std::cout << "===================================" << std::endl;
-
-					// std::string request;
 					// char buffer[4096];
-					// ssize_t n;
+					// char buffer[100000];
+					// int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
+					// std::cout << "=============REQUEST-IN============" << std::endl;
+					// printf("{%s}\n", buffer);
+					// std::cout << "=============END-REQUEST-IN=========" << std::endl;
+		
+			// std::cout << "Premiers octets (hex): ";
+			// for (size_t i = 0; i < 50000 && i <100000; i++)
+			// {
+			// 	printf("%02X ", (unsigned char)buffer[i]);
+			// 	// printf(":%zu | ", i);
+			// }
+			// std::cout << std::endl;
+					std::cout << "=================================123==" << std::endl;
+
+					std::string request;
+					char buffer[4096];
+					ssize_t n;
+					n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
 					// while ((n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0)) > 0)
+					// while ((n = read(pollfds[i].fd, buffer, sizeof(buffer))) > 0)
 					// {
-					// 	request.append(buffer, n);
-					// 	size_t header_end = request.find("\r\n\r\n");
-					// 	if (header_end != std::string::npos)
-					// 	{
-					// 		size_t cl_pos = request.find("Content-Length:");
-					// 		if (cl_pos != std::string::npos)
-					// 		{
-					// 			size_t cl_end = request.find("\r\n", cl_pos);
-					// 			std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
-					// 			size_t content_length = std::atoi(cl_str.c_str());
+					// while (n > 0)
+					// {
+						printf("n:%ld\n", n);
+						printf("========BUFFER:%s\n", buffer);
+						request.append(buffer, n);
+						printf("========request:%s\n", request.c_str());
+						// n = read(pollfds[i].fd, buffer, sizeof(buffer));
+						// printf("n:%ld\n", n);
+						size_t header_end = request.find("\r\n\r\n");
+						if (header_end != std::string::npos)
+						{
+							size_t cl_pos = request.find("Content-Length:");
+							if (cl_pos != std::string::npos)
+							{
+								size_t cl_end = request.find("\r\n", cl_pos);
+								std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
+								size_t content_length = std::atoi(cl_str.c_str());
 								
-					// 			size_t total_expected = header_end + 4 + content_length;
+								size_t total_expected = header_end + 4 + content_length;
 								
-					// 			while (request.length() < total_expected)
-					// 			{
-					// 				n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-					// 				if (n <= 0)
-					// 					break;
-					// 				request.append(buffer, n);
-					// 			}
-					// 			break;
-					// 		}
-					// 	}
+								while (request.length() < total_expected)
+								{
+									n = read(pollfds[i].fd, buffer, sizeof(buffer));
+									if (n <= 0)
+										break;
+									request.append(buffer, n);
+								}
+								// break;
+							}
+						}
 					// }
+					printf("im out\n");
 					if (n <= 0)
 					{
 						close(pollfds[i].fd);
@@ -164,7 +185,7 @@ void Server::run()
 					}
 					else
 					{
-						Response rep = parseRequest(buffer);
+						Response rep = parseRequest(request);
 
 						// std::string response_temp = "test";
 						// std::cout << "tset" << std::endl;
