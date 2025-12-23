@@ -183,6 +183,15 @@ void Config::parseLocation(std::istringstream &str, Location &location)
 			location._config_autoindex = (temp == "on;");
 			std::cout << location._config_autoindex << std::endl;
 		}
+		// else if (token == "cgi_path")
+		// {
+		// 	std::cout << "ENtry7" << std::endl;
+		// 	std::string temp;
+		// 	str >> temp;
+		// 	// std::cout << temp << std::endl;
+		// 	location._config_autoindex = (temp == "on;");
+		// 	std::cout << location._config_autoindex << std::endl;
+		// }
 		else if (token == "allowed_methods" || token == "allow_methods")
 		{
 			std::cout << "ENtry5" << std::endl;
