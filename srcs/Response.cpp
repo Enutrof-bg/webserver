@@ -130,6 +130,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	}
 	return "no method found";
 }
+
 std::string handleGET(const std::string &path, const ServerConfig &server)
 {
 	(void)server;
