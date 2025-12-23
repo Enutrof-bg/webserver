@@ -75,7 +75,7 @@ std::cout << std::endl;
     // rep.body = remaining;
 	
 	// std::cout << "-------------rep.body:\n" <<rep.body << std::endl;
-	std::cout << "-------------rep.body:\n" <<rep.body.length() << std::endl;
+	std::cout << "-------------rep.body.length():\n" <<rep.body.length() << std::endl;
 	std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
 	return rep;
 }
@@ -214,7 +214,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	(void)rep;
 	(void)server;
 	std::cout << "-----------------------------------HANDLE_POST_BODY----------------" <<std::endl;
-	std::cout << rep.body  << std::endl;
+	std::cout << "rep.body:" << rep.body  << std::endl;
 	std::string post_content_type;
 	//check rep.length or error413
 	std::map<std::string, std::string>::const_iterator it_len = rep.header.find("Content-Length");
@@ -461,7 +461,17 @@ std::string handleCGI(const Response &rep, const ServerConfig &server, const std
 	(void)rep;
 	(void)server;
 	(void)path;
+	std::cout << "=======================CGI HANDLE================" << std::endl;
+	std::cout << "method:"  << rep.method << std::endl;
 	std::cout << "url:" << rep.url << std::endl;
+	std::cout << "version:"  << rep.version << std::endl;
+	std::cout << "body:" << rep.body << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = rep.header.begin(); it != rep.header.end(); it++)
+	{
+		std::cout << "header->key: " << it->first << " | header->second: " << it->second << std::endl;
+	}
+
+	std::cout << "=======================CGI HANDLE FIN================\n" << std::endl;
 	// std::string cgi_path;
 	// Location cgi_bin;
 	// cgi_bin = server.find()
