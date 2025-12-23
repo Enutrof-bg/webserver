@@ -1,4 +1,5 @@
 #include "../includes/Response.hpp"
+#include <sys/wait.h>
 
 Response parseRequest(const std::string &request)
 {
@@ -459,23 +460,104 @@ std::string handleCGI(const Response &rep, const ServerConfig &server, const std
 	(void)rep;
 	(void)server;
 	(void)path;
+	std::cout << "url:" << rep.url << std::endl;
+	// std::string cgi_path;
+	// Location cgi_bin;
+	// cgi_bin = server.find()
+	// std::vector<Location>::const_iterator it = server._config_location.begin();
+	// for (; it != server._config_location.end(); it++)
+	// {
+	// 	if (it->_config_path.find("cgi-bin") != std::string::npos)
+	// 	{
+	// 		cgi_path = it->_config_cgi_pass;
+	// 	}
+	// }
+
+	std::cout << "PathCGI:" << path << std::endl;
+		
 	//check le path script si existe
+	std::ifstream script_path;
+	script_path.open(path.c_str());
+	if (!script_path.is_open())
+	{
+		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1>";
+	}
+	script_path.close();
 
 	//pipe
+	int scriptfd[2];
+	if (pipe(scriptfd) < 0)
+	{
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
+	}
+
 	//pipe pour body
+	// int bodyfd[2];
+	// if (rep.method == "POST")
+	// {
+	// 	if (pipe(bodyfd) < 0)
+	// 	{
+	// 		close(scriptfd[0]);
+	// 		close(scriptfd[1]);
+	// 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
+	// 	}
+	// }
+
 	//fork
+	int id = fork();
+	if (id < 0)
+	{
+		//PROTEC
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Fork Error</h1>";
+	}
+
 	//processus enfant
+	if (id == 0)
+	{
+		std::cout << "==============execve_enfant==========" << std::endl;
 		//redir stdout vers pipe
+		close(scriptfd[0]);
+		dup2(scriptfd[1], STDOUT_FILENO);
+		close(scriptfd[1]);
 		//redir stdin post
+		// dup2(scriptfd[0], 0);
 		//def envp du cgi
 		//executer le script
-	//parent
-		//envoyer le body au script si post
-		//lire sortie du script
+		char *argv[] = {const_cast<char*>(path.c_str()), NULL};
+		char *envp[] = {NULL};
+		
+		execve(path.c_str(), argv, envp);
+	}
+	else
+	{
+		std::cout << "================parent================" << std::endl;
 		//wait processus enfant
+		int status;
+		waitpid(id, &status, 0);
+		// close(scriptfd[0]);
+		close(scriptfd[1]);
+		//envoyer le body au script si post
+		char buffer[4096];
+		read(scriptfd[0], buffer, sizeof(buffer));
+
+		close(scriptfd[0]);
+		//lire sortie du script
+
+	
+		
+		//script doit return header
+
 		//script doit return header
 		//
-		
-	return ("caca");
+		std::cout << buffer << std::endl;
+		std::cout << "================parent==FIN===============" << std::endl;
+
+		std::ostringstream response;
+		response << "HTTP/1.1 200 OK\r\n"
+					 << buffer;
+		return response.str();
+	}
+	return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"index.html\">go back</a></p>";
+	// return ("caca");
 }
 
