@@ -96,18 +96,21 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 		std::cout << "ERREUR" << std::endl;
 	std::cout << url << std::endl;
 	std::string temp_url(url);
-	temp_url = rtrim(temp_url, "/");
+	// if (temp_url.size() > 1)
+		// temp_url = rtrim(temp_url, "/");
+	std::cout << "temp_url:" << temp_url << std::endl;
 
-	if (temp_url.size() > 1)
-	{
+	// if (temp_url.size() > 1)
+	// {
 		for (size_t j = 0; j < server._config_location.size(); ++j)
 		{
 			if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
 			{
+				std::cout << "Location returned" << std::endl;
 				return (server._config_location[j]);
 			}
 		}
-	}
+	// }
 	return Location();
 }
 
@@ -163,6 +166,21 @@ std::string getPath(const std::string &url, const ServerConfig &server)
 	}
 	return path;
 }
+int ft_check_method(const Location &loc, const Response &rep)
+{
+	if (!loc._config_allowed_methods.empty())
+	{
+		std::cout << "TEST" << std::endl;
+		std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
+		for (; it != loc._config_allowed_methods.end(); it++)
+		{
+			std::cout << "config method:" << *it << std::endl;
+			if (rep.method == *it)
+				return (0);
+		}
+	}
+	return (1);
+}
 
 std::string getRequest(const Response &rep, const ServerConfig &server)
 {
@@ -171,8 +189,25 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	// return "caca1";
 	// std::cout << rep.url << std::endl;
 	Location loc = getLocation(rep.url, server);
-	
+	std::cout << "loc path:"<<loc._config_path << std::endl;
+	std::cout << "method size:"<<loc._config_allowed_methods.size() << std::endl;
+	std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
+	for (; it != loc._config_allowed_methods.end(); it++)
+	{
+			std::cout << "config method:" << *it << std::endl;
+	}
+
+	std::cout << "TEST1" << std::endl;
+
+	if (ft_check_method(loc, rep) == 1)
+	{
+		std::cout << "TEST5" << std::endl;
+		return "HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>";
+	}
+
 	std::string path = getPath(rep.url, server);
+
+	
 	// return "caca";
 	if (rep.url.find("cgi-bin") != std::string::npos
 		|| rep.url.find(".py") != std::string::npos
