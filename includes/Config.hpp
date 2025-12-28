@@ -7,10 +7,13 @@ struct Location
 	std::string 				_config_path;
 	bool 						_config_autoindex;
 	std::vector<std::string> 	_config_allowed_methods;
-	std::string 				_config_cgi_pass;
+	std::vector<std::string> 	_config_cgi_path;
+	std::vector<std::string> 	_config_cgi_ext;
 	std::string 				_config_upload_path;
 	std::string 				_config_redirect;
-
+	std::string 				_config_root;
+	std::string 				_config_index;
+	size_t 						_config_client_max_body_size;
 };
 
 struct ServerConfig
