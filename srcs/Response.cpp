@@ -1,6 +1,16 @@
 #include "../includes/Response.hpp"
 #include <sys/wait.h>
 
+inline std::string& rtrim(std::string& s, const char* t)
+{
+	size_t pos = s.find_last_not_of(t);
+	if (pos != std::string::npos)
+		s.erase(pos + 1);
+	else
+		s.clear();
+    return s;
+}
+
 Response parseRequest(const std::string &request)
 {
 	Response rep;
@@ -80,12 +90,64 @@ std::cout << std::endl;
 	return rep;
 }
 
+Location getLocation(const std::string &url, const ServerConfig &server)
+{
+	if (url.empty())
+		std::cout << "ERREUR" << std::endl;
+	std::cout << url << std::endl;
+	std::string temp_url(url);
+	temp_url = rtrim(temp_url, "/");
+
+	if (temp_url.size() > 1)
+	{
+		for (size_t j = 0; j < server._config_location.size(); ++j)
+		{
+			if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
+			{
+				return (server._config_location[j]);
+			}
+		}
+	}
+	return Location();
+}
+
 std::string getPath(const std::string &url, const ServerConfig &server)
 {
 	// return "asd";
 	if (url.empty())
 		std::cout << "ERREUR" << std::endl;
 	std::cout << url << std::endl;
+	std::string temp_url(url);
+	temp_url = rtrim(temp_url, "/");
+	
+	// location._config_root = rtrim(location._config_root, " \t;");
+	if (temp_url.size() > 1)
+	{
+		for (size_t j = 0; j < server._config_location.size(); ++j)
+		{
+			if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
+			{
+				std::string path = server._config_location[j]._config_root;
+
+				if (url == "/" || url[url.length() - 1] == '/')
+				{
+					// path = path + url + server._config_location[j]._config_index;
+					path = path + "/" + server._config_location[j]._config_index;
+
+					std::cout << path << std::endl;
+					std::cout << "LOCATION2" << std::endl;
+				}
+				else
+				{
+					path = path + "/" +server._config_location[j]._config_index;
+					std::cout << path << std::endl;
+					std::cout << "LOCATION1" << std::endl;
+				}
+				std::cout << "LOCATION" << std::endl;
+				return path;
+			}
+		}
+	}
 	// std::cout << path << std::endl;
 	std::string path = server._config_root;
 
@@ -108,6 +170,8 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	// (void)server;
 	// return "caca1";
 	// std::cout << rep.url << std::endl;
+	Location loc = getLocation(rep.url, server);
+	
 	std::string path = getPath(rep.url, server);
 	// return "caca";
 	if (rep.url.find("cgi-bin") != std::string::npos

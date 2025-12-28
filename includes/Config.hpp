@@ -95,4 +95,10 @@ public:
 	void parseConfig();
 
 	void printConfig() const;
+
+
 };
+
+inline std::string& rtrim(std::string& s, const char* t);
+inline std::string& ltrim(std::string& s, const char* t);
+inline std::string& trim(std::string& s, const char* t);
