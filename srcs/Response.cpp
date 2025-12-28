@@ -204,7 +204,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 		std::cout << "TEST5" << std::endl;
 		return "HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>";
 	}
-
+	std::cout << "TEST6" << std::endl;
 	std::string path = getPath(rep.url, server);
 
 	
