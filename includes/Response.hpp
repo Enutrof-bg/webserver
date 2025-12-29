@@ -5,6 +5,7 @@
 #include "webserv.hpp"
 
 struct ServerConfig;
+struct Location;
 
 struct Response
 {
@@ -22,7 +23,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server);
 std::string handleGET(const std::string &path, const ServerConfig &server);
 std::string handlePOST(const Response &rep, const ServerConfig &server);
 std::string handleDELETE(const Response &rep, const ServerConfig &server);
-std::string handleCGI(const Response &rep, const ServerConfig &server, const std::string &path);
+std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc);
 
 
 inline std::string& rtrim(std::string& s, const char* t);

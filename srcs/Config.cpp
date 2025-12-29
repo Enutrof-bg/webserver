@@ -267,7 +267,8 @@ void Config::parseLocation(std::istringstream &str, Location &location)
 				temp = rtrim(temp, " \t;");
 				if (!temp.empty())
 				{
-					location._config_cgi_path.push_back(temp);
+					// location._config_cgi_path.push_back(temp);
+					location._config_cgi_path.append(temp);
 					std::cout << "CGI Path: " << temp << std::endl;
 				}
 			}

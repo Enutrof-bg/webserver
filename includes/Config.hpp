@@ -7,7 +7,8 @@ struct Location
 	std::string 				_config_path;
 	bool 						_config_autoindex;
 	std::vector<std::string> 	_config_allowed_methods;
-	std::vector<std::string> 	_config_cgi_path;
+	// std::vector<std::string> 	_config_cgi_path;
+	std::string 				_config_cgi_path;
 	std::vector<std::string> 	_config_cgi_ext;
 	std::string 				_config_upload_path;
 	std::string 				_config_redirect;

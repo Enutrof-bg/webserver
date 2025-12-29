@@ -104,10 +104,18 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	// {
 		for (size_t j = 0; j < server._config_location.size(); ++j)
 		{
+			std::cout << "Location config path:" << server._config_location[j]._config_path << std::endl;
 			if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
 			{
 				std::cout << "Location returned" << std::endl;
 				return (server._config_location[j]);
+			}
+			std::string temp_path = server._config_location[j]._config_path;
+			if (temp_path.length() < url.length()
+				&& temp_path.find(".") != std::string::npos)
+			{
+				if (url.compare(url.length() - temp_path.length(), temp_path.length(), temp_path) == 0)
+					return (server._config_location[j]);
 			}
 		}
 	// }
@@ -166,19 +174,18 @@ std::string getPath(const std::string &url, const ServerConfig &server)
 	}
 	return path;
 }
+
 int ft_check_method(const Location &loc, const Response &rep)
 {
-	if (!loc._config_allowed_methods.empty())
+	std::cout << "TEST" << std::endl;
+	std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
+	for (; it != loc._config_allowed_methods.end(); it++)
 	{
-		std::cout << "TEST" << std::endl;
-		std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
-		for (; it != loc._config_allowed_methods.end(); it++)
-		{
-			std::cout << "config method:" << *it << std::endl;
-			if (rep.method == *it)
-				return (0);
-		}
+		std::cout << "config method:" << *it << std::endl;
+		if (rep.method == *it)
+			return (0);
 	}
+
 	return (1);
 }
 
@@ -199,21 +206,28 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 
 	std::cout << "TEST1" << std::endl;
 
-	if (ft_check_method(loc, rep) == 1)
+	if (!loc._config_allowed_methods.empty() && ft_check_method(loc, rep) == 1)
 	{
 		std::cout << "TEST5" << std::endl;
-		// return "HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>";
+		return "HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>";
 	}
 	std::cout << "TEST6" << std::endl;
 	std::string path = getPath(rep.url, server);
 
 	
 	// return "caca";
-	if (rep.url.find("cgi-bin") != std::string::npos
-		|| rep.url.find(".py") != std::string::npos
-		|| rep.url.find(".php") != std::string::npos)
+	// if (rep.url.find("cgi-bin") != std::string::npos
+	// 	|| rep.url.find(".py") != std::string::npos
+	// 	|| rep.url.find(".php") != std::string::npos)
+	std::string temp_path = loc._config_path;
+	std::cout << "temp_path:" << temp_path << std::endl;
+
+	if (temp_path.length() > 1
+		&& rep.url.compare(rep.url.length() - temp_path.length(), temp_path.length(), temp_path) == 0
+		&& rep.url.find(".") != std::string::npos)
 	{
-		return handleCGI(rep, server, path);
+		std::cout << "going to handleCGI" << std::endl;
+		return handleCGI(rep, server, path, loc);
 	}
 	if (rep.method == "GET")
 	{
@@ -227,7 +241,8 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	{
 		return handleDELETE(rep, server);
 	}
-	return "no method found";
+	// return "no method found";
+	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>");
 }
 
 std::string handleGET(const std::string &path, const ServerConfig &server)
@@ -555,11 +570,12 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 	// return "DELETEtest";
 }
 
-std::string handleCGI(const Response &rep, const ServerConfig &server, const std::string &path)
+std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc)
 {
 	(void)rep;
 	(void)server;
 	(void)path;
+	(void)loc;
 	std::cout << "=======================CGI HANDLE================" << std::endl;
 	std::cout << "method:"  << rep.method << std::endl;
 	std::cout << "url:" << rep.url << std::endl;
@@ -583,11 +599,14 @@ std::string handleCGI(const Response &rep, const ServerConfig &server, const std
 	// 	}
 	// }
 
-	std::cout << "PathCGI:" << path << std::endl;
-		
+	std::cout << "PathCGI1:" << path << std::endl;
+
+	std::string temp_cgi_path = loc._config_cgi_path;
+	std::cout << "PathCGI2:" << temp_cgi_path << std::endl;
+
 	//check le path script si existe
 	std::ifstream script_path;
-	script_path.open(path.c_str());
+	script_path.open(temp_cgi_path.c_str());
 	if (!script_path.is_open())
 	{
 		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1>";
@@ -636,7 +655,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server, const std
 		char *argv[] = {const_cast<char*>(path.c_str()), NULL};
 		char *envp[] = {NULL};
 		
-		execve(path.c_str(), argv, envp);
+		execve(temp_cgi_path.c_str(), argv, envp);
 	}
 	else
 	{
