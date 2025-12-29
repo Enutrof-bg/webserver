@@ -7,5 +7,5 @@ print("<h1>Hello from CGI!</h1>")
 print("<a title=\"Motherfucking Website\" href=\"index.html\">go back</a></p>")
 print("</body></html>")
 
-# for cle, valeur in os.environ.items():
-#     print(f"{cle} = {valeur}", file=sys.stderr)
+for cle, valeur in os.environ.items():
+    print(f"{cle} = {valeur}", file=sys.stderr)

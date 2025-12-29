@@ -121,7 +121,7 @@ inline std::string& rtrim(std::string& s, const char* t)
 		s.erase(pos + 1);
 	else
 		s.clear();
-    return s;
+	return s;
 }
 
 inline std::string& ltrim(std::string& s, const char* t)
@@ -131,12 +131,12 @@ inline std::string& ltrim(std::string& s, const char* t)
 		s.erase(0, pos);
 	else
 		s.clear();
-    return s;
+	return s;
 }
 
 inline std::string& trim(std::string& s, const char* t)
 {
-    return ltrim(rtrim(s, t), t);
+	return ltrim(rtrim(s, t), t);
 }
 
 std::string Config::readConfig()
@@ -445,83 +445,84 @@ void Config::printConfig() const
 {
 	for (size_t i = 0; i < this->_server.size(); ++i)
 	{
-        const ServerConfig& server = this->_server[i];
-        std::cout << "\n===Server" << i + 1 << "===" << std::endl;
-        std::cout << "Port: " << server._config_listen << std::endl;
-        std::cout << "Server name: " << server._config_server_name << std::endl;
-        std::cout << "Root: " << server._config_root << std::endl;
-        std::cout << "Index: " << server._config_index << std::endl;
-        std::cout << "Max body size: " << server._config_client_max_body_size << " bytes" << std::endl;
-        
-        if (!server._config_error_page.empty())
-        {
-            std::cout << "Error pages:" << std::endl;
-            std::map<int, std::string>::const_iterator it;
-            for (it = server._config_error_page.begin(); it != server._config_error_page.end(); ++it)
-            {
-                std::cout << "    " << it->first << " = " << it->second << std::endl;
-            }
-        }
-        
-
-        for (size_t j = 0; j < server._config_location.size(); ++j)
+		const ServerConfig& server = this->_server[i];
+		std::cout << "\n===Server" << i + 1 << "===" << std::endl;
+		std::cout << "Port: " << server._config_listen << std::endl;
+		std::cout << "Server name: " << server._config_server_name << std::endl;
+		std::cout << "Root: " << server._config_root << std::endl;
+		std::cout << "Index: " << server._config_index << std::endl;
+		std::cout << "Max body size: " << server._config_client_max_body_size << " bytes" << std::endl;
+		
+		if (!server._config_error_page.empty())
 		{
-            const Location& loc = server._config_location[j];
-            std::cout << "\n---Location: " << loc._config_path << "---" << std::endl;
-            
-            if (!loc._config_allowed_methods.empty())
-            {
-                std::cout << "Allowed methods: ";
-                for (size_t k = 0; k < loc._config_allowed_methods.size(); ++k)
-                {
-                    std::cout << loc._config_allowed_methods[k];
-                    if (k < loc._config_allowed_methods.size() - 1)
-                        std::cout << ", ";
-                }
-                std::cout << std::endl;
-            }
-            
-            std::cout << "Autoindex: " << (loc._config_autoindex ? "on" : "off") << std::endl;
-            
-            if (!loc._config_root.empty())
-                std::cout << "Root: " << loc._config_root << std::endl;
-            
-            if (!loc._config_index.empty())
-                std::cout << "Index: " << loc._config_index << std::endl;
-            
-            if (loc._config_client_max_body_size > 0)
-                std::cout << "Max body size: " << loc._config_client_max_body_size << " bytes" << std::endl;
-            
-            if (!loc._config_cgi_path.empty())
-            {
-                std::cout << "CGI paths: ";
-                for (size_t k = 0; k < loc._config_cgi_path.size(); ++k)
-                {
-                    std::cout << loc._config_cgi_path[k];
-                    if (k < loc._config_cgi_path.size() - 1)
-                        std::cout << ", ";
-                }
-                std::cout << std::endl;
-            }
-            
-            if (!loc._config_cgi_ext.empty())
-            {
-                std::cout << "CGI extensions: ";
-                for (size_t k = 0; k < loc._config_cgi_ext.size(); ++k)
-                {
-                    std::cout << loc._config_cgi_ext[k];
-                    if (k < loc._config_cgi_ext.size() - 1)
-                        std::cout << ", ";
-                }
-                std::cout << std::endl;
-            }
-            
-            if (!loc._config_redirect.empty())
-                std::cout << "Redirect: " << loc._config_redirect << std::endl;
-            
-            if (!loc._config_upload_path.empty())
-                std::cout << "Upload path: " << loc._config_upload_path << std::endl;
-        }
-        std::cout << std::endl;
-    }
+			std::cout << "Error pages:" << std::endl;
+			std::map<int, std::string>::const_iterator it;
+			for (it = server._config_error_page.begin(); it != server._config_error_page.end(); ++it)
+			{
+				std::cout << "	" << it->first << " = " << it->second << std::endl;
+			}
+		}
+		
+
+		for (size_t j = 0; j < server._config_location.size(); ++j)
+		{
+			const Location& loc = server._config_location[j];
+			std::cout << "\n---Location: " << loc._config_path << "---" << std::endl;
+			
+			if (!loc._config_allowed_methods.empty())
+			{
+				std::cout << "Allowed methods: ";
+				for (size_t k = 0; k < loc._config_allowed_methods.size(); ++k)
+				{
+					std::cout << loc._config_allowed_methods[k];
+					if (k < loc._config_allowed_methods.size() - 1)
+						std::cout << ", ";
+				}
+				std::cout << std::endl;
+			}
+			
+			std::cout << "Autoindex: " << (loc._config_autoindex ? "on" : "off") << std::endl;
+			
+			if (!loc._config_root.empty())
+				std::cout << "Root: " << loc._config_root << std::endl;
+			
+			if (!loc._config_index.empty())
+				std::cout << "Index: " << loc._config_index << std::endl;
+			
+			if (loc._config_client_max_body_size > 0)
+				std::cout << "Max body size: " << loc._config_client_max_body_size << " bytes" << std::endl;
+			
+			if (!loc._config_cgi_path.empty())
+			{
+				std::cout << "CGI paths: " << loc._config_cgi_path << std::endl;
+				// std::cout << "CGI paths: ";
+				// for (size_t k = 0; k < loc._config_cgi_path.size(); ++k)
+				// {
+				//	 std::cout << loc._config_cgi_path[k];
+				//	 if (k < loc._config_cgi_path.size() - 1)
+				//		 std::cout << ", ";
+				// }
+				std::cout << std::endl;
+			}
+			
+			if (!loc._config_cgi_ext.empty())
+			{
+				std::cout << "CGI extensions: ";
+				for (size_t k = 0; k < loc._config_cgi_ext.size(); ++k)
+				{
+					std::cout << loc._config_cgi_ext[k];
+					if (k < loc._config_cgi_ext.size() - 1)
+						std::cout << ", ";
+				}
+				std::cout << std::endl;
+			}
+			
+			if (!loc._config_redirect.empty())
+				std::cout << "Redirect: " << loc._config_redirect << std::endl;
+			
+			if (!loc._config_upload_path.empty())
+				std::cout << "Upload path: " << loc._config_upload_path << std::endl;
+		}
+		std::cout << std::endl;
+	}
 }
