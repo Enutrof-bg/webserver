@@ -7,6 +7,14 @@
 struct ServerConfig;
 struct Location;
 
+struct ParseURL
+{
+	std::string path_script;
+	std::string path_info;
+	std::string query_string;
+	std::string url;
+};
+
 struct Response
 {
 	std::string method;
@@ -23,7 +31,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server);
 std::string handleGET(const std::string &path, const ServerConfig &server);
 std::string handlePOST(const Response &rep, const ServerConfig &server);
 std::string handleDELETE(const Response &rep, const ServerConfig &server);
-std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc);
+std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc, const ParseURL &parsed_url);
 
 
 inline std::string& rtrim(std::string& s, const char* t);

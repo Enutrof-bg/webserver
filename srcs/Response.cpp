@@ -189,13 +189,52 @@ int ft_check_method(const Location &loc, const Response &rep)
 	return (1);
 }
 
+ParseURL parseURL(const std::string &url)
+{
+	ParseURL result;
+	
+	size_t query_pos = url.find('?');
+	if (query_pos != std::string::npos)
+	{
+		result.url = url.substr(0, query_pos);
+		result.query_string = url.substr(query_pos + 1);
+	}
+	else
+	{
+		result.url = url;
+		result.query_string = "";
+	}
+	
+	size_t script_end = result.url.find(".py");
+	if (script_end != std::string::npos)
+	{
+		script_end += 3; // length of ".py"
+		result.path_script = result.url.substr(0, script_end);
+		result.path_info = result.url.substr(script_end);
+	}
+	else
+	{
+		result.path_script = result.url;
+		result.path_info = "";
+	}
+	
+	return result;
+}
+
 std::string getRequest(const Response &rep, const ServerConfig &server)
 {
 	//error a gerer check method
 	// (void)server;
 	// return "caca1";
 	// std::cout << rep.url << std::endl;
-	Location loc = getLocation(rep.url, server);
+	ParseURL parsed_url = parseURL(rep.url);
+	std::cout << "Parsed URL:" << std::endl;
+	std::cout << "  Full URL: " << parsed_url.url << std::endl;
+	std::cout << "  Script Path: " << parsed_url.path_script << std::endl;
+	std::cout << "  Path Info: " << parsed_url.path_info << std::endl;
+	std::cout << "  Query String: " << parsed_url.query_string << std::endl;
+
+	Location loc = getLocation(parsed_url.path_script, server);
 	std::cout << "loc path:"<<loc._config_path << std::endl;
 	std::cout << "method size:"<<loc._config_allowed_methods.size() << std::endl;
 	std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
@@ -219,15 +258,17 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	// if (rep.url.find("cgi-bin") != std::string::npos
 	// 	|| rep.url.find(".py") != std::string::npos
 	// 	|| rep.url.find(".php") != std::string::npos)
+
 	std::string temp_path = loc._config_path;
+	// std::string temp_path = parsed_url.path_script;
 	std::cout << "temp_path:" << temp_path << std::endl;
 
 	if (temp_path.length() > 1
-		&& rep.url.compare(rep.url.length() - temp_path.length(), temp_path.length(), temp_path) == 0
-		&& rep.url.find(".") != std::string::npos)
+		&& parsed_url.path_script.compare(parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
+		&& parsed_url.path_script.find(".") != std::string::npos)
 	{
 		std::cout << "going to handleCGI" << std::endl;
-		return handleCGI(rep, server, path, loc);
+		return handleCGI(rep, server, path, loc, parsed_url);
 	}
 	if (rep.method == "GET")
 	{
@@ -381,7 +422,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 			}
 			newbody << "</ul>\n"
 			<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
-			<< "<br><p><a title=\"Motherfucking Website\" href=\"index.html\">go back</a></p></br>\n"
+			<< "<br><p><a title=\"Motherfucking Website\" href=\"/\">go back</a></p></br>\n"
 			<< "</body>\n</html>\n";
 
 		std::ostringstream response;
@@ -492,7 +533,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 		//retourner 201 Created avec le chemin du fichier?
 		std::ostringstream body;
 		body << "<body><h1>Upload réussi!</h1>"
-			 << "<p><a title=\"Retour\" href=\"index.html\">go back</a></p></body>";
+			 << "<p><a title=\"Retour\" href=\"/\">go back</a></p></body>";
 
 		std::ostringstream response;
 		response << "HTTP/1.1 201 Created\r\n"
@@ -678,7 +719,7 @@ void ft_print_double_tab(char **tab)
 }
 
 char **ft_return_cgi_env(const Response &rep, const ServerConfig &server,
-						std::string path, const Location &loc)
+						std::string path, const Location &loc, const ParseURL &parsed_url)
 {
 	(void)rep;
 	(void)server;
@@ -687,26 +728,29 @@ char **ft_return_cgi_env(const Response &rep, const ServerConfig &server,
 	char **newenv;
 	newenv = NULL;
 	newenv = ft_add_double_tab(const_cast<char*>(("REQUEST_METHOD=" + rep.method).c_str()), newenv);
-	newenv = ft_add_double_tab(const_cast<char*>(("QUERY_STRING=" + rep.body).c_str()), newenv);
+	newenv = ft_add_double_tab(const_cast<char*>(("QUERY_STRING=" + parsed_url.query_string).c_str()), newenv);
+	if ((rep.header.find("Content-Length")) != rep.header.end())
 	newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_LENGTH=" + rep.header.find("Content-Length")->second).c_str()), newenv);
-	newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_TYPE=" + rep.header.find("Content-Type")->second).c_str()), newenv);
+	if ((rep.header.find("Content-Type")) != rep.header.end())
+		newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_TYPE=" + rep.header.find("Content-Type")->second).c_str()), newenv);
 	// newenv = ft_add_double_tab(const_cast<char*>(("PATH_INFO=" + path).c_str()), newenv);
 	// newenv = ft_add_double_tab(const_cast<char*>(("PATH_TRANSLATED=" + path).c_str()), newenv);
-	newenv = ft_add_double_tab(const_cast<char*>(("SCRIPT_NAME=" + path).c_str()), newenv);
+	newenv = ft_add_double_tab(const_cast<char*>(("SCRIPT_NAME=" + parsed_url.path_script).c_str()), newenv);
 	newenv = ft_add_double_tab(const_cast<char*>(("SERVER_NAME=" + server._config_server_name).c_str()), newenv);
-
+	newenv = ft_add_double_tab(const_cast<char*>(("SERVER_PROTOCOL=" + rep.version).c_str()), newenv);
 	// newenv = ft_add_double_tab(const_cast<char*>(("SERVER_PROTOCOL=" + rep.version).c_str()), newenv);
-
+	newenv = ft_add_double_tab(const_cast<char*>(("PATH_INFO=" + parsed_url.path_info).c_str()), newenv);
 	return (newenv);
 }
 
 std::string handleCGI(const Response &rep, const ServerConfig &server,
-						std::string path, const Location &loc)
+						std::string path, const Location &loc, const ParseURL &parsed_url)
 {
 	(void)rep;
 	(void)server;
 	(void)path;
 	(void)loc;
+	(void)parsed_url;
 	std::cout << "=======================CGI HANDLE================" << std::endl;
 	std::cout << "method:"  << rep.method << std::endl;
 	std::cout << "url:" << rep.url << std::endl;
@@ -785,7 +829,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		//executer le script
 		char *argv[] = {const_cast<char*>(path.c_str()), NULL};
 		// char *envp[] = {NULL};
-		char **envp = ft_return_cgi_env(rep, server, path, loc);
+		char **envp = ft_return_cgi_env(rep, server, path, loc, parsed_url);
 		
 		execve(temp_cgi_path.c_str(), argv, envp);
 	}
@@ -818,7 +862,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 					 << buffer;
 		return response.str();
 	}
-	return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"index.html\">go back</a></p>";
+	return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 	// return ("caca");
 }
 
