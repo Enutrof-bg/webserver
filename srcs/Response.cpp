@@ -189,7 +189,7 @@ int ft_check_method(const Location &loc, const Response &rep)
 	return (1);
 }
 
-ParseURL parseURL(const std::string &url)
+ParseURL parseURL(const std::string &url, const Response &rep)
 {
 	ParseURL result;
 	
@@ -202,7 +202,14 @@ ParseURL parseURL(const std::string &url)
 	else
 	{
 		result.url = url;
-		result.query_string = "";
+		if (rep.method == "POST")
+		{
+			result.query_string = rep.body;
+		}
+		else
+		{
+			result.query_string = "";
+		}
 	}
 	
 	size_t script_end = result.url.find(".py");
@@ -215,6 +222,7 @@ ParseURL parseURL(const std::string &url)
 	else
 	{
 		result.path_script = result.url;
+		// result.path_info = std::string();
 		result.path_info = "";
 	}
 	
@@ -227,12 +235,12 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	// (void)server;
 	// return "caca1";
 	// std::cout << rep.url << std::endl;
-	ParseURL parsed_url = parseURL(rep.url);
+	ParseURL parsed_url = parseURL(rep.url, rep);
 	std::cout << "Parsed URL:" << std::endl;
-	std::cout << "  Full URL: " << parsed_url.url << std::endl;
-	std::cout << "  Script Path: " << parsed_url.path_script << std::endl;
-	std::cout << "  Path Info: " << parsed_url.path_info << std::endl;
-	std::cout << "  Query String: " << parsed_url.query_string << std::endl;
+	std::cout << "  Full URL: " <<  "{"<< parsed_url.url << "}" << std::endl;
+	std::cout << "  Script Path: " <<  "{"<< parsed_url.path_script << "}" << std::endl;
+	std::cout << "  Path Info: " <<  "{"<< parsed_url.path_info << "}" << std::endl;
+	std::cout << "  Query String: " << "{"<< parsed_url.query_string << "}" << std::endl;
 
 	Location loc = getLocation(parsed_url.path_script, server);
 	std::cout << "loc path:"<<loc._config_path << std::endl;
@@ -713,7 +721,7 @@ void ft_print_double_tab(char **tab)
 	}
 	while (tab[i])
 	{
-		std::cout << "tab[" << i << "]:" << tab[i] << std::endl;
+		std::cout << "tab[" << i << "]:" << "{" << tab[i] << "}" << std::endl;
 		i++;
 	}
 }
@@ -796,16 +804,16 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	}
 
 	//pipe pour body
-	// int bodyfd[2];
-	// if (rep.method == "POST")
-	// {
-	// 	if (pipe(bodyfd) < 0)
-	// 	{
-	// 		close(scriptfd[0]);
-	// 		close(scriptfd[1]);
-	// 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
-	// 	}
-	// }
+	int bodyfd[2];
+	if (rep.method == "POST")
+	{
+		if (pipe(bodyfd) < 0)
+		{
+			close(scriptfd[0]);
+			close(scriptfd[1]);
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
+		}
+	}
 
 	//fork
 	int id = fork();
@@ -819,19 +827,37 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	if (id == 0)
 	{
 		std::cout << "==============execve_enfant==========" << std::endl;
+		//def envp du cgi
+		char *argv[] = {const_cast<char*>(path.c_str()), NULL};
+		// char *envp[] = {NULL};
+		char **envp = ft_return_cgi_env(rep, server, path, loc, parsed_url);
+		ft_print_double_tab(envp);
+
 		//redir stdout vers pipe
 		close(scriptfd[0]);
 		dup2(scriptfd[1], STDOUT_FILENO);
 		close(scriptfd[1]);
+
 		//redir stdin post
+		// if (rep.method == "POST")
+		// {
+		// 	close(bodyfd[1]);
+		// 	dup2(bodyfd[0], STDIN_FILENO);
+		// 	close(bodyfd[0]);
+		// }
+	
+
 		// dup2(scriptfd[0], 0);
-		//def envp du cgi
+		
 		//executer le script
-		char *argv[] = {const_cast<char*>(path.c_str()), NULL};
-		// char *envp[] = {NULL};
-		char **envp = ft_return_cgi_env(rep, server, path, loc, parsed_url);
+		
 		
 		execve(temp_cgi_path.c_str(), argv, envp);
+		//execve fail
+		ft_free_double_tab(envp);
+		// std::string error_msg = "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
+		// write(1, error_msg.c_str(), error_msg.length());
+		exit(EXIT_FAILURE);
 	}
 	else
 	{
@@ -854,8 +880,14 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 
 		//script doit return header
 		//
-		std::cout << buffer << std::endl;
+		std::cout << "\n[BUFFER:"<< buffer << "]"<< std::endl;
 		std::cout << "================parent==FIN===============" << std::endl;
+
+	
+		if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
+		{
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
+		}
 
 		std::ostringstream response;
 		response << "HTTP/1.1 200 OK\r\n"
