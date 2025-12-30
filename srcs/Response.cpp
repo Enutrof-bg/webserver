@@ -191,6 +191,7 @@ int ft_check_method(const Location &loc, const Response &rep)
 
 ParseURL parseURL(const std::string &url, const Response &rep)
 {
+	(void)rep;  // Le body n'est pas utilisé ici !
 	ParseURL result;
 	
 	size_t query_pos = url.find('?');
@@ -202,14 +203,7 @@ ParseURL parseURL(const std::string &url, const Response &rep)
 	else
 	{
 		result.url = url;
-		if (rep.method == "POST")
-		{
-			result.query_string = rep.body;
-		}
-		else
-		{
-			result.query_string = "";
-		}
+		result.query_string = "";  // Vide si pas de ? dans l'URL
 	}
 	
 	size_t script_end = result.url.find(".py");
@@ -256,7 +250,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	if (!loc._config_allowed_methods.empty() && ft_check_method(loc, rep) == 1)
 	{
 		std::cout << "TEST5" << std::endl;
-		return "HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>";
+		return "HTTP/1.1 405 Method Not Allowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 	}
 	std::cout << "TEST6" << std::endl;
 	std::string path = getPath(rep.url, server);
@@ -291,7 +285,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 		return handleDELETE(rep, server);
 	}
 	// return "no method found";
-	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1>");
+	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
 }
 
 std::string handleGET(const std::string &path, const ServerConfig &server)
@@ -839,19 +833,17 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		close(scriptfd[1]);
 
 		//redir stdin post
-		// if (rep.method == "POST")
-		// {
-		// 	close(bodyfd[1]);
-		// 	dup2(bodyfd[0], STDIN_FILENO);
-		// 	close(bodyfd[0]);
-		// }
+		if (rep.method == "POST")
+		{
+			close(bodyfd[1]);
+			dup2(bodyfd[0], STDIN_FILENO);
+			close(bodyfd[0]);
+		}
 	
 
 		// dup2(scriptfd[0], 0);
 		
 		//executer le script
-		
-		
 		execve(temp_cgi_path.c_str(), argv, envp);
 		//execve fail
 		ft_free_double_tab(envp);
@@ -862,6 +854,14 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	else
 	{
 		std::cout << "================parent================" << std::endl;
+		if (rep.method == "POST")
+		{
+			//envoyer le body au script
+			close(bodyfd[0]);
+			write(bodyfd[1], rep.body.c_str(), rep.body.length());
+			close(bodyfd[1]);
+		}
+
 		//wait processus enfant
 		int status;
 		waitpid(id, &status, 0);
