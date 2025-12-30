@@ -568,7 +568,7 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 	// path = "../" + path;
 	// std::cout << "URL3:" << path << std::endl;
 	std::ostringstream newbody;
-
+	std::ostringstream response;
 	//check path if exist
 	// std::ifstream test(path.c_str());
 	// if (!test.good())
@@ -582,6 +582,25 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 
 	// test.close();
 	// close(test);
+
+	//path end with '/'
+	if (path[path.length() -1] == '/')
+	{
+		newbody << "<!DOCTYPE html>\n"
+			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
+			<< "<body>\n"
+			<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
+			<< "<ul>\n";
+		response << "HTTP/1.1 400 Bad Request\r\n"
+			<< "Content-Type: text/html; charset=UTF-8\r\n"
+			<< "Content-Length: " << newbody.str().length() << "\r\n"
+			<< "Connection: close\r\n"
+			<< "\r\n"
+			<< newbody.str();
+		std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
+		return response.str();
+	}
+
 	//delete file
 	if (std::remove(path.c_str()))
 	{
@@ -590,6 +609,14 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 			<< "<body>\n"
 			<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
 			<< "<ul>\n";
+		response << "HTTP/1.1 404 Not Found\r\n"
+			<< "Content-Type: text/html; charset=UTF-8\r\n"
+			<< "Content-Length: " << newbody.str().length() << "\r\n"
+			<< "Connection: close\r\n"
+			<< "\r\n"
+			<< newbody.str();
+		std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
+		return response.str();
 	}
 	else
 	{
@@ -600,7 +627,7 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server)
 			<< "<ul>\n";
 	}
 
-	std::ostringstream response;
+
 	response << "HTTP/1.1 204 No Content\r\n"
 			<< "Content-Type: text/html; charset=UTF-8\r\n"
 			<< "Content-Length: " << newbody.str().length() << "\r\n"
