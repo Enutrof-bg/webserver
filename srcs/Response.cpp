@@ -71,8 +71,8 @@ std::cout << std::endl;
 	// 	rep.body.append(line);
 	// }
 	// std::string remaining((std::istreambuf_iterator<char>(stream)),
-    //                        std::istreambuf_iterator<char>());
-    // rep.body = remaining;
+	//						std::istreambuf_iterator<char>());
+	// rep.body = remaining;
 	
 	// std::cout << "-------------rep.body:\n" <<rep.body << std::endl;
 	std::cout << "-------------rep.body.length():\n" <<rep.body.length() << std::endl;
@@ -477,6 +477,58 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 	std::ifstream file(path.c_str(), std::ios::binary);
 	if (!file.is_open())
 	{
+		if (loc._config_autoindex == true)
+		{
+			std::string dir_path;
+			if (!loc._config_root.empty())
+				dir_path = loc._config_root;
+			else
+				dir_path = server._config_root;
+			
+			if (parsed_url.url != "/" && !parsed_url.url.empty())
+			{
+				if (dir_path[dir_path.length() - 1] != '/' && parsed_url.url[0] != '/')
+					dir_path += "/";
+				dir_path += parsed_url.url;
+			}
+
+			DIR *dir2 = opendir(dir_path.c_str());
+			if (dir2 != NULL)
+			{
+				std::ostringstream body;
+				body << "<!DOCTYPE html>\n"
+					 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
+					 << "<body>\n"
+					 << "<h1>Index of " << parsed_url.url << "</h1>\n"
+					 << "<ul>\n";
+
+				struct dirent *ent;
+				while ((ent = readdir(dir2)) != NULL)
+				{
+					std::string filename = ent->d_name;
+					if (filename == ".")
+						continue;
+					body << "<li><a href=\"" << parsed_url.url;
+					if (!parsed_url.url.empty() && parsed_url.url[parsed_url.url.length() - 1] != '/')
+						body << "/";
+					body << filename << "\">" << filename << "</a></li>\n";
+				}
+				closedir(dir2);
+
+				body << "</ul>\n</body>\n</html>\n";
+
+				std::ostringstream response;
+				response << "HTTP/1.1 200 OK\r\n"
+						 << "Content-Type: text/html; charset=UTF-8\r\n"
+						 << "Content-Length: " << body.str().length() << "\r\n"
+						 << "Connection: close\r\n"
+						 << "\r\n"
+						 << body.str();
+				
+				std::cout << "-----------------------------------HANDLE_GET-FIN------------" << std::endl;
+				return response.str();
+			}
+		}
 		std::cout << "Fichier not found: " << path << std::endl;
 		
 		std::map<int, std::string>::const_iterator it = server._config_error_page.find(404);
@@ -727,9 +779,9 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 
 		std::ostringstream response;
 		response << "HTTP/1.1 201 Created\r\n"
-             << "Content-Type: text/html; charset=UTF-8\r\n"
-             << "Content-Length: " << body.str().length() <<"\r\n"
-             << "\r\n"
+			 << "Content-Type: text/html; charset=UTF-8\r\n"
+			 << "Content-Length: " << body.str().length() <<"\r\n"
+			 << "\r\n"
 			 << body.str();
 		return (response.str());
 	}
