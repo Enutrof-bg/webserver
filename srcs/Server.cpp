@@ -34,9 +34,17 @@ void Server::setup()
 		if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
 			throw std::runtime_error("setsockopt failed");
 
-		bind(_server_listen_socket[i], (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+		if (bind(_server_listen_socket[i], (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+		{
+			strerror(errno);
+			continue;
+		}
 
-		listen(_server_listen_socket[i], 10);
+		if (listen(_server_listen_socket[i], 10) < 0)
+		{
+			strerror(errno);
+			continue;
+		}
 	}
 }
 

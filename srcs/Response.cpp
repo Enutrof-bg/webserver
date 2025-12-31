@@ -1,16 +1,6 @@
 #include "../includes/Response.hpp"
 #include <sys/wait.h>
 
-inline std::string& rtrim(std::string& s, const char* t)
-{
-	size_t pos = s.find_last_not_of(t);
-	if (pos != std::string::npos)
-		s.erase(pos + 1);
-	else
-		s.clear();
-    return s;
-}
-
 Response parseRequest(const std::string &request)
 {
 	Response rep;
@@ -896,7 +886,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		close(scriptfd[1]);
 		//envoyer le body au script si post
 		char buffer[4096];
-		read(scriptfd[0], buffer, sizeof(buffer));
+		size_t n = read(scriptfd[0], buffer, sizeof(buffer));
+		buffer[n] = '\0';
 
 		close(scriptfd[0]);
 		//lire sortie du script

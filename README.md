@@ -1,6 +1,16 @@
 # webserv
 BONHOMME
 
+# todo
+autoindex
+redirection (return)
+body_size_max
+multiple cgi extension
+multiple server name
+chunked transfer encoding
+timeout request
+cgi bloquant
+content type dynamique
 
 # INFO EN VRAC:
 

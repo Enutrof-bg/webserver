@@ -114,7 +114,7 @@ void Config::setConfig(std::string &config)
 // 	_config_cgi_pass = config;
 // }
 
-inline std::string& rtrim(std::string& s, const char* t)
+std::string& rtrim(std::string& s, const char* t)
 {
 	size_t pos = s.find_last_not_of(t);
 	if (pos != std::string::npos)
@@ -124,7 +124,7 @@ inline std::string& rtrim(std::string& s, const char* t)
 	return s;
 }
 
-inline std::string& ltrim(std::string& s, const char* t)
+std::string& ltrim(std::string& s, const char* t)
 {
 	size_t pos = s.find_first_not_of(t);
 	if (pos != std::string::npos)
@@ -134,7 +134,7 @@ inline std::string& ltrim(std::string& s, const char* t)
 	return s;
 }
 
-inline std::string& trim(std::string& s, const char* t)
+std::string& trim(std::string& s, const char* t)
 {
 	return ltrim(rtrim(s, t), t);
 }
@@ -439,7 +439,6 @@ void Config::parseConfig()
 		}
 	}
 }
-
 
 void Config::printConfig() const
 {

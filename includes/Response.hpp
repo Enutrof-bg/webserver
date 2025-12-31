@@ -33,10 +33,6 @@ std::string handlePOST(const Response &rep, const ServerConfig &server);
 std::string handleDELETE(const Response &rep, const ServerConfig &server);
 std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc, const ParseURL &parsed_url);
 
-
-inline std::string& rtrim(std::string& s, const char* t);
-inline std::string& ltrim(std::string& s, const char* t);
-inline std::string& trim(std::string& s, const char* t);
 // {
 // 	Response rep;
 // 	std::istringstream stream(request);
