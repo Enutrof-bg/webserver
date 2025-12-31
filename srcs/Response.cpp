@@ -270,6 +270,55 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 			std::cout << "config method:" << *it << std::endl;
 	}
 
+	//gestion transfer-encoding: chunked
+	if (rep.header.find("Transfer-Encoding") != rep.header.end()
+		&& rep.header.at("Transfer-Encoding") == "chunked")
+	{
+		// if (rep.method != "POST" && rep.method != "PUT")
+		// {
+		// 	std::cout << "Chunked encoding only allowed for POST and PUT methods" << std::endl;
+		// 	return "HTTP/1.1 400 Bad Request\r\n\r\n<h1>ERROR 400 Bad Request</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// }
+		std::string body;
+		size_t pos = 0;
+		while (true)
+		{
+			size_t line_end = rep.body.find("\r\n", pos);
+			if (line_end == std::string::npos)
+				break;
+
+			std::string size_str = rep.body.substr(pos, line_end - pos);
+			size_t chunk_size = std::strtoul(size_str.c_str(), NULL, 16);
+			if (chunk_size == 0)
+				break;
+
+			pos = line_end + 2;
+			body.append(rep.body.substr(pos, chunk_size));
+			pos += chunk_size + 2; // +2 pour \r\n
+
+			//verifie que le chunk depasse pas la taille max autorisee
+			//si location existe, check sa taille max
+			//sinon check server
+			size_t current_body_size = body.length();
+			size_t max_size = server._config_client_max_body_size;
+			if (loc._config_client_max_body_size > 0)
+				max_size = loc._config_client_max_body_size;
+			if (current_body_size > max_size)
+			{
+				std::cout << "Body size exceeded during chunked decoding" << std::endl;
+				return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+			}
+		}
+		const_cast<Response&>(rep).body = body;
+		
+		//met a jour le content-length ou le creer si existe pas
+		// const_cast<Response&>(rep).header["Content-Length"] = std::to_string(body.length());
+
+	}
+	std::cout << rep.body << std::endl;
+	std::cout << "Reconstructed body length:" << rep.body.length() << std::endl;
+	
+	//check body size
 	std::string body_size_check = ft_check_body_size(rep, server, loc);
 	if (!body_size_check.empty())
 		return body_size_check;
@@ -403,6 +452,15 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	std::cout << "-----------------------------------HANDLE_POST_BODY----------------" <<std::endl;
 	std::cout << "rep.body:" << rep.body  << std::endl;
 	std::string post_content_type;
+
+	//verifie transfer-encoding dans le header vaut chunked
+	if (rep.header.find("Transfer-Encoding") != rep.header.end()
+		/*&& rep.header.at("Transfer-Encoding") == "chunked"*/)
+	{
+		std::cout << "POST with chunked transfer-encoding not supported yet" << std::endl;
+		return "HTTP/1.1 501 Not Implemented\r\n\r\n<h1>ERROR 501 Not Implemented</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+	}
+
 	//check rep.length or error413
 	std::map<std::string, std::string>::const_iterator it_len = rep.header.find("Content-Length");
 	if (it_len != rep.header.end())
@@ -777,6 +835,14 @@ void ft_print_double_tab(char **tab)
 	}
 }
 
+
+std::string intToString(size_t n)
+{
+	std::ostringstream oss;
+	oss << n;
+	return oss.str();
+}
+
 char **ft_return_cgi_env(const Response &rep, const ServerConfig &server,
 						std::string path, const Location &loc, const ParseURL &parsed_url)
 {
@@ -788,8 +854,13 @@ char **ft_return_cgi_env(const Response &rep, const ServerConfig &server,
 	newenv = NULL;
 	newenv = ft_add_double_tab(const_cast<char*>(("REQUEST_METHOD=" + rep.method).c_str()), newenv);
 	newenv = ft_add_double_tab(const_cast<char*>(("QUERY_STRING=" + parsed_url.query_string).c_str()), newenv);
+
+	//si content-length dans header n'existe pas, calculer a partir de body
 	if ((rep.header.find("Content-Length")) != rep.header.end())
-	newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_LENGTH=" + rep.header.find("Content-Length")->second).c_str()), newenv);
+		newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_LENGTH=" + rep.header.find("Content-Length")->second).c_str()), newenv);
+	else
+		newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_LENGTH=" + intToString(rep.body.length())).c_str()), newenv);
+
 	if ((rep.header.find("Content-Type")) != rep.header.end())
 		newenv = ft_add_double_tab(const_cast<char*>(("CONTENT_TYPE=" + rep.header.find("Content-Type")->second).c_str()), newenv);
 	// newenv = ft_add_double_tab(const_cast<char*>(("PATH_INFO=" + path).c_str()), newenv);

@@ -164,24 +164,68 @@ void Server::run()
 						size_t header_end = request.find("\r\n\r\n");
 						if (header_end != std::string::npos)
 						{
-							size_t cl_pos = request.find("Content-Length:");
-							if (cl_pos != std::string::npos)
-							{
-								size_t cl_end = request.find("\r\n", cl_pos);
-								std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
-								size_t content_length = std::atoi(cl_str.c_str());
-								
-								size_t total_expected = header_end + 4 + content_length;
-								
-								while (request.length() < total_expected)
+							//gestion transfer-encoding: chunked
+							// if (request.find("Transfer-Encoding: chunked") != std::string::npos)
+							// {
+							// 	size_t pos = header_end + 4;
+							// 	while (true)
+							// 	{
+							// 		//lire la taille du chunk
+							// 		size_t line_end = request.find("\r\n", pos);
+							// 		if (line_end == std::string::npos)
+							// 			break;
+							// 		std::string size_str = request.substr(pos, line_end - pos);
+							// 		size_t chunk_size = std::strtol(size_str.c_str(), NULL, 16);
+							// 		if (chunk_size == 0)
+							// 		{
+							// 			//fin des chunks
+							// 			pos = line_end + 2;
+							// 			//lire les headers finaux si présents
+							// 			size_t final_header_end = request.find("\r\n\r\n", pos);
+							// 			if (final_header_end != std::string::npos)
+							// 			{
+							// 				pos = final_header_end + 4;
+							// 			}
+							// 			break;
+							// 		}
+							// 		//lire le chunk
+							// 		if (request.length() < line_end + 2 + chunk_size + 2)
+							// 			break; //pas assez de données reçues
+							// 		pos = line_end + 2 + chunk_size + 2;
+							// 	}
+							// 	//vérifier si tout le corps a été reçu
+							// 	if (request.length() < pos)
+							// 	{
+							// 		//continuer à lire
+							// 		n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
+							// 		if (n <= 0)
+							// 			break;
+							// 		request.append(buffer, n);
+							// 		// continue;
+							// 	}
+							// }
+							// else
+							// {
+								//gestion content-length
+								size_t cl_pos = request.find("Content-Length:");
+								if (cl_pos != std::string::npos)
 								{
-									n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-									if (n <= 0)
-										break;
-									request.append(buffer, n);
+									size_t cl_end = request.find("\r\n", cl_pos);
+									std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
+									size_t content_length = std::atoi(cl_str.c_str());
+									
+									size_t total_expected = header_end + 4 + content_length;
+									
+									while (request.length() < total_expected)
+									{
+										n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
+										if (n <= 0)
+											break;
+										request.append(buffer, n);
+									}
+									// break;
 								}
-								// break;
-							}
+							// }
 						}
 					// }
 					printf("im out\n");

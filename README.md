@@ -2,13 +2,15 @@
 BONHOMME
 
 # todo
+body_size_max
+timeout request
+
+chunked transfer encoding
+
 autoindex
 redirection (return)
-body_size_max
 multiple cgi extension
 multiple server name
-chunked transfer encoding
-timeout request
 cgi bloquant
 content type dynamique
 
@@ -31,6 +33,32 @@ demande au kernel d'activer SO_REUSEADDR, si ca fonctionne, setsockopt renvoie 0
 appliquer setsockopt juste après socket() et vérifier les retours, sinon le bind suivant peut échouer
 
 port 443 et 80 sans permissions
+
+# Pour tester une requete chunked avec netcat
+nc localhost 8080 < netcat.txt
+
+netcat.txt:
+```
+POST /post_body HTTP/1.1
+Host: localhost:8080
+Transfer-Encoding: chunked
+Content-Type: text/plain
+
+5
+Hello
+8
+ World !
+0
+
+```
+
+ # Pour tester une requete chunked avec curl
+ ```
+ curl -v -X POST http://localhost:8080/post_body \
+     -H "Transfer-Encoding: chunked" \
+     -H "Content-Type: text/plain" \
+     -d "Ceci est un test de message envoyé par morceaux."
+```
 
 ## wait_result = waitpid(id, &status, WNOHANG);
 Avec WNOHANG, l'appel à waitpid devient une simple vérification:
