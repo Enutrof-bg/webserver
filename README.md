@@ -4,12 +4,11 @@ BONHOMME
 # todo
 body_size_max
 timeout request
-
 chunked transfer encoding
+multiple cgi extension
 
 autoindex
 redirection (return)
-multiple cgi extension
 multiple server name
 cgi bloquant
 content type dynamique

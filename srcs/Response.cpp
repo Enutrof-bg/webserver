@@ -179,9 +179,10 @@ int ft_check_method(const Location &loc, const Response &rep)
 	return (1);
 }
 
-ParseURL parseURL(const std::string &url, const Response &rep)
+ParseURL parseURL(const std::string &url, const Response &rep, const ServerConfig &server)
 {
 	(void)rep;
+	(void)server;
 	ParseURL result;
 	
 	size_t query_pos = url.find('?');
@@ -196,19 +197,60 @@ ParseURL parseURL(const std::string &url, const Response &rep)
 		result.query_string = "";  // Vide si pas de ? dans l'URL
 	}
 	
-	size_t script_end = result.url.find(".py");
-	if (script_end != std::string::npos)
+	// parcour les location de server pour trouver si url correspond a un cgi
+	// for (size_t j = 0; j < server._config_location.size(); ++j)
+	// {
+	// 	std::string cgi_path = server._config_location[j]._config_cgi_path;
+	// 	std::vector<std::string> cgi_exts = server._config_location[j]._config_cgi_ext;
+	// 	if (!cgi_path.empty())
+	// 	{
+	// 		//verifie si l'url se termine par une des extensions cgi
+	// 		for (size_t i = 0; i < cgi_exts.size(); ++i)
+	// 		{
+	// 			size_t ext_pos = result.url.rfind(cgi_exts[i]);
+	// 			if (ext_pos != std::string::npos
+	// 				&& ext_pos + cgi_exts[i].length() == result.url.length())
+	// 			{
+	// 				result.path_script = result.url;
+	// 				result.path_info = "";
+	// 				return result;
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	//check tout les location pour trouver les extensions CGI
+	for (size_t j = 0; j < server._config_location.size(); ++j)
 	{
-		script_end += 3; // length of ".py"
-		result.path_script = result.url.substr(0, script_end);
-		result.path_info = result.url.substr(script_end);
+		std::vector<std::string> cgi_exts = server._config_location[j]._config_cgi_ext;
+		if (cgi_exts.empty())
+			continue;
+		
+		//parcours des extensions CGI pour cette location
+		for (size_t i = 0; i < cgi_exts.size(); ++i)
+		{
+			std::string ext = cgi_exts[i];
+			size_t ext_pos = result.url.find(ext);
+			
+			if (ext_pos != std::string::npos)
+			{
+				size_t script_end = ext_pos + ext.length();
+				result.path_script = result.url.substr(0, script_end);
+				
+
+				if (script_end < result.url.length())
+					result.path_info = result.url.substr(script_end);
+				else
+					result.path_info = "";
+				
+				return result;
+			}
+		}
 	}
-	else
-	{
-		result.path_script = result.url;
-		// result.path_info = std::string();
-		result.path_info = "";
-	}
+
+	// aucun cgi trouve
+	result.path_script = result.url;
+	result.path_info = "";
 	
 	return result;
 }
@@ -254,7 +296,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	// std::cout << rep.url << std::endl;
 	std::cout << "-------------------GET REQUEST------------------------" << std::endl;
 
-	ParseURL parsed_url = parseURL(rep.url, rep);
+	ParseURL parsed_url = parseURL(rep.url, rep, server);
 	std::cout << "Parsed URL:" << std::endl;
 	std::cout << "  Full URL: " <<  "{"<< parsed_url.url << "}" << std::endl;
 	std::cout << "  Script Path: " <<  "{"<< parsed_url.path_script << "}" << std::endl;
