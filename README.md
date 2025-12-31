@@ -32,6 +32,12 @@ appliquer setsockopt juste après socket() et vérifier les retours, sinon le bi
 
 port 443 et 80 sans permissions
 
+## wait_result = waitpid(id, &status, WNOHANG);
+Avec WNOHANG, l'appel à waitpid devient une simple vérification:
+Si le CGI est fini : waitpid renvoie le PID de l'enfant, nettoie le processus zombie et remplit le status
+
+Si le CGI tourne encore : waitpid renvoie immédiatement 0. Le serveur continue alors son exécution normalement
+
 # Ressource:
 https://www.garshol.priv.no/download/text/http-tut.html
 
