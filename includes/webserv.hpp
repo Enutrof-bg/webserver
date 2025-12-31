@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdexcept>
 #include <poll.h>
+#include <dirent.h>
 
 
 #include <vector>

@@ -395,7 +395,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	}
 	if (rep.method == "GET")
 	{
-		return handleGET(path, server);
+		return handleGET(path, server, loc, parsed_url);
 	}
 	else if (rep.method == "POST")
 	{
@@ -409,11 +409,69 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
 }
 
-std::string handleGET(const std::string &path, const ServerConfig &server)
+std::string handleGET(const std::string &path, const ServerConfig &server, const Location &loc, const ParseURL &parsed_url)
 {
 	(void)server;
+	(void)loc;
+	(void)parsed_url;
 	std::cout << "-----------------------------------HANDLE_GET----------------" <<std::endl;
 	std::cout << "Chemin apth: " << path << std::endl;
+	std::cout << "parsed url: " << parsed_url.url << std::endl;
+	
+
+	DIR *dir = opendir(path.c_str());
+	if (dir != NULL)
+	{
+		if (loc._config_autoindex == true)
+		{
+			std::cout << "Autoindex activé pour le répertoire: " << path << std::endl;
+			std::ostringstream body;
+			body << "<!DOCTYPE html>\n"
+				 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
+				 << "<body>\n"
+				 << "<h1>Index of " << parsed_url.url << "</h1>\n"
+				 << "<ul>\n";
+
+			struct dirent *ent;
+			while ((ent = readdir(dir)) != NULL)
+			{
+				std::string filename = ent->d_name;
+				if (filename == ".")
+					continue;
+				body << "<li><a href=\"" << parsed_url.url;
+				if (parsed_url.url[parsed_url.url.length() - 1] != '/')
+					body << "/";
+				body << filename << "\">" << filename << "</a></li>\n";
+			}
+			closedir(dir);
+
+			body << "</ul>\n</body>\n</html>\n";
+
+			std::ostringstream response;
+			response << "HTTP/1.1 200 OK\r\n"
+					 << "Content-Type: text/html; charset=UTF-8\r\n"
+					 << "Content-Length: " << body.str().length() << "\r\n"
+					 << "Connection: close\r\n"
+					 << "\r\n"
+					 << body.str();
+			
+			return response.str();
+		}
+		else
+		{
+			closedir(dir);
+			// Autoindex desactive
+			std::string body = "<h1>403 Forbidden</h1><p>Directory listing not allowed</p>";
+			std::ostringstream response;
+			response << "HTTP/1.1 403 Forbidden\r\n"
+					 << "Content-Type: text/html; charset=UTF-8\r\n"
+					 << "Content-Length: " << body.length() << "\r\n"
+					 << "Connection: close\r\n"
+					 << "\r\n"
+					 << body;
+			return response.str();
+		}
+	}
 	
 	std::string line;
 	std::ifstream file(path.c_str(), std::ios::binary);
