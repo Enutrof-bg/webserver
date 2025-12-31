@@ -181,7 +181,7 @@ int ft_check_method(const Location &loc, const Response &rep)
 
 ParseURL parseURL(const std::string &url, const Response &rep)
 {
-	(void)rep;  // Le body n'est pas utilisé ici !
+	(void)rep;
 	ParseURL result;
 	
 	size_t query_pos = url.find('?');
@@ -213,12 +213,47 @@ ParseURL parseURL(const std::string &url, const Response &rep)
 	return result;
 }
 
+std::string ft_check_body_size(const Response &rep, const ServerConfig &server, const Location &loc)
+{
+	(void)rep;
+	(void)server;
+	(void)loc;
+	size_t max_size = server._config_client_max_body_size;
+	if (loc._config_client_max_body_size > 0)
+		max_size = loc._config_client_max_body_size;
+	std::cout << "Max body size allowed: " << max_size << " bytes" << std::endl;
+
+	std::map<std::string, std::string>::const_iterator it = rep.header.find("Content-Length");
+	if (it != rep.header.end())
+	{
+		size_t content_length = atoi(it->second.c_str());
+		std::cout << "content_length_test:"<< content_length << std::endl;
+		if (content_length > max_size)
+		{
+			std::cout << "Body size exceeded" << std::endl;
+			std::cout << "content_length:" << content_length << std::endl;
+			return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		}
+	}
+
+	if (rep.body.length() > max_size)
+	{
+		std::cout << "Body size exceeded" << std::endl;
+		std::cout << "rep.body.length():" << rep.body.length() << std::endl;
+		return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+	}
+
+	return "";
+}
+
 std::string getRequest(const Response &rep, const ServerConfig &server)
 {
 	//error a gerer check method
 	// (void)server;
 	// return "caca1";
 	// std::cout << rep.url << std::endl;
+	std::cout << "-------------------GET REQUEST------------------------" << std::endl;
+
 	ParseURL parsed_url = parseURL(rep.url, rep);
 	std::cout << "Parsed URL:" << std::endl;
 	std::cout << "  Full URL: " <<  "{"<< parsed_url.url << "}" << std::endl;
@@ -234,6 +269,11 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	{
 			std::cout << "config method:" << *it << std::endl;
 	}
+
+	std::string body_size_check = ft_check_body_size(rep, server, loc);
+	if (!body_size_check.empty())
+		return body_size_check;
+
 
 	std::cout << "TEST1" << std::endl;
 
