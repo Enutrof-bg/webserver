@@ -109,7 +109,17 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 			}
 		}
 	// }
-	return Location();
+
+	//return default location / sinon vide
+	for (size_t j = 0; j < server._config_location.size(); ++j)
+	{
+		if (server._config_location[j]._config_path == "/")
+		{
+			return (server._config_location[j]);
+		}
+	}
+	Location empty_loc;
+	return (empty_loc);
 }
 
 std::string getPath(const std::string &url, const ServerConfig &server)
@@ -133,7 +143,8 @@ std::string getPath(const std::string &url, const ServerConfig &server)
 				if (url == "/" || url[url.length() - 1] == '/')
 				{
 					// path = path + url + server._config_location[j]._config_index;
-					path = path + "/" + server._config_location[j]._config_index;
+					//si url est un dossier
+					path = path + "/" + url;
 
 					std::cout << path << std::endl;
 					std::cout << "LOCATION2" << std::endl;
@@ -288,6 +299,77 @@ std::string ft_check_body_size(const Response &rep, const ServerConfig &server, 
 	return "";
 }
 
+std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
+{
+	for (size_t j = 0; j < server._config_location.size(); ++j)
+	{
+		Location loc = server._config_location[j];
+		if (!loc._config_redirect.empty())
+		{
+			if (parsed_url.url == loc._config_path)
+			{
+				std::string new_url = loc._config_redirect;
+				if (parsed_url.query_string != "")
+					new_url += "?" + parsed_url.query_string;
+
+				std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+				std::ostringstream response;
+				response << "HTTP/1.1 301 Moved Permanently\r\n"
+						 << "Location: " << new_url << "\r\n"
+						 << "Content-Type: text/html; charset=UTF-8\r\n"
+						 << "Content-Length: " << body.length() << "\r\n"
+						 << "Connection: close\r\n"
+						 << "\r\n"
+						 << body;
+				
+				return response.str();
+			}
+			else
+			{
+				//verifie si parsed_url.path_script commence par loc._config_path
+				std::string loc_path = loc._config_path;
+				if (!loc_path.empty() && loc_path[0] == '/')
+					loc_path = loc_path.substr(1);
+				//segmente parsed_url.path_script et verifie si correspond a loc_path
+				std::string temp_right = parsed_url.path_script;
+				std::string temp_left;
+				size_t pos = temp_right.find('/');
+				while (pos != std::string::npos)
+				{
+					temp_left = temp_right.substr(0, pos);
+					temp_right = temp_right.substr(pos + 1);
+					std::cout << "temp_left: " << temp_left << std::endl;
+					std::cout << "temp_right:" << temp_right << std::endl;
+					if (temp_left == loc_path)
+					{
+						std::string new_url = loc._config_redirect + "/" + temp_right;
+						std::cout << "New URL for redirection: " << new_url << std::endl;
+						if (parsed_url.query_string != "")
+							new_url += "?" + parsed_url.query_string;
+
+						std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+						std::ostringstream response;
+						response << "HTTP/1.1 301 Moved Permanently\r\n"
+								<< "Location: " << new_url << "\r\n"
+								<< "Content-Type: text/html; charset=UTF-8\r\n"
+								<< "Content-Length: " << body.length() << "\r\n"
+								<< "Connection: close\r\n"
+								<< "\r\n"
+								<< body;
+						
+						return response.str();
+					}
+					pos = temp_right.find('/');
+				}
+				//si ca correspond, fait la redirection
+			
+			}
+			
+		}
+	}
+	return "";
+}
+
 std::string getRequest(const Response &rep, const ServerConfig &server)
 {
 	//error a gerer check method
@@ -302,6 +384,11 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	std::cout << "  Script Path: " <<  "{"<< parsed_url.path_script << "}" << std::endl;
 	std::cout << "  Path Info: " <<  "{"<< parsed_url.path_info << "}" << std::endl;
 	std::cout << "  Query String: " << "{"<< parsed_url.query_string << "}" << std::endl;
+
+	//verification des redirections
+	std::string test_redir = ft_redirection(server, parsed_url);
+	if (!test_redir.empty())
+		return test_redir;
 
 	Location loc = getLocation(parsed_url.path_script, server);
 	std::cout << "loc path:"<<loc._config_path << std::endl;

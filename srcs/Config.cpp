@@ -292,7 +292,7 @@ void Config::parseLocation(std::istringstream &str, Location &location)
 				}
 			}
 		}
-		else if (token == "return")
+		else if (token == "return" || token == "redirect")
 		{
 			str >> location._config_redirect;
 			location._config_redirect = rtrim(location._config_redirect, " \t;");
