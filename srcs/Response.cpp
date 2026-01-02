@@ -122,57 +122,116 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	return (empty_loc);
 }
 
-std::string getPath(const std::string &url, const ServerConfig &server)
+bool is_directory(const std::string &path) {
+    DIR *dir = opendir(path.c_str());
+    if (dir != NULL) {
+        closedir(dir);
+		return true;
+    }
+    return false;
+}
+
+std::string getPath(const std::string &url, const ServerConfig &server, Location &location)
 {
 	// return "asd";
+	std::cout << "-------------------GET PATH------------------------" << std::endl;
 	if (url.empty())
-		std::cout << "ERREUR" << std::endl;
+		std::cout << "ERREUR (impossible supposement)" << std::endl;
 	std::cout << url << std::endl;
-	std::string temp_url(url);
-	temp_url = rtrim(temp_url, "/");
+	// std::string temp_url(url);
+	// temp_url = rtrim(temp_url, "/");
 	
-	// location._config_root = rtrim(location._config_root, " \t;");
-	if (temp_url.size() > 1)
-	{
-		for (size_t j = 0; j < server._config_location.size(); ++j)
-		{
-			if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
-			{
-				std::string path = server._config_location[j]._config_root;
+	std::cout << "loc:" << location._config_path << std::endl;
 
-				if (url == "/" || url[url.length() - 1] == '/')
-				{
-					// path = path + url + server._config_location[j]._config_index;
-					//si url est un dossier
-					path = path + "/" + url;
+	std::string path_root = server._config_root;
+	if (!location._config_root.empty())
+		path_root = location._config_root;
 
-					std::cout << path << std::endl;
-					std::cout << "LOCATION2" << std::endl;
-				}
-				else
-				{
-					path = path + "/" +server._config_location[j]._config_index;
-					std::cout << path << std::endl;
-					std::cout << "LOCATION1" << std::endl;
-				}
-				std::cout << "LOCATION" << std::endl;
-				return path;
-			}
-		}
-	}
-	// std::cout << path << std::endl;
-	std::string path = server._config_root;
-
-	std::cout << path << std::endl;
-
+	std::string path_index = server._config_index;
+	if (!location._config_index.empty())
+		path_index = location._config_index;
+	
+	std::string path;
 	if (url == "/" || url[url.length() - 1] == '/')
 	{
-		path = path + url + server._config_index;
+		path = path_root + url;
+		//if est un fichier
+		if (is_directory(path) == false)
+		{
+			//erreur 404
+			std::cout << "Path is not a directory, 404 error" << std::endl;
+			return "";
+		}
+		else
+		{
+			std::cout << "path 0: "<< path << std::endl;
+			path = path + path_index;
+			std::cout << "path 1: "<< path << std::endl;
+			return path;
+		}
 	}
 	else
 	{
-		path = path + url;
+		path = path_root + url;
+		if (is_directory(path) == false)
+		{
+			return path;
+		}
+		else
+		{
+			//erreur 301
+			std::cout << "Path is a directory, 301 error" << std::endl;
+			return "";
+		}
 	}
+
+	// location._config_root = rtrim(location._config_root, " \t;");
+	// if (temp_url.size() > 1)
+	// {
+	// 	for (size_t j = 0; j < server._config_location.size(); ++j)
+	// 	{
+	// 		if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
+	// 		{
+	// 			std::cout << "loc_test_if:" << server._config_location[j]._config_path << std::endl;
+	// 			std::string path = server._config_location[j]._config_root;
+
+	// 			// if (url == "/" || url[url.length() - 1] == '/')
+	// 			// {
+	// 			// 	path = path + url + server._config_location[j]._config_index;
+	// 			// 	//si url est un dossier
+	// 			// 	// path = path + "/" + url;
+
+	// 			// 	std::cout << path << std::endl;
+	// 			// 	std::cout << "LOCATION2" << std::endl;
+	// 			// }
+	// 			// else
+	// 			// {
+	// 			// 	path = path + "/" +server._config_location[j]._config_index;
+	// 			// 	std::cout << path << std::endl;
+	// 			// 	std::cout << "LOCATION1" << std::endl;
+	// 			// }
+	// 			std::cout << "LOCATION" << std::endl;
+	// 			std::cout << "path: "<< path << std::endl;
+	// 			std::cout << "-------------------GET PATH FIN------------------------" << std::endl;
+	// 			return path;
+	// 		}
+	// 	}
+	// }
+
+	// std::string path = server._config_root;
+
+	// std::cout << path << std::endl;
+
+	// if (url == "/" || url[url.length() - 1] == '/')
+	// {
+	// 	path = path + url + server._config_index;
+	// }
+	// else
+	// {
+	// 	path = path + url;
+	// }
+	std::cout << "path 2: "<< path << std::endl;
+	std::cout << "-------------------GET PATH FIN 2------------------------" << std::endl;
 	return path;
 }
 
@@ -461,7 +520,32 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 		return "HTTP/1.1 405 Method Not Allowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 	}
 	std::cout << "TEST6" << std::endl;
-	std::string path = getPath(rep.url, server);
+	std::string path = getPath(rep.url, server, loc);
+	if (path.empty())
+	{
+		//verifie si c'est une redirection 301
+		std::string temp_path = server._config_root;
+		if (!loc._config_root.empty())
+			temp_path = loc._config_root;
+
+		if (rep.url[rep.url.length() - 1] != '/')
+		{
+			std::string new_url = rep.url + "/";
+			std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+			std::ostringstream response;
+			response << "HTTP/1.1 301 Moved Permanently\r\n"
+					 << "Location: " << new_url << "\r\n"
+					 << "Content-Type: text/html; charset=UTF-8\r\n"
+					 << "Content-Length: " << body.length() << "\r\n"
+					 << "Connection: close\r\n"
+					 << "\r\n"
+					 << body;
+			
+			return response.str();
+		}
+
+		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>ERROR 404 Not Found</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+	}
 
 	
 	// return "caca";
@@ -490,7 +574,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	}
 	else if (rep.method == "DELETE")
 	{
-		return handleDELETE(rep, server);
+		return handleDELETE(rep, server, loc);
 	}
 	// return "no method found";
 	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
@@ -883,14 +967,14 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 	// }
 }
 
-std::string handleDELETE(const Response &rep, const ServerConfig &server)
+std::string handleDELETE(const Response &rep, const ServerConfig &server, Location &loc)
 {
 	(void)rep;
 	(void)server;
 	//path
 	std::cout << "-----------------------------------HANDLE_DELETE-------------" <<std::endl;
 	std::cout << "URL1:" <<rep.url.c_str() << std::endl;
-	std::string path = getPath(rep.url.c_str(), server);
+	std::string path = getPath(rep.url.c_str(), server, loc);
 	std::cout << "URL2:" << path << std::endl;
 	// path = "../" + path;
 	// std::cout << "URL3:" << path << std::endl;

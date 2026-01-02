@@ -25,12 +25,12 @@ struct Response
 };
 
 Response parseRequest(const std::string &request);
-std::string getPath(const std::string &url, const ServerConfig &server);
+std::string getPath(const std::string &url, const ServerConfig &server, Location &location);
 std::string getRequest(const Response &rep, const ServerConfig &server);
 
 std::string handleGET(const std::string &path, const ServerConfig &server, const Location &loc, const ParseURL &parsed_url);
 std::string handlePOST(const Response &rep, const ServerConfig &server);
-std::string handleDELETE(const Response &rep, const ServerConfig &server);
+std::string handleDELETE(const Response &rep, const ServerConfig &server, Location &loc);
 std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc, const ParseURL &parsed_url);
 
 // {

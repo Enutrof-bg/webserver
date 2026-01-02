@@ -312,7 +312,7 @@ void Config::parseServer(std::istringstream &str, ServerConfig &server)
 	server._config_listen = 80;
 	server._config_server_name = "localhost";
 	server._config_root = "./html";
-	server._config_index = "index.html";
+	server._config_index = "index.html"; //par defaut 
 	server._config_client_max_body_size = 1048576;
 
 	std::string token;
