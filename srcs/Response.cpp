@@ -136,7 +136,7 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 	// return "asd";
 	std::cout << "-------------------GET PATH------------------------" << std::endl;
 	if (url.empty())
-		std::cout << "ERREUR (impossible supposement)" << std::endl;
+		std::cout << "ERREUR (impossible suppose)" << std::endl;
 	std::cout << url << std::endl;
 	// std::string temp_url(url);
 	// temp_url = rtrim(temp_url, "/");
@@ -1314,38 +1314,40 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		}
 
 		//wait processus enfant
-		int status;
-		int cgi_timeout = 5;
-		int elapsed = 0;
-		pid_t wait_result;
-		while (elapsed < cgi_timeout)
-		{
-			wait_result = waitpid(id, &status, WNOHANG);
-			if (wait_result == id)
-			{
-				break; //processus termine
-			}
-			if (wait_result == -1)
-			{
-				//erreur waitpid
-				close(scriptfd[0]);
-				close(scriptfd[1]);
-				return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Waitpid Error</h1>";
-			}
-			usleep(1000000); // check tout les 1 seconde
-			elapsed++;
-		}
+		int status = 0;
+		(void)status;
+		// int cgi_timeout = 5;
+		// int elapsed = 0;
+		// pid_t wait_result;
+		// while (elapsed < cgi_timeout)
+		// {
+		// 	wait_result = waitpid(id, &status, WNOHANG);
+		// 	if (wait_result == id)
+		// 	{
+		// 		break; //processus termine
+		// 	}
+		// 	if (wait_result == -1)
+		// 	{
+		// 		//erreur waitpid
+		// 		close(scriptfd[0]);
+		// 		close(scriptfd[1]);
+		// 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Waitpid Error</h1>";
+		// 	}
+		// 	usleep(1000000); // check tout les 1 seconde
+		// 	elapsed++;
+		// }
 
-		if (elapsed == cgi_timeout)
-		{
-		// 	//timeout
-			kill(id, SIGKILL);
-			waitpid(id, &status, 0);//processus zombie
-			close(scriptfd[0]);
-			close(scriptfd[1]);
-			return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
-		}
-		// waitpid(id, &status, 0);
+		// if (elapsed == cgi_timeout)
+		// {
+		// // 	//timeout
+		// 	kill(id, SIGKILL);
+		// 	waitpid(id, &status, 0);//processus zombie
+		// 	close(scriptfd[0]);
+		// 	close(scriptfd[1]);
+		// 	return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// }
+
+		waitpid(id, &status, WNOHANG);
 		// close(scriptfd[0]);
 		close(scriptfd[1]);
 		//envoyer le body au script si post
@@ -1353,11 +1355,12 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		char buffer[4096];
 		size_t buffer_read;
 
-		while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
-		{
+		// while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
+		// {
+			buffer_read = read(scriptfd[0], buffer, sizeof(buffer));
 			buffer[buffer_read] = '\0';
 			buff_output.append(buffer, buffer_read);
-		}
+		// }
 		
 
 		close(scriptfd[0]);

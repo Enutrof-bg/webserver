@@ -150,11 +150,7 @@ void Server::run()
 					char buffer[4096];
 					ssize_t n;
 					n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-					// while ((n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0)) > 0)
-					// while ((n = read(pollfds[i].fd, buffer, sizeof(buffer))) > 0)
-					// {
-					// while (n > 0)
-					// {
+				
 						printf("n:%ld\n", n);
 						printf("========BUFFER:%s\n", buffer);
 						request.append(buffer, n);
@@ -164,48 +160,6 @@ void Server::run()
 						size_t header_end = request.find("\r\n\r\n");
 						if (header_end != std::string::npos)
 						{
-							//gestion transfer-encoding: chunked
-							// if (request.find("Transfer-Encoding: chunked") != std::string::npos)
-							// {
-							// 	size_t pos = header_end + 4;
-							// 	while (true)
-							// 	{
-							// 		//lire la taille du chunk
-							// 		size_t line_end = request.find("\r\n", pos);
-							// 		if (line_end == std::string::npos)
-							// 			break;
-							// 		std::string size_str = request.substr(pos, line_end - pos);
-							// 		size_t chunk_size = std::strtol(size_str.c_str(), NULL, 16);
-							// 		if (chunk_size == 0)
-							// 		{
-							// 			//fin des chunks
-							// 			pos = line_end + 2;
-							// 			//lire les headers finaux si présents
-							// 			size_t final_header_end = request.find("\r\n\r\n", pos);
-							// 			if (final_header_end != std::string::npos)
-							// 			{
-							// 				pos = final_header_end + 4;
-							// 			}
-							// 			break;
-							// 		}
-							// 		//lire le chunk
-							// 		if (request.length() < line_end + 2 + chunk_size + 2)
-							// 			break; //pas assez de données reçues
-							// 		pos = line_end + 2 + chunk_size + 2;
-							// 	}
-							// 	//vérifier si tout le corps a été reçu
-							// 	if (request.length() < pos)
-							// 	{
-							// 		//continuer à lire
-							// 		n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-							// 		if (n <= 0)
-							// 			break;
-							// 		request.append(buffer, n);
-							// 		// continue;
-							// 	}
-							// }
-							// else
-							// {
 								//gestion content-length
 								size_t cl_pos = request.find("Content-Length:");
 								if (cl_pos != std::string::npos)
@@ -250,39 +204,10 @@ void Server::run()
 						_client_responses[pollfds[i].fd] = response;
 						pollfds[i].events = POLLOUT;
 					}
-
 				} 
 
 				if (pollfds[i].revents & POLLOUT)
 				{
-					// const char* response = 
-					// 	"<!DOCTYPE html>\n"
-					// 	"<html>\n"
-					// 	"<head>\n"
-					// 	"	<meta charset='UTF-8'>\n"
-					// 	"	<title>SilkRoad</title>\n"
-					// 	"</head>\n"
-					// 	"<body>\n"
-					// 	"	<h1>Bonjour du serveur!</h1>\n"
-					// 	"	<p>Ceci est une reponse HTML</p>\n"
-					// 	"	<ul>\n"
-					// 	"		<li>Port: 18000</li>\n"
-					// 	"		<li>Status: OK</li>\n"
-					// 	"		<li>c: 50e/g</li>\n"
-					// 	"	</ul>\n"
-					// 	"</body>\n"
-					// 	"</html>\n";
-
-					// char buffer[8192];
-					// snprintf(buffer, sizeof(buffer),
-					// 	"HTTP/1.1 200 OK\r\n"
-					// 	"Content-Type: text/html; charset=UTF-8\r\n"
-					// 	"Content-Length: %zu\r\n"
-					// 	"Connection: close\r\n"
-					// 	"\r\n"
-					// 	"%s",
-					// 	strlen(response), response);
-					
 					std::string response_2 = _client_responses[pollfds[i].fd];
 					std::cout << "============================================================" << std::endl;
 					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;
@@ -306,62 +231,6 @@ void Server::run()
 					i--;
 				}
 			}
-
 		}
-		// for(size_t i = 0; i < _server.size(); i++)
-		// 	printf("Waiting for connection on port %d\n", _server[i]._config_listen);
-
-		// 	int connfd = accept(_server_listen_socket[i], NULL, NULL);
-			
-		// 	printf("test1\n");
-
-		// 	memset(recvline, 0, 4096);
-
-		// 	while ((n = read(connfd, recvline, MAXLINE -1)) > 0)
-		// 	{
-		// 		printf("{%s}", recvline);
-
-		// 		if (recvline[n -1] == '\n')
-		// 			break;
-
-		// 		memset(recvline, 0, MAXLINE);
-		// 	}
-
-		// 	printf("test2\n");
-
-		// 	const char* html = 
-		// 	"<!DOCTYPE html>\n"
-		// 	"<html>\n"
-		// 	"<head>\n"
-		// 	"	<meta charset='UTF-8'>\n"
-		// 	"	<title>SilkRoad</title>\n"
-		// 	"</head>\n"
-		// 	"<body>\n"
-		// 	"	<h1>Bonjour du serveur!</h1>\n"
-		// 	"	<p>Ceci est une reponse HTML</p>\n"
-		// 	"	<ul>\n"
-		// 	"		<li>Port: 18000</li>\n"
-		// 	"		<li>Status: OK</li>\n"
-		// 	"		<li>c: 50e/g</li>\n"
-		// 	"	</ul>\n"
-		// 	"</body>\n"
-		// 	"</html>\n";
-		
-		// 	 snprintf((char*)buff, sizeof(buff), 
-		// 	"HTTP/1.1 200 OK\r\n"
-		// 	"Content-Type: text/html; charset=UTF-8\r\n"
-		// 	"Content-Length: %zu\r\n"
-		// 	"Connection: close\r\n"
-		// 	"\r\n"
-		// 	"%s", 
-		// 	strlen(html), html);
-		// 	// snprintf((char*)buff, sizeof(buff), "HTTP/1.0 200 OK\r\n\r\n%s", strlen(html), html);
-
-		// 	write(connfd, (char *)buff, strlen((char *)buff));
-
-		// 	printf("test3\n");
-		// 	close(connfd);
-
-		// 	printf("test4\n");
 	}
 }

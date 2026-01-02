@@ -1,4 +1,4 @@
-printf 'GET / HTTP/1.1\r
+printf 'POST /hesd.py HTTP/1.1\r
 Host: localhost:8080\r
 Transfer-Encoding: chunked\r
 Content-Type: text/plain\r

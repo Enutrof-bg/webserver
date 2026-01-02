@@ -6,14 +6,17 @@ body_size_max
 timeout request
 chunked transfer encoding
 multiple cgi extension
-
 autoindex
 redirection (return)
+correct path handling 
+
 multiple server name
 cgi bloquant
 content type dynamique
 
 # INFO EN VRAC:
+
+_config_index a souvent pour convention index.html par defaut
 
 ## setsockopt
 int opt = 1;
@@ -64,6 +67,10 @@ Avec WNOHANG, l'appel à waitpid devient une simple vérification:
 Si le CGI est fini : waitpid renvoie le PID de l'enfant, nettoie le processus zombie et remplit le status
 
 Si le CGI tourne encore : waitpid renvoie immédiatement 0. Le serveur continue alors son exécution normalement
+
+# opendir()
+ DIR *dir = opendir(path.c_str());
+ return null si fail, et un pointeur si c'est un dossier
 
 # Ressource:
 https://www.garshol.priv.no/download/text/http-tut.html
