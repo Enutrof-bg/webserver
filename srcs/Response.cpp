@@ -580,6 +580,25 @@ std::string getRequest(const Response &rep, const ServerConfig &server)
 	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
 }
 
+std::string ft_get_extension_file(const std::string& path)
+{
+	size_t dot_pos = path.find_last_of('.');
+	if (dot_pos == std::string::npos) return "text/plain";
+
+	std::string ext = path.substr(dot_pos);
+	if (ext == ".html")
+		return "text/html";
+	if (ext == ".css")
+		return "text/css";
+	if (ext == ".js")
+		return "application/javascript";
+	if (ext == ".png")
+		return "image/png";
+	if (ext == ".jpg" || ext == ".jpeg")
+		return "image/jpeg";
+	return "text/plain";
+}
+
 std::string handleGET(const std::string &path, const ServerConfig &server, const Location &loc, const ParseURL &parsed_url)
 {
 	(void)server;
@@ -589,6 +608,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 	std::cout << "Chemin apth: " << path << std::endl;
 	std::cout << "parsed url: " << parsed_url.url << std::endl;
 	
+	std::string temp_content_type = ft_get_extension_file(path);
 
 	DIR *dir = opendir(path.c_str());
 	if (dir != NULL)
@@ -620,7 +640,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 
 			std::ostringstream response;
 			response << "HTTP/1.1 200 OK\r\n"
-					 << "Content-Type: text/html; charset=UTF-8\r\n"
+					 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
 					 << "Content-Length: " << body.str().length() << "\r\n"
 					 << "Connection: close\r\n"
 					 << "\r\n"
@@ -635,7 +655,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 			std::string body = "<h1>403 Forbidden</h1><p>Directory listing not allowed</p>";
 			std::ostringstream response;
 			response << "HTTP/1.1 403 Forbidden\r\n"
-					 << "Content-Type: text/html; charset=UTF-8\r\n"
+					 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
 					 << "Content-Length: " << body.length() << "\r\n"
 					 << "Connection: close\r\n"
 					 << "\r\n"
@@ -688,9 +708,10 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 
 				body << "</ul>\n</body>\n</html>\n";
 
+				
 				std::ostringstream response;
 				response << "HTTP/1.1 200 OK\r\n"
-						 << "Content-Type: text/html; charset=UTF-8\r\n"
+						 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
 						 << "Content-Length: " << body.str().length() << "\r\n"
 						 << "Connection: close\r\n"
 						 << "\r\n"
@@ -743,7 +764,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 		
 		std::ostringstream response;
 		response << "HTTP/1.1 404 Not Found\r\n"
-				 << "Content-Type: text/html; charset=UTF-8\r\n"
+				 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
 				 << "Content-Length: " << body.length() << "\r\n"
 				 << "Connection: close\r\n"
 				 << "\r\n"
@@ -759,7 +780,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 
 	std::ostringstream response;
 	response << "HTTP/1.1 200 OK\r\n"
-			<<"Content-Type: text/html; charset=UTF-8\r\n"
+			<<"Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
 			<<"Content-Length: " << content.length()<<"\r\n"
 			<<"Connection: close\r\n"
 			<<"\r\n"

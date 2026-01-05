@@ -212,7 +212,7 @@ void Server::run()
 					std::cout << "============================================================" << std::endl;
 					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;
 					std::cout << response_2 << std::endl;
-					write(pollfds[i].fd, response_2.c_str(), strlen(response_2.c_str()));
+				write(pollfds[i].fd, response_2.c_str(), response_2.length());
 					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;
 					std::cout << "============================================================\n\n\n\n\n" << std::endl;
 					//  write(pollfds[i].fd, buffer, strlen(buffer));
