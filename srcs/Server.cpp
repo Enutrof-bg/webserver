@@ -212,6 +212,15 @@ void Server::run()
 					std::cout << "============================================================" << std::endl;
 					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;
 					std::cout << response_2 << std::endl;
+
+			// 		std::cout << "Premiers octets (hex): ";
+			// for (size_t i = 0; i < 50000 && i <100000; i++)
+			// {
+			// 	printf("%02X ", (unsigned char)response_2[i]);
+			// 	// printf(":%zu | ", i);
+			// }
+			// std::cout << std::endl;
+
 				write(pollfds[i].fd, response_2.c_str(), response_2.length());
 					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;
 					std::cout << "============================================================\n\n\n\n\n" << std::endl;
