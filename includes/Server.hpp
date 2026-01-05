@@ -23,7 +23,9 @@ private:
 	// std::map<int, Client> _client;
 	std::map<int, std::string> _client_responses;
 
-	  std::map<int, size_t> _client_to_server;
+	std::map<int, size_t> _client_to_server;
+
+	std::vector<pollfd> pollfds;
 
 public:
 	Server(const Config &conf);

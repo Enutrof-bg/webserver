@@ -81,7 +81,7 @@ void Server::run()
 
 	printListenPorts();
 
-	std::vector<pollfd> pollfds;
+	// std::vector<pollfd> pollfds;
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)
 	{
 		pollfd temp;
@@ -199,7 +199,7 @@ void Server::run()
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
 
-						std::string response = getRequest(rep, server);
+						std::string response = getRequest(rep, server, *this);
 						// std::cout << response << std::endl;
 						_client_responses[pollfds[i].fd] = response;
 						pollfds[i].events = POLLOUT;
