@@ -48,6 +48,15 @@ void Server::setup()
 	}
 }
 
+void ft_print_map(std::map<int, int> mp)
+{
+	std::cout << "Printing map contents:" << std::endl;
+	for (std::map<int, int>::iterator it = mp.begin(); it != mp.end(); ++it)
+	{
+		std::cout << "Key: " << it->first << ", Value: " << it->second << std::endl;
+	}
+}
+
 bool Server::is_listen_socket(int fd)
 {
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)
@@ -55,6 +64,40 @@ bool Server::is_listen_socket(int fd)
 		if (_server_listen_socket[i] == fd)
 			return true;
 	}
+	return false;
+}
+
+bool Server::is_cgi_pipe_socket_second(int fd)
+{
+	std::cout << "Checking if fd: " << fd << " is a CGI pipe socket." << std::endl;
+	std::map<int, int>::iterator it;
+	for (it = _cgi_pipe_client.begin(); it != _cgi_pipe_client.end(); it++)
+	{
+		std::cout << "Checking CGI pipe socket fd: " << it->second << " against fd: " << fd << std::endl;
+		if (it->second == fd)
+		{
+			std::cout << "fd: " << fd << " is a CGI pipe socket." << std::endl;
+			return true;
+		}
+	}
+	std::cout << "fd: " << fd << " is not a CGI pipe socket." << std::endl;
+	return false;
+}
+
+bool Server::is_cgi_pipe_socket(int fd)
+{
+	std::cout << "Checking if fd: " << fd << " is a CGI pipe socket." << std::endl;
+	std::map<int, int>::iterator it;
+	for (it = _cgi_pipe_client.begin(); it != _cgi_pipe_client.end(); it++)
+	{
+		std::cout << "Checking CGI pipe socket fd: " << it->first << " against fd: " << fd << std::endl;
+		if (it->first == fd)
+		{
+			std::cout << "fd: " << fd << " is a CGI pipe socket." << std::endl;
+			return true;
+		}
+	}
+	std::cout << "fd: " << fd << " is not a CGI pipe socket." << std::endl;
 	return false;
 }
 
@@ -144,70 +187,157 @@ void Server::run()
 			// 	// printf(":%zu | ", i);
 			// }
 			// std::cout << std::endl;
-					std::cout << "=================================123==" << std::endl;
-
-					std::string request;
-					char buffer[4096];
-					ssize_t n;
-					n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-				
-						printf("n:%ld\n", n);
-						printf("========BUFFER:%s\n", buffer);
-						request.append(buffer, n);
-						printf("========request:%s\n", request.c_str());
-						// n = read(pollfds[i].fd, buffer, sizeof(buffer));
-						// printf("n:%ld\n", n);
-						size_t header_end = request.find("\r\n\r\n");
-						if (header_end != std::string::npos)
+/*
+					if (is_cgi_pipe_socket_second(pollfds[i].fd))
+					{
+						//handle cgi pipe read
+						std::cout << "Handling CGI pipe read for fd: " << pollfds[i].fd << std::endl;
+						std::map<int, int>::iterator it;
+						int client_fd = -1;
+						for (it = _cgi_pipe_client.begin(); it != _cgi_pipe_client.end(); it++)
 						{
-								//gestion content-length
-								size_t cl_pos = request.find("Content-Length:");
-								if (cl_pos != std::string::npos)
-								{
-									size_t cl_end = request.find("\r\n", cl_pos);
-									std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
-									size_t content_length = std::atoi(cl_str.c_str());
-									
-									size_t total_expected = header_end + 4 + content_length;
-									
-									while (request.length() < total_expected)
-									{
-										n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-										if (n <= 0)
-											break;
-										request.append(buffer, n);
-									}
-									// break;
-								}
-							// }
+							std::cout << "CGI pipe client map - Key: " << it->first << ", Value: " << it->second << std::endl;
+							if (it->second == pollfds[i].fd)
+							{
+								std::cout << "Found CGI pipe client for fd: " << pollfds[i].fd << std::endl;
+								client_fd = it->first;
+								break;
+							}
+
 						}
-					// }
-					printf("im out\n");
-					if (n <= 0)
-					{
-						close(pollfds[i].fd);
-						pollfds.erase(pollfds.begin() + i);
-						i--;
+
+						std::cout << "=================================1234==" << std::endl;
+						// it = _cgi_pipe_client.find(pollfds[i].fd);
+						// if (it != _cgi_pipe_client.end())
+						// {
+						// 	std::cout << "Found CGI pipe client for fd: " << pollfds[i].fd << std::endl;
+							// int server_index = it->first;
+							// ServerConfig& server = _server[server_index];
+
+							char cgi_buffer[4096];
+							ssize_t cgi_n = read(_cgi_pipe_client[it->second], cgi_buffer, sizeof(cgi_buffer));
+							if (cgi_n > 0)
+							{
+								std::cout << "Read " << cgi_n << " bytes from CGI pipe." << std::endl;
+								std::string cgi_output(cgi_buffer, cgi_n);
+								_client_responses[client_fd] += cgi_output;
+							}
+							else
+							{
+								std::cout << "CGI pipe closed for fd: " << pollfds[i].fd << std::endl;
+								std::string response_cgi = _client_responses[client_fd];
+								close(pollfds[i].fd);
+								pollfds.erase(pollfds.begin() + i);
+								_cgi_pipe_client.erase(it);
+								i--;
+
+								// _client_responses[pollfds[i].fd] = response;
+								for (size_t j = 0; j < pollfds.size(); j++)
+								{
+									std::cout << "Checking pollfd fd: " << pollfds[j].fd << " against client fd: " << client_fd << std::endl;
+									if (pollfds[j].fd == client_fd)
+									{
+										// _client_responses[pollfds[j].fd] = response_cgi;
+										std::cout << "Storing CGI response for client fd: " << pollfds[j].fd << std::endl;
+										_client_responses[pollfds[j].fd] = response_cgi;
+										pollfds[j].events = POLLOUT;
+									}
+								}
+
+								// pollfds[i].events = POLLOUT;
+
+							}
+						// }
 					}
-					else
-					{
-						Response rep = parseRequest(request);
+*/
+					// else
+					// {
+						std::cout << "=================================123==" << std::endl;
 
-						// std::string response_temp = "test";
-						// std::cout << "tset" << std::endl;
+						std::string request;
+						char buffer[4096];
+						ssize_t n;
+						n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
+					
+							printf("n:%ld\n", n);
+							printf("========BUFFER:%s\n", buffer);
+							request.append(buffer, n);
+							printf("========request:%s\n", request.c_str());
+							// n = read(pollfds[i].fd, buffer, sizeof(buffer));
+							// printf("n:%ld\n", n);
+							size_t header_end = request.find("\r\n\r\n");
+							if (header_end != std::string::npos)
+							{
+									//gestion content-length
+									size_t cl_pos = request.find("Content-Length:");
+									if (cl_pos != std::string::npos)
+									{
+										size_t cl_end = request.find("\r\n", cl_pos);
+										std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
+										size_t content_length = std::atoi(cl_str.c_str());
+										
+										size_t total_expected = header_end + 4 + content_length;
+										
+										while (request.length() < total_expected)
+										{
+											n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
+											if (n <= 0)
+												break;
+											request.append(buffer, n);
+										}
+										// break;
+									}
+								// }
+							}
+						// }
+						printf("im out\n");
+						if (n <= 0)
+						{
+							close(pollfds[i].fd);
+							pollfds.erase(pollfds.begin() + i);
+							i--;
+						}
+						else
+						{
+							Response rep = parseRequest(request);
 
-						size_t server_index = _client_to_server[pollfds[i].fd];
-						ServerConfig& server = _server[server_index];
+							// std::string response_temp = "test";
+							// std::cout << "tset" << std::endl;
 
-						std::string response = getRequest(rep, server, *this);
-						// std::cout << response << std::endl;
-						_client_responses[pollfds[i].fd] = response;
-						pollfds[i].events = POLLOUT;
-					}
-				} 
+							size_t server_index = _client_to_server[pollfds[i].fd];
+							ServerConfig& server = _server[server_index];
+
+							actual_port = pollfds[i].fd;
+							std::string response = getRequest(rep, server, *this);
+
+							//parse _cgi_pipe_client to get cgi output
+							// std::map<int, int>::iterator it_cgi;
+							// for (it_cgi = _cgi_pipe_client.begin(); it_cgi != _cgi_pipe_client.end(); ++it_cgi)
+							// {
+
+							// }
+
+							// std::cout << response << std::endl;
+							std::cout << "==============================NORMALtest=========================" << std::endl;
+							if (is_cgi_pipe_socket(pollfds[i].fd) == false)
+							{
+								std::cout << "Storing response for client fd: " << pollfds[i].fd << std::endl;
+								_client_responses[pollfds[i].fd] = response;
+								pollfds[i].events = POLLOUT;
+							}
+							else
+							{
+								std::cout << "CGI response pending for client fd: " << pollfds[i].fd << std::endl;
+								pollfds[i].events = 0;
+							}
+							
+						}
+					// } 
+				}
 
 				if (pollfds[i].revents & POLLOUT)
 				{
+					std::cout << "Sending response to client fd: " << pollfds[i].fd << std::endl;
 					std::string response_2 = _client_responses[pollfds[i].fd];
 					std::cout << "============================================================" << std::endl;
 					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;

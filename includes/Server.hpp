@@ -27,7 +27,12 @@ private:
 
 	std::vector<pollfd> pollfds;
 
+	std::map<int, int> _cgi_pipe_client;
+
+	int actual_port;
 public:
+	
+
 	Server(const Config &conf);
 	~Server();
 
@@ -35,5 +40,22 @@ public:
 	void printListenPorts();
 	void setup();
 	void run();
+
+	bool is_cgi_pipe_socket(int fd);
+	bool is_cgi_pipe_socket_second(int fd);
+
+	std::map<int, int> &get_cgi_pipe_client()
+	{	return _cgi_pipe_client;
+	}
+
+	std::vector<pollfd> &get_pollfds()
+	{	return pollfds;
+	}
+
+	int &get_actual_port()
+	{	return actual_port;
+	}	
 	// void stop();
 };
+
+void ft_print_map(std::map<int, int> mp);

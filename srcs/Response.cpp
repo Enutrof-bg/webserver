@@ -1370,23 +1370,38 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		// 	return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		// }
 
-		waitpid(id, &status, 0);
+		waitpid(id, &status, WNOHANG);
 		// close(scriptfd[0]);
 		close(scriptfd[1]);
 		//envoyer le body au script si post
 		std::string buff_output;
 		char buffer[4096];
-		size_t buffer_read;
+		// size_t buffer_read;
 
 		// while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
 		// {
-			buffer_read = read(scriptfd[0], buffer, sizeof(buffer));
-			buffer[buffer_read] = '\0';
-			buff_output.append(buffer, buffer_read);
+
+			std::cout << "================parent==READ===============" << std::endl;
+			std::cout << "Adding cgi fd to pollfd list: " << scriptfd[0] << std::endl;
+			std::cout << "Actual port: " << srv.get_actual_port() << std::endl;
+			srv.get_cgi_pipe_client().insert(std::make_pair(srv.get_actual_port(), scriptfd[0]));
+			pollfd cgi_pollfd;
+			cgi_pollfd.fd = scriptfd[0];
+			cgi_pollfd.events = POLLIN;
+			cgi_pollfd.revents = 0;
+			srv.get_pollfds().push_back(cgi_pollfd);
+
+			ft_print_map(srv.get_cgi_pipe_client());
+			// buffer_read = read(scriptfd[0], buffer, sizeof(buffer));
+			// buffer[buffer_read] = '\0';
+			// buff_output.append(buffer, buffer_read);
+
+
+
 		// }
 		
 
-		close(scriptfd[0]);
+		// close(scriptfd[0]);qq
 		//lire sortie du script
 
 	
