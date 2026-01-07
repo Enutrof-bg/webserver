@@ -1179,6 +1179,7 @@ void ft_print_double_tab(char **tab)
 	}
 }
 
+
 std::string intToString(size_t n)
 {
 	std::ostringstream oss;
@@ -1269,7 +1270,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
 	}
 
-	fcntl(scriptfd[0], F_SETFL, O_NONBLOCK);
+	// Pipe en mode bloquant car on attend avec waitpid() avant de lire
+	// fcntl(scriptfd[0], F_SETFL, O_NONBLOCK);
 	
 	//pipe pour body
 	int bodyfd[2];
@@ -1339,70 +1341,57 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		//wait processus enfant
 		int status = 0;
 		(void)status;
-		// int cgi_timeout = 5;
-		// int elapsed = 0;
-		// pid_t wait_result;
-		// while (elapsed < cgi_timeout)
-		// {
-		// 	wait_result = waitpid(id, &status, WNOHANG);
-		// 	if (wait_result == id)
-		// 	{
-		// 		break; //processus termine
-		// 	}
-		// 	if (wait_result == -1)
-		// 	{
-		// 		//erreur waitpid
-		// 		close(scriptfd[0]);
-		// 		close(scriptfd[1]);
-		// 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Waitpid Error</h1>";
-		// 	}
-		// 	usleep(1000000); // check tout les 1 seconde
-		// 	elapsed++;
-		// }
+		int cgi_timeout = 5;
+		int elapsed = 0;
+		pid_t wait_result;
+		while (elapsed < cgi_timeout)
+		{
+			wait_result = waitpid(id, &status, WNOHANG);
+			if (wait_result == id)
+			{
+				break; //processus termine
+			}
+			if (wait_result == -1)
+			{
+				//erreur waitpid
+				close(scriptfd[0]);
+				close(scriptfd[1]);
+				return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Waitpid Error</h1>";
+			}
+			usleep(1000000); // check tout les 1 seconde
+			elapsed++;
+		}
 
-		// if (elapsed == cgi_timeout)
-		// {
-		// // 	//timeout
-		// 	kill(id, SIGKILL);
-		// 	waitpid(id, &status, 0);//processus zombie
-		// 	close(scriptfd[0]);
-		// 	close(scriptfd[1]);
-		// 	return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
-		// }
-		
-		
-		waitpid(id, &status, WNOHANG);
+		if (elapsed == cgi_timeout)
+		{
+		// 	//timeout
+			kill(id, SIGKILL);
+			waitpid(id, &status, 0);//processus zombie
+			close(scriptfd[0]);
+			close(scriptfd[1]);
+			return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		}
+
+		// waitpid(id, &status, 0);
 		// close(scriptfd[0]);
 		close(scriptfd[1]);
 		//envoyer le body au script si post
 		std::string buff_output;
 		char buffer[4096];
-		// size_t buffer_read;
+		size_t buffer_read;
 
-		// while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
-		// {
+		while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
+		{
 
-			std::cout << "================parent==READ===============" << std::endl;
-			std::cout << "Adding cgi fd to pollfd list: " << scriptfd[0] << std::endl;
-			std::cout << "Actual port: " << srv.get_actual_port() << std::endl;
-			srv.get_cgi_pipe_client().insert(std::make_pair(srv.get_actual_port(), scriptfd[0]));
-			pollfd cgi_pollfd;
-			cgi_pollfd.fd = scriptfd[0];
-			cgi_pollfd.events = POLLIN;
-			cgi_pollfd.revents = 0;
-			srv.get_pollfds().push_back(cgi_pollfd);
-
-			ft_print_map(srv.get_cgi_pipe_client());
-			// buffer_read = read(scriptfd[0], buffer, sizeof(buffer));
-			// buffer[buffer_read] = '\0';
-			// buff_output.append(buffer, buffer_read);
+			std::cout << "Read " << buffer_read << " bytes from CGI" << std::endl;
+			buff_output.append(buffer, buffer_read);
 
 
+			
+		}
+		std::cout << "================parent==READ_FIN===============" << std::endl;
 
-		// }
-		
-
-		// close(scriptfd[0]);qq
+		close(scriptfd[0]);
 		//lire sortie du script
 
 	
@@ -1422,7 +1411,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 
 		std::ostringstream response;
 		response << "HTTP/1.1 200 OK\r\n"
-					 << buffer;
+					 << buff_output;
 		return response.str();
 	}
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
