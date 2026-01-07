@@ -187,7 +187,7 @@ void Server::run()
 			// 	// printf(":%zu | ", i);
 			// }
 			// std::cout << std::endl;
-/*
+
 					if (is_cgi_pipe_socket_second(pollfds[i].fd))
 					{
 						//handle cgi pipe read
@@ -215,17 +215,25 @@ void Server::run()
 							// ServerConfig& server = _server[server_index];
 
 							char cgi_buffer[4096];
-							ssize_t cgi_n = read(_cgi_pipe_client[it->second], cgi_buffer, sizeof(cgi_buffer));
+							std::string response;
+							std::cout << "Reading from CGI pipe for fd: " << pollfds[i].fd << std::endl;
+
+							//ssize_t cgi_n = read(_cgi_pipe_client[it->second], cgi_buffer, sizeof(cgi_buffer));
+							ssize_t cgi_n = read(it->second, cgi_buffer, sizeof(cgi_buffer));
+
+							// std::cout << "Read " << cgi_n << " bytes from CGI pipe." << std::endl;
 							if (cgi_n > 0)
 							{
 								std::cout << "Read " << cgi_n << " bytes from CGI pipe." << std::endl;
 								std::string cgi_output(cgi_buffer, cgi_n);
-								_client_responses[client_fd] += cgi_output;
+								
+								response += cgi_output;
+								std::cout << response << std::endl;
 							}
-							else
+							if (cgi_n <= 0)
 							{
 								std::cout << "CGI pipe closed for fd: " << pollfds[i].fd << std::endl;
-								std::string response_cgi = _client_responses[client_fd];
+								// std::string response_cgi = _client_responses[client_fd];
 								close(pollfds[i].fd);
 								pollfds.erase(pollfds.begin() + i);
 								_cgi_pipe_client.erase(it);
@@ -239,19 +247,18 @@ void Server::run()
 									{
 										// _client_responses[pollfds[j].fd] = response_cgi;
 										std::cout << "Storing CGI response for client fd: " << pollfds[j].fd << std::endl;
-										_client_responses[pollfds[j].fd] = response_cgi;
+										_client_responses[pollfds[j].fd] = response;
 										pollfds[j].events = POLLOUT;
 									}
 								}
 
-								// pollfds[i].events = POLLOUT;
+								pollfds[i].events = POLLHUP;
 
 							}
 						// }
 					}
-*/
-					// else
-					// {
+					else
+					{
 						std::cout << "=================================123==" << std::endl;
 
 						std::string request;
@@ -332,7 +339,7 @@ void Server::run()
 							}
 							
 						}
-					// } 
+					}
 				}
 
 				if (pollfds[i].revents & POLLOUT)
@@ -368,6 +375,7 @@ void Server::run()
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					i--;
+					// if ()
 				}
 			}
 		}

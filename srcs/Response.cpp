@@ -1369,7 +1369,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		// 	close(scriptfd[1]);
 		// 	return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		// }
-
+		
+		
 		waitpid(id, &status, WNOHANG);
 		// close(scriptfd[0]);
 		close(scriptfd[1]);
