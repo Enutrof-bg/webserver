@@ -145,34 +145,47 @@ void Server::run()
 				if (ft_is_fd_client_state(pollfds[i].fd) == true)
 				{
 					//cgi pipe read
-					std::map<int, ClientState>::iterator it_client = _clients.find(pollfds[i].fd);
-					if (it_client != _clients.end())
+					std::cout << "Reading from CGI pipe fd: " << pollfds[i].fd << std::endl;
+					std::map<int, ClientState>::iterator it = _clients.begin();
+
+					for (; it != _clients.end(); it++)
+					{
+						if (it->second.fd_cgi == pollfds[i].fd)
+							break;
+					}
+					if (it != _clients.end())
 					{
 						char buffer[4096];
-						ssize_t n = read(pollfds[i].fd, buffer, sizeof(buffer));
+						std::cout << "Reading CGI output..." << it->second.fd_cgi << std::endl;
+						ssize_t n = read(it->second.fd_cgi, buffer, sizeof(buffer));
+						std::cout << "Read " << n << " bytes from CGI." << std::endl;
 						if (n > 0)
 						{
-							it_client->second.response_buffer.append(buffer, n);
+							std::cout << "Appending " << n << " bytes to response buffer." << std::endl;
+							it->second.response_buffer.append(buffer, n);
 						}
 						else
 						{
 							//fin de la lecture du cgi
-							close(it_client->second.fd_cgi);
+							std::cout << "CGI output read complete. Closing CGI pipe fd: " << it->second.fd_cgi << std::endl;
+							close(it->second.fd_cgi);
 							pollfds.erase(pollfds.begin() + i);
 							i--;
-							waitpid(it_client->second.cgi_pid, NULL, 0);
-							_client_responses[it_client->second.fd_client] = it_client->second.response_buffer;
+							waitpid(it->second.cgi_pid, NULL, WNOHANG);
+							_client_responses[it->second.fd_client] = it->second.response_buffer;
 
 							for (size_t j = 0; j < pollfds.size(); j++)
 							{
-								if (pollfds[j].fd == it_client->second.fd_client)
+								if (pollfds[j].fd == it->second.fd_client)
 								{
 									pollfds[j].events = POLLOUT;
+									_clients[pollfds[i].fd].state = ClientState::WRITING_RES;
 									break;
 								}
 							}
-
-							_clients.erase(it_client);
+							
+							// _clients.state
+							// _clients.erase(it);
 						}
 					}
 				}
@@ -256,10 +269,13 @@ void Server::run()
 						std::map<int,ClientState>::iterator it_client = _clients.find(pollfds[i].fd);
 						if (it_client == _clients.end())
 						{
+
 							ClientState new_client;
 							new_client.fd_client = pollfds[i].fd;
 							new_client.last_activity = time(NULL);
 							_clients[pollfds[i].fd] = new_client;
+
+							
 						}
 
 						std::string response = getRequest(rep, server, *this, _clients[pollfds[i].fd]);
@@ -290,6 +306,25 @@ void Server::run()
 					std::string response_2 = _client_responses[pollfds[i].fd];
 					std::cout << "============================================================" << std::endl;
 					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;
+					if (_clients[pollfds[i].fd].state == ClientState::WRITING_RES)
+					{
+						_clients[pollfds[i].fd].state = ClientState::IDLE;
+
+						// std::string response_header = "HTTP/1.1 200 OK\r\n";
+						// response_header += "Content-Length: " + response_2.length() + "\r\n";
+						// response_header += "Connection: close\r\n";
+						// response_header += "\r\n";
+						// response_2 = response_header + response_2;
+						std::ostringstream response;
+						response << "HTTP/1.1 200 OK\r\n"
+								<<"Content-Type: " << "text/html" << "; charset=UTF-8\r\n"
+								<<"Content-Length: " << response_2.length()<<"\r\n"
+								<<"Connection: close\r\n"
+								<<"\r\n"
+								<< response_2;
+						response_2 = response.str();
+					}
+
 					std::cout << response_2 << std::endl;
 				write(pollfds[i].fd, response_2.c_str(), response_2.length());
 					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;

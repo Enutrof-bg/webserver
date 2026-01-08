@@ -1274,8 +1274,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
 	}
 
-	// Pipe en mode bloquant car on attend avec waitpid() avant de lire
-	// fcntl(scriptfd[0], F_SETFL, O_NONBLOCK);
+	// Pipe en mode non-bloquant pour utilisation avec poll()
+	fcntl(scriptfd[0], F_SETFL, O_NONBLOCK);
 	
 	//pipe pour body
 	int bodyfd[2];
