@@ -325,6 +325,7 @@ void Server::run()
 						response_2 = response.str();
 
 						_clients.erase(pollfds[i].fd);
+						
 					}
 
 					std::cout << response_2 << std::endl;
