@@ -2,7 +2,7 @@
 
 import os
 import sys
-
+import time
 method = os.environ.get('REQUEST_METHOD', '')
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
