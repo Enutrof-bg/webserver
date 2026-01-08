@@ -1,5 +1,6 @@
 #include "../includes/Server.hpp"
 #include <fcntl.h>
+#include <sys/wait.h>
 
 Server::Server(const Config &conf): _server(conf.getServer())
 {
@@ -73,6 +74,20 @@ void Server::printListenPorts()
 	std::cout << "En attente de connexions..." << std::endl << std::endl;
 }
 
+bool Server::ft_is_fd_client_state(int fd)
+{
+	std::map<int, ClientState>::iterator it = _clients.begin();
+
+	for (; it != _clients.end(); it++)
+	{
+		if (it->second.fd_cgi == fd)
+			return true;
+	}
+// 	if (it != _clients.end())
+// 		return true;
+	return false;
+}
+
 void Server::run()
 {
 	// int n;
@@ -127,7 +142,41 @@ void Server::run()
 			}
 			else
 			{
-				if (pollfds[i].revents & POLLIN)
+				if (ft_is_fd_client_state(pollfds[i].fd) == true)
+				{
+					//cgi pipe read
+					std::map<int, ClientState>::iterator it_client = _clients.find(pollfds[i].fd);
+					if (it_client != _clients.end())
+					{
+						char buffer[4096];
+						ssize_t n = read(pollfds[i].fd, buffer, sizeof(buffer));
+						if (n > 0)
+						{
+							it_client->second.response_buffer.append(buffer, n);
+						}
+						else
+						{
+							//fin de la lecture du cgi
+							close(it_client->second.fd_cgi);
+							pollfds.erase(pollfds.begin() + i);
+							i--;
+							waitpid(it_client->second.cgi_pid, NULL, 0);
+							_client_responses[it_client->second.fd_client] = it_client->second.response_buffer;
+
+							for (size_t j = 0; j < pollfds.size(); j++)
+							{
+								if (pollfds[j].fd == it_client->second.fd_client)
+								{
+									pollfds[j].events = POLLOUT;
+									break;
+								}
+							}
+
+							_clients.erase(it_client);
+						}
+					}
+				}
+				else if (pollfds[i].revents & POLLIN)
 				{
 
 					// char buffer[4096];
@@ -145,6 +194,8 @@ void Server::run()
 			// }
 			// std::cout << std::endl;
 					std::cout << "=================================123==" << std::endl;
+
+
 
 					std::string request;
 					char buffer[4096];
@@ -202,10 +253,35 @@ void Server::run()
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
 
-						std::string response = getRequest(rep, server, *this);
+						std::map<int,ClientState>::iterator it_client = _clients.find(pollfds[i].fd);
+						if (it_client == _clients.end())
+						{
+							ClientState new_client;
+							new_client.fd_client = pollfds[i].fd;
+							new_client.last_activity = time(NULL);
+							_clients[pollfds[i].fd] = new_client;
+						}
+
+						std::string response = getRequest(rep, server, *this, _clients[pollfds[i].fd]);
 						// std::cout << response << std::endl;
-						_client_responses[pollfds[i].fd] = response;
-						pollfds[i].events = POLLOUT;
+						
+						if (_clients[pollfds[i].fd].state == ClientState::READING_CGI)
+						{
+							pollfd _pipe_cgi_fd;
+							_pipe_cgi_fd.fd = _clients[pollfds[i].fd].fd_cgi;
+							_pipe_cgi_fd.events = POLLIN;
+							_pipe_cgi_fd.revents = 0;
+							pollfds.push_back(_pipe_cgi_fd);
+
+							pollfds[i].events = 0;
+						}
+						else
+						{
+							_client_responses[pollfds[i].fd] = response;
+							pollfds[i].events = POLLOUT;
+						}
+						// _client_responses[pollfds[i].fd] = response;
+						// pollfds[i].events = POLLOUT;
 					}
 				} 
 

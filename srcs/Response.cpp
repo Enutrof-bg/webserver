@@ -429,12 +429,13 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 	return "";
 }
 
-std::string getRequest(const Response &rep, const ServerConfig &server, Server &srv)
+std::string getRequest(const Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state)
 {
 	//error a gerer check method
 	// (void)server;
 	// return "caca1";
 	// std::cout << rep.url << std::endl;
+	(void)client_state;
 	std::cout << "-------------------GET REQUEST------------------------" << std::endl;
 
 	ParseURL parsed_url = parseURL(rep.url, rep, server);
@@ -562,7 +563,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 		&& parsed_url.path_script.find(".") != std::string::npos)
 	{
 		std::cout << "going to handleCGI" << std::endl;
-		return handleCGI(rep, server, path, loc, parsed_url, srv);
+		return handleCGI(rep, server, path, loc, parsed_url, srv, client_state);
 	}
 	if (rep.method == "GET")
 	{
@@ -1218,7 +1219,9 @@ char **ft_return_cgi_env(const Response &rep, const ServerConfig &server,
 }
 
 std::string handleCGI(const Response &rep, const ServerConfig &server,
-						std::string path, const Location &loc, const ParseURL &parsed_url, Server &srv)
+						std::string path, const Location &loc,
+						const ParseURL &parsed_url, Server &srv,
+						ClientState &client_state)
 {
 	(void)rep;
 	(void)server;
@@ -1226,6 +1229,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	(void)loc;
 	(void)parsed_url;
 	(void)srv;
+	(void)client_state;
 	std::cout << "=======================CGI HANDLE================" << std::endl;
 	std::cout << "method:"  << rep.method << std::endl;
 	std::cout << "url:" << rep.url << std::endl;
@@ -1338,69 +1342,70 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 			close(bodyfd[1]);
 		}
 
+		client_state.cgi_pid = id;
+		client_state.fd_cgi = scriptfd[0];
+		client_state.state = ClientState::READING_CGI;
+
 		//wait processus enfant
 		int status = 0;
 		(void)status;
-		int cgi_timeout = 5;
-		int elapsed = 0;
-		pid_t wait_result;
-		while (elapsed < cgi_timeout)
-		{
-			wait_result = waitpid(id, &status, WNOHANG);
-			if (wait_result == id)
-			{
-				break; //processus termine
-			}
-			if (wait_result == -1)
-			{
-				//erreur waitpid
-				close(scriptfd[0]);
-				close(scriptfd[1]);
-				return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Waitpid Error</h1>";
-			}
-			usleep(1000000); // check tout les 1 seconde
-			elapsed++;
-		}
+		// int cgi_timeout = 5;
+		// int elapsed = 0;
+		// pid_t wait_result;
+		// while (elapsed < cgi_timeout)
+		// {
+		// 	wait_result = waitpid(id, &status, WNOHANG);
+		// 	if (wait_result == id)
+		// 	{
+		// 		break; //processus termine
+		// 	}
+		// 	if (wait_result == -1)
+		// 	{
+		// 		//erreur waitpid
+		// 		close(scriptfd[0]);
+		// 		close(scriptfd[1]);
+		// 		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Waitpid Error</h1>";
+		// 	}
+		// 	usleep(1000000); // check tout les 1 seconde
+		// 	elapsed++;
+		// }
 
-		if (elapsed == cgi_timeout)
-		{
-		// 	//timeout
-			kill(id, SIGKILL);
-			waitpid(id, &status, 0);//processus zombie
-			close(scriptfd[0]);
-			close(scriptfd[1]);
-			return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
-		}
+		// if (elapsed == cgi_timeout)
+		// {
+		// // 	//timeout
+		// 	kill(id, SIGKILL);
+		// 	waitpid(id, &status, 0);//processus zombie
+		// 	close(scriptfd[0]);
+		// 	close(scriptfd[1]);
+		// 	return "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// }
 
 		// waitpid(id, &status, 0);
 		// close(scriptfd[0]);
+
+
+		
 		close(scriptfd[1]);
 		//envoyer le body au script si post
-		std::string buff_output;
-		char buffer[4096];
-		size_t buffer_read;
+		// std::string buff_output;
+		// char buffer[4096];
+		// size_t buffer_read;
 
-		while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
-		{
+		// while ((buffer_read = read(scriptfd[0], buffer, sizeof(buffer))) > 0)
+		// {
 
-			std::cout << "Read " << buffer_read << " bytes from CGI" << std::endl;
-			buff_output.append(buffer, buffer_read);
+		// 	std::cout << "Read " << buffer_read << " bytes from CGI" << std::endl;
+		// 	buff_output.append(buffer, buffer_read);
 
 
 			
-		}
+		// }
 		std::cout << "================parent==READ_FIN===============" << std::endl;
 
-		close(scriptfd[0]);
-		//lire sortie du script
+		// close(scriptfd[0]);
 
-	
 		
-		//script doit return header
-
-		//script doit return header
-		//
-		std::cout << "\n[BUFFER:"<< buffer << "]"<< std::endl;
+		// std::cout << "\n[BUFFER:"<< buffer << "]"<< std::endl;
 		std::cout << "================parent==FIN===============" << std::endl;
 
 	
@@ -1409,10 +1414,11 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
 		}
 
-		std::ostringstream response;
-		response << "HTTP/1.1 200 OK\r\n"
-					 << buff_output;
-		return response.str();
+		std::string response = "";
+		// std::ostringstream response;
+		// response << "HTTP/1.1 200 OK\r\n"
+					//  << buff_output;
+		return response;
 	}
 	return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 	// return ("caca");

@@ -8,6 +8,27 @@ struct ServerConfig;
 class Config;
 struct ServerConfig;
 
+// #define IDLE -1
+// #define STATE_READING_REQUEST 0
+// #define STATE_WRITING_RESPONSE 1
+// #define STATE_CGI_PROCESSING 2
+
+struct ClientState
+{
+	int fd_client;
+	int fd_cgi;
+	pid_t cgi_pid;
+	std::string request_buffer;
+	std::string response_buffer;
+
+	time_t last_activity;
+
+	// int state;
+	enum State { IDLE, READING_REQ, WRITING_CGI, READING_CGI, WRITING_RES } state;
+
+	ClientState(): fd_client(-1), fd_cgi(-1), cgi_pid(-1), request_buffer(""), response_buffer(""), state(IDLE) {}
+};
+
 class Server
 {
 private:
@@ -30,6 +51,8 @@ private:
 	std::map<int, int> _cgi_pipe_client;
 
 	int actual_port;
+
+	std::map<int, ClientState> _clients;
 public:
 	
 
@@ -43,6 +66,7 @@ public:
 
 	bool is_cgi_pipe_socket(int fd);
 	bool is_cgi_pipe_socket_second(int fd);
+	bool ft_is_fd_client_state(int fd);
 
 	std::map<int, int> &get_cgi_pipe_client()
 	{	return _cgi_pipe_client;
