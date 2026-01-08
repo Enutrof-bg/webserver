@@ -8,7 +8,7 @@ content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
 
 time.sleep(3)
-print("Content-Type: text/html\r\n\r\n")
+# print("Content-Type: text/html\r\n\r\n")
 print("<html><body>")
 print("<h1>Hello from CGI!</h1>")
 if method == 'POST' and content_length > 0:

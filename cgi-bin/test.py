@@ -6,7 +6,7 @@ method = os.environ.get('REQUEST_METHOD', '')
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
 time.sleep(3)
-print("Content-Type: text/html\r\n\r\n", end='')
+# print("Content-Type: text/html\r\n\r\n", end='')
 print("<html><body>")
 print(f"<h1>Method: {method}</h1>")
 
