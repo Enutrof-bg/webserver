@@ -115,6 +115,7 @@ void Server::ft_remove_fd(int fd)
 		if (pollfds[i].fd == fd)
 		{
 			// close(pollfds[i].fd);
+			std::cout << "Removing fd from pollfds: " << fd << std::endl;
 			pollfds.erase(pollfds.begin() + i);
 		}
 	}
@@ -139,25 +140,29 @@ void Server::ft_check_timeout()
 				_client_responses[it->second.fd_client] = it->second.response_buffer;
 
 				close(it->second.fd_cgi);
+				// it->second.fd_cgi = -1;
 				it->second.state = ClientState::TIMEOUT;
 
-				ft_remove_fd(it->second.fd_cgi);
-				// for(size_t i = 0; i < pollfds.size(); i++)
-				// {
-				// 	if (pollfds[i].fd == it->second.fd_cgi)
-				// 	{
-				// 		// close(pollfds[i].fd);
-				// 		pollfds.erase(pollfds.begin() + i);
+				// ft_remove_fd(it->second.fd_cgi);
+				for(size_t i = 0; i < pollfds.size(); i++)
+				{
+					if (pollfds[i].fd == it->second.fd_cgi)
+					{
+						// close(pollfds[i].fd);
+						std::cout << "Removing CGI fd from pollfds due to timeout: " << it->second.fd_cgi << std::endl;
+						pollfds.erase(pollfds.begin() + i);
+						break ;
 						
-						
-				// 	}
-				// }
+					}
+				}
 
 				for(size_t i = 0; i < pollfds.size(); i++)
 				{
 					if (pollfds[i].fd == it->second.fd_client)
 					{
+						std::cout << "Setting client fd " << it->second.fd_client << " to POLLOUT due to timeout." << std::endl;
 						pollfds[i].events = POLLOUT;
+						break;
 					}
 				}			
 			}
@@ -189,7 +194,7 @@ void Server::run()
 		if (ret < 0)
 			throw std::runtime_error("Error: poll failed");
 		
-		ft_check_timeout();
+		// ft_check_timeout();
 
 		for(size_t i = 0; i < pollfds.size(); i++)
 		{
@@ -258,7 +263,7 @@ void Server::run()
 				// 	}
 				// }
 */
-				if (ft_is_fd_client_state(pollfds[i].fd) == true && pollfds[i].revents & POLLIN)
+				if (ft_is_fd_client_state(pollfds[i].fd) == true)
 				{
 					//cgi pipe read
 					std::cout << "Reading from CGI pipe fd: " << pollfds[i].fd << std::endl;
@@ -441,12 +446,12 @@ void Server::run()
 						_clients.erase(pollfds[i].fd);
 						
 					}
-					if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
-					{
-						_clients[pollfds[i].fd].state = ClientState::IDLE;
-						std::cout << "Client was in TIMEOUT state. Cleaning up." << std::endl;
-						_clients.erase(pollfds[i].fd);
-					}
+					// if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
+					// {
+					// 	_clients[pollfds[i].fd].state = ClientState::IDLE;
+					// 	std::cout << "Client was in TIMEOUT state. Cleaning up." << std::endl;
+					// 	_clients.erase(pollfds[i].fd);
+					// }
 
 					std::cout << response_2 << std::endl;
 				write(pollfds[i].fd, response_2.c_str(), response_2.length());
