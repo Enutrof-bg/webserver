@@ -120,6 +120,16 @@ void Server::ft_remove_fd(int fd)
 		}
 	}
 }
+bool Server::ft_is_timeout(int fd)
+{
+	std::map<int, ClientState>::iterator it = _clients.begin();
+	for (; it != _clients.end(); it++)
+	{
+		if (it->first == fd && it->second.state == ClientState::TIMEOUT)
+			return true;
+	}
+	return false;
+}
 
 void Server::ft_check_timeout()
 {
@@ -140,8 +150,8 @@ void Server::ft_check_timeout()
 				_client_responses[it->second.fd_client] = it->second.response_buffer;
 
 				close(it->second.fd_cgi);
-				// it->second.fd_cgi = -1;
-				it->second.state = ClientState::TIMEOUT;
+
+				// it->second.state = ClientState::TIMEOUT;
 
 				// ft_remove_fd(it->second.fd_cgi);
 				for(size_t i = 0; i < pollfds.size(); i++)
@@ -155,7 +165,7 @@ void Server::ft_check_timeout()
 						
 					}
 				}
-
+				it->second.state = ClientState::TIMEOUT;
 				for(size_t i = 0; i < pollfds.size(); i++)
 				{
 					if (pollfds[i].fd == it->second.fd_client)
@@ -178,7 +188,6 @@ void Server::run()
 
 	printListenPorts();
 
-	std::vector<pollfd> pollfds;
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)
 	{
 		pollfd temp;
@@ -190,11 +199,11 @@ void Server::run()
 
 	while(true)
 	{
-		int ret = poll(pollfds.data(), pollfds.size(), -1);
+		int ret = poll(pollfds.data(), pollfds.size(), 1000); // timeout de 1000 ms
 		if (ret < 0)
 			throw std::runtime_error("Error: poll failed");
 		
-		// ft_check_timeout();
+		ft_check_timeout();
 
 		for(size_t i = 0; i < pollfds.size(); i++)
 		{
@@ -262,6 +271,27 @@ void Server::run()
 				// 		}
 				// 	}
 				// }
+*/
+				
+/*
+				if (ft_is_timeout(pollfds[i].fd) == true)
+				{
+					//client en timeout ecriture reponse
+					std::map<int, ClientState>::iterator it = _clients.begin();
+
+					for (; it != _clients.end(); it++)
+					{
+						if (it->first == pollfds[i].fd)
+							break;
+					}
+					if (it != _clients.end())
+					{
+						std::cout << "Client write response timeout for fd: " << it->second.fd_client << std::endl;
+						close(it->second.fd_client);
+						pollfds.erase(pollfds.begin() + i);
+						i--;
+					}
+				}
 */
 				if (ft_is_fd_client_state(pollfds[i].fd) == true)
 				{
@@ -445,6 +475,10 @@ void Server::run()
 
 						_clients.erase(pollfds[i].fd);
 						
+					}
+					if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
+					{
+						_clients.erase(pollfds[i].fd);
 					}
 					// if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
 					// {

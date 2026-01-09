@@ -71,6 +71,7 @@ public:
 	bool ft_is_timeout_over(int fd);
 	void ft_check_timeout();
 	void ft_remove_fd(int fd);
+	bool ft_is_timeout(int fd);
 
 	std::map<int, int> &get_cgi_pipe_client()
 	{	return _cgi_pipe_client;
