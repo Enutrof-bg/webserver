@@ -506,7 +506,7 @@ void Server::run()
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					i--;
-					continue;
+					// continue;
 				}
 			}
 		}
