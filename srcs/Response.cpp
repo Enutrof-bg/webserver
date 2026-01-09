@@ -1345,6 +1345,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		client_state.cgi_pid = id;
 		client_state.fd_cgi = scriptfd[0];
 		client_state.state = ClientState::READING_CGI;
+		client_state.last_activity = time(NULL);
 
 		//wait processus enfant
 		int status = 0;

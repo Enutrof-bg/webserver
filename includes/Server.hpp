@@ -12,6 +12,7 @@ struct ServerConfig;
 // #define STATE_READING_REQUEST 0
 // #define STATE_WRITING_RESPONSE 1
 // #define STATE_CGI_PROCESSING 2
+#define TIMEOUT_SECONDS 3
 
 struct ClientState
 {
@@ -24,7 +25,7 @@ struct ClientState
 	time_t last_activity;
 
 	// int state;
-	enum State { IDLE, READING_REQ, WRITING_CGI, READING_CGI, WRITING_RES } state;
+	enum State { IDLE, READING_REQ, WRITING_CGI, READING_CGI, WRITING_RES, TIMEOUT } state;
 
 	ClientState(): fd_client(-1), fd_cgi(-1), cgi_pid(-1), request_buffer(""), response_buffer(""), state(IDLE) {}
 };
@@ -67,6 +68,9 @@ public:
 	bool is_cgi_pipe_socket(int fd);
 	bool is_cgi_pipe_socket_second(int fd);
 	bool ft_is_fd_client_state(int fd);
+	bool ft_is_timeout_over(int fd);
+	void ft_check_timeout();
+	void ft_remove_fd(int fd);
 
 	std::map<int, int> &get_cgi_pipe_client()
 	{	return _cgi_pipe_client;

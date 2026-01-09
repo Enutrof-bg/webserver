@@ -5,11 +5,11 @@ import time
 method = os.environ.get('REQUEST_METHOD', '')
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
-time.sleep(3)
+time.sleep(4)
 # print("Content-Type: text/html\r\n\r\n", end='')
 print("<html><body>")
 print(f"<h1>Method: {method}</h1>")
-
+# time.sleep(3)
 if method == 'POST' and content_length > 0:
     # Lire le body depuis STDIN
     post_data = sys.stdin.read(content_length)

@@ -88,6 +88,83 @@ bool Server::ft_is_fd_client_state(int fd)
 	return false;
 }
 
+bool Server::ft_is_timeout_over(int fd)
+{
+	std::map<int, ClientState>::iterator it = _clients.begin();
+
+	for (; it != _clients.end(); it++)
+	{
+		if (it->first == fd && it->second.state == ClientState::READING_CGI)
+		{
+			time_t now = time(NULL);
+			std::cout << "Check timer ... " << std::endl;
+			if (difftime(now, it->second.last_activity) > TIMEOUT_SECONDS)
+			{
+				std::cout << "TIMEOUT ..." << std::endl;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void Server::ft_remove_fd(int fd)
+{
+	for(size_t i = 0; i < pollfds.size(); i++)
+	{
+		if (pollfds[i].fd == fd)
+		{
+			// close(pollfds[i].fd);
+			pollfds.erase(pollfds.begin() + i);
+		}
+	}
+}
+
+void Server::ft_check_timeout()
+{
+	std::map<int, ClientState>::iterator it = _clients.begin();
+
+	for (; it != _clients.end(); it++)
+	{
+		if (it->second.state == ClientState::READING_CGI)
+		{
+			time_t now = time(NULL);
+
+			if (difftime(now, it->second.last_activity) > TIMEOUT_SECONDS)
+			{
+				kill(it->second.cgi_pid, SIGKILL);
+				waitpid(it->second.cgi_pid, NULL, 0);
+				std::cout << "CGI Timeout detected for fd: " << it->second.fd_cgi << std::endl;
+				it->second.response_buffer = "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+				_client_responses[it->second.fd_client] = it->second.response_buffer;
+
+				close(it->second.fd_cgi);
+				it->second.state = ClientState::TIMEOUT;
+
+				ft_remove_fd(it->second.fd_cgi);
+				// for(size_t i = 0; i < pollfds.size(); i++)
+				// {
+				// 	if (pollfds[i].fd == it->second.fd_cgi)
+				// 	{
+				// 		// close(pollfds[i].fd);
+				// 		pollfds.erase(pollfds.begin() + i);
+						
+						
+				// 	}
+				// }
+
+				for(size_t i = 0; i < pollfds.size(); i++)
+				{
+					if (pollfds[i].fd == it->second.fd_client)
+					{
+						pollfds[i].events = POLLOUT;
+					}
+				}			
+			}
+		}
+	}
+}
+
 void Server::run()
 {
 	// int n;
@@ -112,6 +189,8 @@ void Server::run()
 		if (ret < 0)
 			throw std::runtime_error("Error: poll failed");
 		
+		ft_check_timeout();
+
 		for(size_t i = 0; i < pollfds.size(); i++)
 		{
 			if (pollfds[i].revents == 0)
@@ -142,7 +221,44 @@ void Server::run()
 			}
 			else
 			{
-				if (ft_is_fd_client_state(pollfds[i].fd) == true)
+	/*
+				// if (ft_is_timeout_over(pollfds[i].fd) == true)
+				// {
+				// 	std::map<int, ClientState>::iterator it = _clients.begin();
+
+				// 	for (; it != _clients.end(); it++)
+				// 	{
+				// 		if (it->first == pollfds[i].fd)
+				// 			break;
+				// 	}
+				// 	if (it != _clients.end())
+				// 	{
+				// 		std::cout << "CGI Timeout detected for fd: " << it->second.fd_cgi << std::endl;
+				// 		it->second.response_buffer = "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+
+				// 		kill(it->second.cgi_pid, SIGKILL);
+				// 		waitpid(it->second.cgi_pid, NULL, 0);
+
+				// 		close(it->second.fd_cgi);
+				// 		pollfds.erase(pollfds.begin() + i);
+				// 		i--;
+						
+				// 		_client_responses[it->second.fd_client] = it->second.response_buffer;
+
+				// 		for (size_t j = 0; j < pollfds.size(); j++)
+				// 		{
+				// 			if (pollfds[j].fd == it->second.fd_client)
+				// 			{
+				// 				std::cout << "Setting client fd " << it->second.fd_client << " to POLLOUT due to timeout." << std::endl;
+				// 				pollfds[j].events = POLLOUT;
+				// 				_clients[pollfds[i].fd].state = ClientState::TIMEOUT;
+				// 				break;
+				// 			}
+				// 		}
+				// 	}
+				// }
+*/
+				if (ft_is_fd_client_state(pollfds[i].fd) == true && pollfds[i].revents & POLLIN)
 				{
 					//cgi pipe read
 					std::cout << "Reading from CGI pipe fd: " << pollfds[i].fd << std::endl;
@@ -155,6 +271,7 @@ void Server::run()
 					}
 					if (it != _clients.end())
 					{
+
 						char buffer[4096];
 						std::cout << "Reading CGI output..." << it->second.fd_cgi << std::endl;
 						ssize_t n = read(it->second.fd_cgi, buffer, sizeof(buffer));
@@ -183,9 +300,6 @@ void Server::run()
 									break;
 								}
 							}
-							
-							// _clients.state
-							// _clients.erase(it);
 						}
 					}
 				}
@@ -326,6 +440,12 @@ void Server::run()
 
 						_clients.erase(pollfds[i].fd);
 						
+					}
+					if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
+					{
+						_clients[pollfds[i].fd].state = ClientState::IDLE;
+						std::cout << "Client was in TIMEOUT state. Cleaning up." << std::endl;
+						_clients.erase(pollfds[i].fd);
 					}
 
 					std::cout << response_2 << std::endl;
