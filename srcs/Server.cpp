@@ -80,7 +80,7 @@ bool Server::ft_is_fd_client_state(int fd)
 
 	for (; it != _clients.end(); it++)
 	{
-		if (it->second.fd_cgi == fd)
+		if (it->second.fd_cgi == fd && it->second.fd_cgi != -1)
 			return true;
 	}
 // 	if (it != _clients.end())
@@ -165,6 +165,7 @@ void Server::ft_check_timeout()
 						
 					}
 				}
+				it->second.fd_cgi = -1;
 				it->second.state = ClientState::TIMEOUT;
 				for(size_t i = 0; i < pollfds.size(); i++)
 				{
@@ -505,6 +506,7 @@ void Server::run()
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					i--;
+					continue;
 				}
 			}
 		}
