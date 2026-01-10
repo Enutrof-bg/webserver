@@ -18,6 +18,14 @@ content type dynamique
 
 _config_index a souvent pour convention index.html par defaut
 
+## Test avec la commande siege
+siege -b -t1M http://localhost:8080
+siege -c50 -t30s http://localhost:8080
+
+-b : Mode benchmark (pas de délai entre les requêtes)
+-t1M : Test pendant 1 minute
+-c50 : Simule 50 utilisateurs simultanés
+
 ## setsockopt
 int opt = 1;
 if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)

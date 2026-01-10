@@ -135,12 +135,37 @@ void Server::ft_check_timeout()
 {
 	std::map<int, ClientState>::iterator it = _clients.begin();
 
-	for (; it != _clients.end(); it++)
+	while (it != _clients.end())
 	{
-		if (it->second.state == ClientState::READING_CGI)
+		time_t now = time(NULL);
+		
+		//timeout pour les clients en lecture de requete
+		if (it->second.state == ClientState::READING_REQ)
 		{
-			time_t now = time(NULL);
-
+			if (difftime(now, it->second.last_activity) > TIMEOUT_SECONDS)
+			{
+				std::cout << "Client Request Timeout for fd: " << it->second.fd_client << std::endl;
+				
+				//fermer et retirer le fd du poll
+				for(size_t i = 0; i < pollfds.size(); i++)
+				{
+					if (pollfds[i].fd == it->second.fd_client)
+					{
+						close(pollfds[i].fd);
+						pollfds.erase(pollfds.begin() + i);
+						break;
+					}
+				}
+				_client_to_server.erase(it->second.fd_client);
+				std::map<int, ClientState>::iterator to_erase = it;
+				++it;
+				_clients.erase(to_erase);
+				continue;
+			}
+		}
+		//t0imeout pour les CGI
+		else if (it->second.state == ClientState::READING_CGI)
+		{
 			if (difftime(now, it->second.last_activity) > TIMEOUT_SECONDS)
 			{
 				kill(it->second.cgi_pid, SIGKILL);
@@ -151,14 +176,10 @@ void Server::ft_check_timeout()
 
 				close(it->second.fd_cgi);
 
-				// it->second.state = ClientState::TIMEOUT;
-
-				// ft_remove_fd(it->second.fd_cgi);
 				for(size_t i = 0; i < pollfds.size(); i++)
 				{
 					if (pollfds[i].fd == it->second.fd_cgi)
 					{
-						// close(pollfds[i].fd);
 						std::cout << "Removing CGI fd from pollfds due to timeout: " << it->second.fd_cgi << std::endl;
 						pollfds.erase(pollfds.begin() + i);
 						break ;
@@ -178,6 +199,7 @@ void Server::ft_check_timeout()
 				}			
 			}
 		}
+		++it;
 	}
 }
 
@@ -236,7 +258,8 @@ void Server::run()
 			}
 			else
 			{
-	/*
+
+/*
 				// if (ft_is_timeout_over(pollfds[i].fd) == true)
 				// {
 				// 	std::map<int, ClientState>::iterator it = _clients.begin();
@@ -341,95 +364,83 @@ void Server::run()
 				}
 				else if (pollfds[i].revents & POLLIN)
 				{
-
-					// char buffer[4096];
-					// char buffer[100000];
-					// int n = read(pollfds[i].fd, buffer,	sizeof(buffer));
-					// std::cout << "=============REQUEST-IN============" << std::endl;
-					// printf("{%s}\n", buffer);
-					// std::cout << "=============END-REQUEST-IN=========" << std::endl;
-		
-			// std::cout << "Premiers octets (hex): ";
-			// for (size_t i = 0; i < 50000 && i <100000; i++)
-			// {
-			// 	printf("%02X ", (unsigned char)buffer[i]);
-			// 	// printf(":%zu | ", i);
-			// }
-			// std::cout << std::endl;
 					std::cout << "=================================123==" << std::endl;
 
+					//initialiser le client si necessaire
+					std::map<int,ClientState>::iterator it_client = _clients.find(pollfds[i].fd);
+					if (it_client == _clients.end())
+					{
+						ClientState new_client;
+						new_client.fd_client = pollfds[i].fd;
+						new_client.last_activity = time(NULL);
+						new_client.state = ClientState::READING_REQ;
+						_clients[pollfds[i].fd] = new_client;
+					}
 
+					ClientState& client = _clients[pollfds[i].fd];
+					client.last_activity = time(NULL);
 
-					std::string request;
 					char buffer[4096];
 					ssize_t n;
 					n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
 				
-						printf("n:%ld\n", n);
+					printf("n:%ld\n", n);
 					if (n > 0)
 					{
 						printf("========BUFFER:%s\n", buffer);
-						request.append(buffer, n);
-						printf("========request:%s\n", request.c_str());
+						client.request_buffer.append(buffer, n);
+						printf("========request:%s\n", client.request_buffer.c_str());
 					}
-						// n = read(pollfds[i].fd, buffer, sizeof(buffer));
-						// printf("n:%ld\n", n);
-						size_t header_end = request.find("\r\n\r\n");
-						if (header_end != std::string::npos)
+
+					//verifier si la requete est complete
+					bool request_complete = false;
+					size_t header_end = client.request_buffer.find("\r\n\r\n");
+					if (header_end != std::string::npos)
+					{
+						//gestion content-length
+						size_t cl_pos = client.request_buffer.find("Content-Length:");
+						if (cl_pos != std::string::npos)
 						{
-								//gestion content-length
-								size_t cl_pos = request.find("Content-Length:");
-								if (cl_pos != std::string::npos)
-								{
-									size_t cl_end = request.find("\r\n", cl_pos);
-									std::string cl_str = request.substr(cl_pos + 15, cl_end - (cl_pos + 15));
-									size_t content_length = std::atoi(cl_str.c_str());
-									
-									size_t total_expected = header_end + 4 + content_length;
-									
-									while (request.length() < total_expected)
-									{
-										n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-										if (n <= 0)
-											break;
-										request.append(buffer, n);
-									}
-									// break;
-								}
-							// }
+							size_t cl_end = client.request_buffer.find("\r\n", cl_pos);
+							std::string cl_str = client.request_buffer.substr(cl_pos + 15, cl_end - (cl_pos + 15));
+							size_t content_length = std::atoi(cl_str.c_str());
+							
+							size_t total_expected = header_end + 4 + content_length;
+							
+							//lecture asynchrone- verifie juste si on a tout recu
+							if (client.request_buffer.length() >= total_expected)
+							{
+								request_complete = true;
+							}
+							//sinon on attend le prochain poll() /  pas de while bloquant
 						}
+						else
+						{
+							//pas de Content-Length = requete complete apres les headers
+							request_complete = true;
+						}
+					}
 					// }
 					printf("im out\n");
-					if (n <= 0)
+					if (n <= 0 && client.request_buffer.empty())
 					{
+						_clients.erase(pollfds[i].fd);
 						close(pollfds[i].fd);
 						pollfds.erase(pollfds.begin() + i);
 						i--;
 					}
-					else
+					else if (request_complete)
 					{
-						Response rep = parseRequest(request);
-
-						// std::string response_temp = "test";
-						// std::cout << "tset" << std::endl;
+						Response rep = parseRequest(client.request_buffer);
 
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
 
-						std::map<int,ClientState>::iterator it_client = _clients.find(pollfds[i].fd);
-						if (it_client == _clients.end())
-						{
-
-							ClientState new_client;
-							new_client.fd_client = pollfds[i].fd;
-							new_client.last_activity = time(NULL);
-							_clients[pollfds[i].fd] = new_client;
-
-							
-						}
-
 						std::string response = getRequest(rep, server, *this, _clients[pollfds[i].fd]);
 						// std::cout << response << std::endl;
+						
+						//reinitialiser le buffer pour les prochaines requetes keep-alive
+						client.request_buffer.clear();
 						
 						if (_clients[pollfds[i].fd].state == ClientState::READING_CGI)
 						{
@@ -446,9 +457,8 @@ void Server::run()
 							_client_responses[pollfds[i].fd] = response;
 							pollfds[i].events = POLLOUT;
 						}
-						// _client_responses[pollfds[i].fd] = response;
-						// pollfds[i].events = POLLOUT;
 					}
+					//sinon on attend plus de données, pas d'action, on revient au poll()
 				} 
 
 				if (pollfds[i].revents & POLLOUT)
@@ -477,7 +487,7 @@ void Server::run()
 						_clients.erase(pollfds[i].fd);
 						
 					}
-					if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
+					else if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
 					{
 						_clients.erase(pollfds[i].fd);
 					}
