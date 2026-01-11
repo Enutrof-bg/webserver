@@ -1,6 +1,5 @@
 #include "../includes/Server.hpp"
-#include <fcntl.h>
-#include <sys/wait.h>
+
 
 Server::Server(const Config &conf): _server(conf.getServer())
 {
@@ -133,6 +132,10 @@ bool Server::ft_is_timeout(int fd)
 
 void Server::ft_check_timeout()
 {
+	while (waitpid(-1, NULL, WNOHANG) > 0)
+	{
+	}
+
 	std::map<int, ClientState>::iterator it = _clients.begin();
 
 	while (it != _clients.end())
@@ -168,8 +171,12 @@ void Server::ft_check_timeout()
 		{
 			if (difftime(now, it->second.last_activity) > TIMEOUT_SECONDS)
 			{
-				kill(it->second.cgi_pid, SIGKILL);
-				waitpid(it->second.cgi_pid, NULL, 0);
+				std::cout << "Time:" << difftime(now, it->second.last_activity) << std::endl;
+				// if (it->second.cgi_pid != -1)
+				// {
+					kill(it->second.cgi_pid, SIGKILL);
+					waitpid(it->second.cgi_pid, NULL, WNOHANG);
+				// }
 				std::cout << "CGI Timeout detected for fd: " << it->second.fd_cgi << std::endl;
 				it->second.response_buffer = "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 				_client_responses[it->second.fd_client] = it->second.response_buffer;
@@ -182,18 +189,22 @@ void Server::ft_check_timeout()
 					{
 						std::cout << "Removing CGI fd from pollfds due to timeout: " << it->second.fd_cgi << std::endl;
 						pollfds.erase(pollfds.begin() + i);
+						// waitpid(it->second.cgi_pid, NULL, WNOHANG);
 						break ;
 						
 					}
 				}
 				it->second.fd_cgi = -1;
-				it->second.state = ClientState::TIMEOUT;
+				
 				for(size_t i = 0; i < pollfds.size(); i++)
 				{
 					if (pollfds[i].fd == it->second.fd_client)
 					{
 						std::cout << "Setting client fd " << it->second.fd_client << " to POLLOUT due to timeout." << std::endl;
 						pollfds[i].events = POLLOUT;
+						it->second.state = ClientState::TIMEOUT;
+
+						std::cout << "Client marked for timeout response." << std::endl;
 						break;
 					}
 				}			
@@ -239,7 +250,7 @@ void Server::run()
 				{
 					int client_fd = accept(pollfds[i].fd, NULL, NULL);
 					//cmd non bloquante
-					// fcntl(client_fd, F_SETFL, O_NONBLOCK);
+					fcntl(client_fd, F_SETFL, O_NONBLOCK);
 					pollfd client_pfd;
 					client_pfd.fd = client_fd;
 					client_pfd.events = POLLIN;
@@ -466,9 +477,12 @@ void Server::run()
 					std::string response_2 = _client_responses[pollfds[i].fd];
 					std::cout << "============================================================" << std::endl;
 					std::cout << "----RESPONSE-SENT-TO-CLIENT----" << std::endl;
-					if (_clients[pollfds[i].fd].state == ClientState::WRITING_RES)
+
+					ClientState::State current_state = _clients[pollfds[i].fd].state;
+
+					if (current_state == ClientState::WRITING_RES)
 					{
-						_clients[pollfds[i].fd].state = ClientState::IDLE;
+						// _clients[pollfds[i].fd].state = ClientState::IDLE;
 
 						// std::string response_header = "HTTP/1.1 200 OK\r\n";
 						// response_header += "Content-Length: " + response_2.length() + "\r\n";
@@ -484,13 +498,14 @@ void Server::run()
 								<< response_2;
 						response_2 = response.str();
 
-						_clients.erase(pollfds[i].fd);
+						// _clients.erase(pollfds[i].fd);
 						
 					}
-					else if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
-					{
-						_clients.erase(pollfds[i].fd);
-					}
+					// else if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
+					// {
+					// 	_clients.erase(pollfds[i].fd);
+					// }
+
 					// if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
 					// {
 					// 	_clients[pollfds[i].fd].state = ClientState::IDLE;
@@ -499,16 +514,26 @@ void Server::run()
 					// }
 
 					std::cout << response_2 << std::endl;
-				write(pollfds[i].fd, response_2.c_str(), response_2.length());
+					size_t n = write(pollfds[i].fd, response_2.c_str(), response_2.length());
+					std::cout << "Wrote " << n << " bytes to client fd: " << pollfds[i].fd << std::endl;
+
 					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;
-					std::cout << "============================================================\n\n\n\n\n" << std::endl;
+					std::cout << "============================================================" << std::endl;
 					//  write(pollfds[i].fd, buffer, strlen(buffer));
+					
+					_clients.erase(pollfds[i].fd);
 					_client_responses.erase(pollfds[i].fd);
 					_client_to_server.erase(pollfds[i].fd);
 					
+					std::cout << "Closing connection to client fd: " << pollfds[i].fd << std::endl;
+					
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
+					std::cout << "Connection closed for client fd: " << pollfds[i].fd << std::endl;
+
 					i--;
+					
+					std::cout << "\n\n\n\n\n" << std::endl;
 				}
 
 				if (pollfds[i].revents & (POLLHUP | POLLERR))

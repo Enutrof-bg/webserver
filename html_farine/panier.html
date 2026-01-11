@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panier - La Minoterie</title>
+</head>
+<body>
+    <header>
+        <h1>La Minoterie</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="farines.html">Farines</a></li>
+                <li><a href="ustensiles.html">Ustensiles</a></li>
+                <li><a href="panier.html">Panier</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h2>Votre Panier</h2>
+
+        <section>
+            <h3>Articles dans votre panier</h3>
+            
+            <table border="1" cellpadding="10" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Prix unitaire</th>
+                        <th>Quantité</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Farine de Blé T65 (1kg)</td>
+                        <td>3.50€</td>
+                        <td>
+                            <input type="number" value="2" min="1" max="99">
+                        </td>
+                        <td>7.00€</td>
+                        <td><button>Retirer</button></td>
+                    </tr>
+                    <tr>
+                        <td>Banneton Rond 25cm</td>
+                        <td>24.90€</td>
+                        <td>
+                            <input type="number" value="1" min="1" max="99">
+                        </td>
+                        <td>24.90€</td>
+                        <td><button>Retirer</button></td>
+                    </tr>
+                    <tr>
+                        <td>Farine de Seigle T130 (1kg)</td>
+                        <td>4.20€</td>
+                        <td>
+                            <input type="number" value="1" min="1" max="99">
+                        </td>
+                        <td>4.20€</td>
+                        <td><button>Retirer</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h3>Récapitulatif</h3>
+            <table>
+                <tr>
+                    <td><strong>Sous-total :</strong></td>
+                    <td>36.10€</td>
+                </tr>
+                <tr>
+                    <td><strong>Frais de livraison :</strong></td>
+                    <td>6.90€</td>
+                </tr>
+                <tr>
+                    <td><em>(Gratuit à partir de 50€)</em></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>Total TTC :</strong></td>
+                    <td><strong>43.00€</strong></td>
+                </tr>
+            </table>
+        </section>
+
+        <section>
+            <h3>Code Promo</h3>
+            <form>
+                <label for="promo">Entrez votre code promo :</label>
+                <input type="text" id="promo" name="promo" placeholder="CODE">
+                <button type="submit">Appliquer</button>
+            </form>
+        </section>
+
+        <section>
+            <h3>Finaliser la commande</h3>
+            <form>
+                <h4>Informations de livraison</h4>
+                
+                <label for="nom">Nom complet :</label><br>
+                <input type="text" id="nom" name="nom" required><br><br>
+                
+                <label for="email">Email :</label><br>
+                <input type="email" id="email" name="email" required><br><br>
+                
+                <label for="telephone">Téléphone :</label><br>
+                <input type="tel" id="telephone" name="telephone" required><br><br>
+                
+                <label for="adresse">Adresse :</label><br>
+                <input type="text" id="adresse" name="adresse" required><br><br>
+                
+                <label for="code_postal">Code postal :</label><br>
+                <input type="text" id="code_postal" name="code_postal" required><br><br>
+                
+                <label for="ville">Ville :</label><br>
+                <input type="text" id="ville" name="ville" required><br><br>
+                
+                <h4>Mode de livraison</h4>
+                <input type="radio" id="colissimo" name="livraison" value="colissimo" checked>
+                <label for="colissimo">Colissimo (3-5 jours) - 6.90€</label><br>
+                
+                <input type="radio" id="chronopost" name="livraison" value="chronopost">
+                <label for="chronopost">Chronopost (24h) - 12.90€</label><br>
+                
+                <input type="radio" id="retrait" name="livraison" value="retrait">
+                <label for="retrait">Retrait en magasin - Gratuit</label><br><br>
+                
+                <h4>Paiement</h4>
+                <input type="radio" id="cb" name="paiement" value="cb" checked>
+                <label for="cb">Carte bancaire</label><br>
+                
+                <input type="radio" id="virement" name="paiement" value="virement">
+                <label for="virement">Virement bancaire</label><br>
+                
+                <input type="radio" id="cheque" name="paiement" value="cheque">
+                <label for="cheque">Chèque</label><br><br>
+                
+                <label for="commentaire">Commentaire (optionnel) :</label><br>
+                <textarea id="commentaire" name="commentaire" rows="4" cols="50"></textarea><br><br>
+                
+                <input type="checkbox" id="cgv" name="cgv" required>
+                <label for="cgv">J'accepte les conditions générales de vente</label><br><br>
+                
+                <button type="submit">Valider la commande</button>
+            </form>
+        </section>
+
+        <p><a href="index.html">Continuer mes achats</a></p>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 La Minoterie - Tous droits réservés</p>
+        <p><a href="contact.html">Nous contacter</a></p>
+    </footer>
+</body>
+</html>

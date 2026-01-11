@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - La Minoterie</title>
+</head>
+<body>
+    <header>
+        <h1>La Minoterie</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="farines.html">Farines</a></li>
+                <li><a href="ustensiles.html">Ustensiles</a></li>
+                <li><a href="panier.html">Panier</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h2>Nous Contacter</h2>
+
+        <section>
+            <h3>Informations de contact</h3>
+            <p><strong>La Minoterie</strong></p>
+            <p>15 Rue du Moulin<br>
+            28000 Chartres<br>
+            France</p>
+            
+            <p><strong>Téléphone :</strong> 02 37 XX XX XX</p>
+            <p><strong>Email :</strong> contact@la-minoterie.fr</p>
+            
+            <p><strong>Horaires d'ouverture :</strong></p>
+            <ul>
+                <li>Lundi - Vendredi : 9h00 - 12h30 / 14h00 - 18h00</li>
+                <li>Samedi : 9h00 - 17h00</li>
+                <li>Dimanche : Fermé</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Formulaire de contact</h3>
+            <p>Pour toute question ou demande d'information, n'hésitez pas à nous écrire :</p>
+            
+            <form>
+                <label for="nom">Nom * :</label><br>
+                <input type="text" id="nom" name="nom" required><br><br>
+                
+                <label for="prenom">Prénom * :</label><br>
+                <input type="text" id="prenom" name="prenom" required><br><br>
+                
+                <label for="email">Email * :</label><br>
+                <input type="email" id="email" name="email" required><br><br>
+                
+                <label for="telephone">Téléphone :</label><br>
+                <input type="tel" id="telephone" name="telephone"><br><br>
+                
+                <label for="sujet">Sujet * :</label><br>
+                <select id="sujet" name="sujet" required>
+                    <option value="">-- Choisissez un sujet --</option>
+                    <option value="commande">Question sur une commande</option>
+                    <option value="produit">Information produit</option>
+                    <option value="livraison">Livraison</option>
+                    <option value="reclamation">Réclamation</option>
+                    <option value="autre">Autre</option>
+                </select><br><br>
+                
+                <label for="message">Message * :</label><br>
+                <textarea id="message" name="message" rows="8" cols="50" required></textarea><br><br>
+                
+                <input type="checkbox" id="rgpd" name="rgpd" required>
+                <label for="rgpd">J'accepte que mes données personnelles soient utilisées pour répondre à ma demande *</label><br><br>
+                
+                <button type="submit">Envoyer</button>
+                <button type="reset">Réinitialiser</button>
+            </form>
+            
+            <p><em>* Champs obligatoires</em></p>
+        </section>
+
+        <section>
+            <h3>Questions fréquentes</h3>
+            
+            <h4>Quelle est la durée de conservation des farines ?</h4>
+            <p>Nos farines se conservent entre 4 et 6 mois dans un endroit sec et frais, à l'abri de la lumière. Les farines complètes ont une durée de conservation légèrement plus courte.</p>
+            
+            <h4>Livrez-vous en Belgique et en Suisse ?</h4>
+            <p>Oui, nous livrons dans toute l'Europe. Les frais de port varient selon la destination. Contactez-nous pour un devis personnalisé.</p>
+            
+            <h4>Puis-je retirer ma commande en magasin ?</h4>
+            <p>Oui, le retrait en magasin est gratuit. Votre commande sera prête sous 24h (jours ouvrés). Vous recevrez un email de confirmation.</p>
+            
+            <h4>Proposez-vous des farines bio ?</h4>
+            <p>Oui, toutes nos farines sont issues de l'agriculture biologique certifiée AB. Nous travaillons avec des producteurs locaux engagés dans une démarche durable.</p>
+            
+            <h4>Comment conserver mes ustensiles en osier ?</h4>
+            <p>Les bannetons en osier doivent être conservés au sec. Ne les lavez jamais à l'eau, brossez-les simplement après utilisation. En cas de moisissure, exposez-les au soleil.</p>
+        </section>
+
+        <section>
+            <h3>Plan d'accès</h3>
+            <p><strong>En voiture :</strong> Parking gratuit à 50m du magasin (Place du Marché)</p>
+            <p><strong>En train :</strong> Gare de Chartres à 10 minutes à pied</p>
+            <p><strong>En bus :</strong> Lignes 3 et 7, arrêt "Cathédrale"</p>
+        </section>
+
+        <p><a href="index.html">Retour à l'accueil</a></p>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 La Minoterie - Tous droits réservés</p>
+        <p><a href="contact.html">Nous contacter</a></p>
+    </footer>
+</body>
+</html>

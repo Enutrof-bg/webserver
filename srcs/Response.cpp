@@ -1263,7 +1263,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	script_path.open(temp_cgi_path.c_str());
 	if (!script_path.is_open())
 	{
-		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1>";
+		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
 	}
 	script_path.close();
 
@@ -1271,7 +1271,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	int scriptfd[2];
 	if (pipe(scriptfd) < 0)
 	{
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1><a title=\"GO BACK\" href=\"/\">go back</a>";
 	}
 
 	// Pipe en mode non-bloquant pour utilisation avec poll()
@@ -1285,7 +1285,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		{
 			close(scriptfd[0]);
 			close(scriptfd[1]);
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1>";
+			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
 		}
 	}
 
@@ -1294,7 +1294,7 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	if (id < 0)
 	{
 		//PROTEC
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Fork Error</h1>";
+		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Fork Error</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
 	}
 
 	//processus enfant
