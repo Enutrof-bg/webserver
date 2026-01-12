@@ -192,9 +192,9 @@ void Server::ft_check_timeout()
 					if (pollfds[i].fd == it->second.fd_cgi)
 					{
 						std::cout << "Removing CGI fd from pollfds due to timeout: " << it->second.fd_cgi << std::endl;
-						// pollfds.erase(pollfds.begin() + i);
+						pollfds.erase(pollfds.begin() + i);
 
-						pollfds[i].fd = 0;
+						// pollfds[i].fd = 0;
 						// waitpid(it->second.cgi_pid, NULL, WNOHANG);
 						break ;
 						
