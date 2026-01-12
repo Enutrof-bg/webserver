@@ -95,11 +95,15 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 		for (size_t j = 0; j < server._config_location.size(); ++j)
 		{
 			std::cout << "Location config path:" << server._config_location[j]._config_path << std::endl;
-			if (server._config_location[j]._config_path.find(temp_url) != std::string::npos)
+			//verifie que temp_url est un prefix de la location
+			if (server._config_location[j]._config_path.length() <= temp_url.length()
+				&& temp_url.compare(0, server._config_location[j]._config_path.length(), server._config_location[j]._config_path) == 0
+				&& server._config_location[j]._config_path != "/")
 			{
 				std::cout << "Location returned" << std::endl;
 				return (server._config_location[j]);
 			}
+			
 			std::string temp_path = server._config_location[j]._config_path;
 			if (temp_path.length() < url.length()
 				&& temp_path.find(".") != std::string::npos)
@@ -122,6 +126,7 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	return (empty_loc);
 }
 
+//Check if a path is a directory(true) or not(false)
 bool is_directory(const std::string &path) {
     DIR *dir = opendir(path.c_str());
     if (dir != NULL) {
@@ -559,6 +564,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 	std::cout << "temp_path:" << temp_path << std::endl;
 
 	if (temp_path.length() > 1
+		&& parsed_url.path_script.length() >= temp_path.length()
 		&& parsed_url.path_script.compare(parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
 		&& parsed_url.path_script.find(".") != std::string::npos)
 	{
@@ -765,7 +771,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 		
 		std::ostringstream response;
 		response << "HTTP/1.1 404 Not Found\r\n"
-				 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
+				 << "Content-Type: " << "text/html" << "; charset=UTF-8\r\n"
 				 << "Content-Length: " << body.length() << "\r\n"
 				 << "Connection: close\r\n"
 				 << "\r\n"

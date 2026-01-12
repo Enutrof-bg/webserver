@@ -12,7 +12,7 @@ struct ServerConfig;
 // #define STATE_READING_REQUEST 0
 // #define STATE_WRITING_RESPONSE 1
 // #define STATE_CGI_PROCESSING 2
-#define TIMEOUT_SECONDS 5
+#define TIMEOUT_SECONDS 3
 
 struct ClientState
 {

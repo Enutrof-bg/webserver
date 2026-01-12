@@ -1,0 +1,31 @@
+Checking listen socket: 3 against fd: 5
+Match found for CGI pipe fd: 5
+Reading from CGI pipe fd: 5
+Reading CGI output...5
+Read 136 bytes from CGI.
+Appending 136 bytes to response buffer.
+Checking listen socket: 3 against fd: 5
+Match found for CGI pipe fd: 5
+Reading from CGI pipe fd: 5
+Reading CGI output...5
+Read 0 bytes from CGI.
+CGI output read complete. Closing CGI pipe fd: 5
+Checking listen socket: 3 against fd: 4
+============================================================
+----RESPONSE-SENT-TO-CLIENT----
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: 136
+Connection: close
+
+<html><body>
+<h1>Method: POST</h1>
+<p>POST Data: age=25&name=kev&taille=177</p>
+<a title="test" href="/">go back</a></p>
+</body></html>
+
+Wrote 235 bytes to client fd: 4
+----END-OF-RESPONSE-SENT-TO-CLIENT----
+============================================================
+Closing connection to client fd: 4
+Connection closed for client fd: 4

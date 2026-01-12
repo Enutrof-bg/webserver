@@ -52,8 +52,12 @@ bool Server::is_listen_socket(int fd)
 {
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)
 	{
+		std::cout << "Checking listen socket: " << _server_listen_socket[i] << " against fd: " << fd << std::endl;
 		if (_server_listen_socket[i] == fd)
+		{
+			std::cout << "Match found for listen socket fd: " << fd << std::endl;
 			return true;
+		}
 	}
 	return false;
 }
@@ -79,8 +83,12 @@ bool Server::ft_is_fd_client_state(int fd)
 
 	for (; it != _clients.end(); it++)
 	{
+		// std::cout << "Checking client state for fd: " << fd << " against client fd: " << it->second.fd_client << " and cgi fd: " << it->second.fd_cgi << std::endl;
 		if (it->second.fd_cgi == fd && it->second.fd_cgi != -1)
+		{
+			std::cout << "Match found for CGI pipe fd: " << fd << std::endl;
 			return true;
+		}
 	}
 // 	if (it != _clients.end())
 // 		return true;
@@ -188,7 +196,9 @@ void Server::ft_check_timeout()
 					if (pollfds[i].fd == it->second.fd_cgi)
 					{
 						std::cout << "Removing CGI fd from pollfds due to timeout: " << it->second.fd_cgi << std::endl;
-						pollfds.erase(pollfds.begin() + i);
+						// pollfds.erase(pollfds.begin() + i);
+
+						pollfds[i].fd = 0;
 						// waitpid(it->second.cgi_pid, NULL, WNOHANG);
 						break ;
 						
@@ -242,12 +252,17 @@ void Server::run()
 		for(size_t i = 0; i < pollfds.size(); i++)
 		{
 			if (pollfds[i].revents == 0)
+			{
+				// std::cout << "No events for fd: " << pollfds[i].fd << std::endl;
 				continue;
+			}
 
 			if (is_listen_socket(pollfds[i].fd))
 			{
+				std::cout << "New connection on listen socket fd: " << pollfds[i].fd << std::endl;
 				if (pollfds[i].revents & POLLIN)
 				{
+					std::cout << "Accepting new client connection..." << std::endl;
 					int client_fd = accept(pollfds[i].fd, NULL, NULL);
 					//cmd non bloquante
 					fcntl(client_fd, F_SETFL, O_NONBLOCK);
@@ -261,6 +276,7 @@ void Server::run()
 					{
 		  				if (_server_listen_socket[j] == pollfds[i].fd)
 						{
+							std::cout << "Mapping client fd " << client_fd << " to server index " << j << std::endl;
 			   				_client_to_server[client_fd] = j;
 			 				break;
 		 				}
@@ -514,7 +530,8 @@ void Server::run()
 					// }
 
 					std::cout << response_2 << std::endl;
-					size_t n = write(pollfds[i].fd, response_2.c_str(), response_2.length());
+					// size_t n = write(pollfds[i].fd, response_2.c_str(), response_2.length());
+					size_t n = send(pollfds[i].fd, response_2.c_str(), response_2.length(), 0);
 					std::cout << "Wrote " << n << " bytes to client fd: " << pollfds[i].fd << std::endl;
 
 					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;
@@ -538,6 +555,7 @@ void Server::run()
 
 				if (pollfds[i].revents & (POLLHUP | POLLERR))
 				{
+					std::cout << "POLLHUP or POLLERR detected on fd: " << pollfds[i].fd << ". Closing connection." << std::endl;
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					i--;

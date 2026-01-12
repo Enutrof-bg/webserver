@@ -7,7 +7,7 @@ method = os.environ.get('REQUEST_METHOD', '')
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
 
-time.sleep(3)
+time.sleep(10)
 # print("Content-Type: text/html\r\n\r\n")
 print("<html><body>")
 print("<h1>Hello from CGI!</h1>")
