@@ -3,7 +3,6 @@
 
 Server::Server(const Config &conf): _server(conf.getServer())
 {
-
 }
 
 Server::~Server()
@@ -14,7 +13,6 @@ void Server::setup()
 {
 	for(size_t i = 0; i < _server.size(); i++)
 	{
-		// _server[i]._config_listen
 		int listenfd = socket(AF_INET, SOCK_STREAM, 0);
 		if (listenfd < 0)
 		{
@@ -90,8 +88,6 @@ bool Server::ft_is_fd_client_state(int fd)
 			return true;
 		}
 	}
-// 	if (it != _clients.end())
-// 		return true;
 	return false;
 }
 
@@ -174,7 +170,7 @@ void Server::ft_check_timeout()
 				continue;
 			}
 		}
-		//t0imeout pour les CGI
+		//timeout pour les CGI
 		else if (it->second.state == ClientState::READING_CGI)
 		{
 			if (difftime(now, it->second.last_activity) > TIMEOUT_SECONDS)
@@ -226,10 +222,6 @@ void Server::ft_check_timeout()
 
 void Server::run()
 {
-	// int n;
-	// uint8_t recvline[4096+1];
-	// uint8_t buff[MAXLINE+1];
-
 	printListenPorts();
 
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)
@@ -263,9 +255,10 @@ void Server::run()
 				if (pollfds[i].revents & POLLIN)
 				{
 					std::cout << "Accepting new client connection..." << std::endl;
+
 					int client_fd = accept(pollfds[i].fd, NULL, NULL);
-					//cmd non bloquante
 					fcntl(client_fd, F_SETFL, O_NONBLOCK);
+					std::cout << "New client connected with fd: " << client_fd << std::endl;
 					pollfd client_pfd;
 					client_pfd.fd = client_fd;
 					client_pfd.events = POLLIN;
@@ -285,65 +278,6 @@ void Server::run()
 			}
 			else
 			{
-
-/*
-				// if (ft_is_timeout_over(pollfds[i].fd) == true)
-				// {
-				// 	std::map<int, ClientState>::iterator it = _clients.begin();
-
-				// 	for (; it != _clients.end(); it++)
-				// 	{
-				// 		if (it->first == pollfds[i].fd)
-				// 			break;
-				// 	}
-				// 	if (it != _clients.end())
-				// 	{
-				// 		std::cout << "CGI Timeout detected for fd: " << it->second.fd_cgi << std::endl;
-				// 		it->second.response_buffer = "HTTP/1.1 504 Gateway Timeout\r\n\r\n<h1>ERROR 504 CGI Timeout</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a></p>";
-
-				// 		kill(it->second.cgi_pid, SIGKILL);
-				// 		waitpid(it->second.cgi_pid, NULL, 0);
-
-				// 		close(it->second.fd_cgi);
-				// 		pollfds.erase(pollfds.begin() + i);
-				// 		i--;
-						
-				// 		_client_responses[it->second.fd_client] = it->second.response_buffer;
-
-				// 		for (size_t j = 0; j < pollfds.size(); j++)
-				// 		{
-				// 			if (pollfds[j].fd == it->second.fd_client)
-				// 			{
-				// 				std::cout << "Setting client fd " << it->second.fd_client << " to POLLOUT due to timeout." << std::endl;
-				// 				pollfds[j].events = POLLOUT;
-				// 				_clients[pollfds[i].fd].state = ClientState::TIMEOUT;
-				// 				break;
-				// 			}
-				// 		}
-				// 	}
-				// }
-*/
-				
-/*
-				if (ft_is_timeout(pollfds[i].fd) == true)
-				{
-					//client en timeout ecriture reponse
-					std::map<int, ClientState>::iterator it = _clients.begin();
-
-					for (; it != _clients.end(); it++)
-					{
-						if (it->first == pollfds[i].fd)
-							break;
-					}
-					if (it != _clients.end())
-					{
-						std::cout << "Client write response timeout for fd: " << it->second.fd_client << std::endl;
-						close(it->second.fd_client);
-						pollfds.erase(pollfds.begin() + i);
-						i--;
-					}
-				}
-*/
 				if (ft_is_fd_client_state(pollfds[i].fd) == true)
 				{
 					//cgi pipe read
@@ -536,7 +470,6 @@ void Server::run()
 
 					std::cout << "----END-OF-RESPONSE-SENT-TO-CLIENT----" << std::endl;
 					std::cout << "============================================================" << std::endl;
-					//  write(pollfds[i].fd, buffer, strlen(buffer));
 					
 					_clients.erase(pollfds[i].fd);
 					_client_responses.erase(pollfds[i].fd);

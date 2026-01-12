@@ -26,7 +26,10 @@
 #include <map>
 
 #include "Config.hpp"
+#include "ErrorCode.hpp"
+#include "Response.hpp"
 #include "Server.hpp"
+#include "Utils.hpp"
 
 #define SERVER_PORT 18000
 #define MAXLINE 4096
