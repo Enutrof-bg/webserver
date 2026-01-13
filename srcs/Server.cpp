@@ -432,13 +432,6 @@ void Server::run()
 
 					if (current_state == ClientState::WRITING_RES)
 					{
-						// _clients[pollfds[i].fd].state = ClientState::IDLE;
-
-						// std::string response_header = "HTTP/1.1 200 OK\r\n";
-						// response_header += "Content-Length: " + response_2.length() + "\r\n";
-						// response_header += "Connection: close\r\n";
-						// response_header += "\r\n";
-						// response_2 = response_header + response_2;
 						std::ostringstream response;
 						response << "HTTP/1.1 200 OK\r\n"
 								<<"Content-Type: " << "text/html" << "; charset=UTF-8\r\n"
@@ -447,21 +440,7 @@ void Server::run()
 								<<"\r\n"
 								<< response_2;
 						response_2 = response.str();
-
-						// _clients.erase(pollfds[i].fd);
-						
 					}
-					// else if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
-					// {
-					// 	_clients.erase(pollfds[i].fd);
-					// }
-
-					// if (_clients[pollfds[i].fd].state == ClientState::TIMEOUT)
-					// {
-					// 	_clients[pollfds[i].fd].state = ClientState::IDLE;
-					// 	std::cout << "Client was in TIMEOUT state. Cleaning up." << std::endl;
-					// 	_clients.erase(pollfds[i].fd);
-					// }
 
 					std::cout << response_2 << std::endl;
 					// size_t n = write(pollfds[i].fd, response_2.c_str(), response_2.length());

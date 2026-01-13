@@ -35,9 +35,11 @@ void ft_free_double_tab(char **tab)
 	while (tab[i])
 	{
 		delete[] tab[i];
+		tab[i] = NULL;
 		i++;
 	}
 	delete[] tab;
+	tab = NULL;
 }
 
 char *ft_strdup(const char *s1)
@@ -105,6 +107,7 @@ char	**ft_add_double_tab(char *str, char **tab)
 		if (!newtab[0])
 		{
 			delete[] newtab;
+			newtab = NULL;
 			return NULL;
 		}
 		return (newtab[1] = 0, newtab);

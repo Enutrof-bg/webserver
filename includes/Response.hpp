@@ -17,8 +17,9 @@ struct ParseURL
 	std::string url;
 };
 
-struct Response
+class Response
 {
+public:
 	std::string method;
 	std::string url;
 	std::string version;
