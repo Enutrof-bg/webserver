@@ -100,6 +100,3 @@ public:
 
 };
 
-std::string& rtrim(std::string& s, const char* t);
-std::string& ltrim(std::string& s, const char* t);
-std::string& trim(std::string& s, const char* t);

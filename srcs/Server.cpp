@@ -50,10 +50,10 @@ bool Server::is_listen_socket(int fd)
 {
 	for (size_t i = 0; i < _server_listen_socket.size(); i++)
 	{
-		std::cout << "Checking listen socket: " << _server_listen_socket[i] << " against fd: " << fd << std::endl;
+		// std::cout << "Checking listen socket: " << _server_listen_socket[i] << " against fd: " << fd << std::endl;
 		if (_server_listen_socket[i] == fd)
 		{
-			std::cout << "Match found for listen socket fd: " << fd << std::endl;
+			// std::cout << "Match found for listen socket fd: " << fd << std::endl;
 			return true;
 		}
 	}
@@ -251,7 +251,7 @@ void Server::run()
 
 			if (is_listen_socket(pollfds[i].fd))
 			{
-				std::cout << "New connection on listen socket fd: " << pollfds[i].fd << std::endl;
+				// std::cout << "New connection on listen socket fd: " << pollfds[i].fd << std::endl;
 				if (pollfds[i].revents & POLLIN)
 				{
 					std::cout << "Accepting new client connection..." << std::endl;

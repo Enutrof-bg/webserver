@@ -114,30 +114,6 @@ void Config::setConfig(std::string &config)
 // 	_config_cgi_pass = config;
 // }
 
-std::string& rtrim(std::string& s, const char* t)
-{
-	size_t pos = s.find_last_not_of(t);
-	if (pos != std::string::npos)
-		s.erase(pos + 1);
-	else
-		s.clear();
-	return s;
-}
-
-std::string& ltrim(std::string& s, const char* t)
-{
-	size_t pos = s.find_first_not_of(t);
-	if (pos != std::string::npos)
-		s.erase(0, pos);
-	else
-		s.clear();
-	return s;
-}
-
-std::string& trim(std::string& s, const char* t)
-{
-	return ltrim(rtrim(s, t), t);
-}
 
 std::string Config::readConfig()
 {
