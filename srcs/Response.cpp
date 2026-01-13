@@ -415,7 +415,8 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 			if (current_body_size > max_size)
 			{
 				std::cout << "Body size exceeded during chunked decoding" << std::endl;
-				return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+				// return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+				return ft_handling_error(server, 413);
 			}
 		}
 		const_cast<Response&>(rep).body = body;
@@ -431,7 +432,8 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 	if (!loc._config_allowed_methods.empty() && ft_check_method(loc, rep) == 1)
 	{
 		std::cout << "TEST5" << std::endl;
-		return "HTTP/1.1 405 Method Not Allowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// return "HTTP/1.1 405 Method Not Allowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		return (ft_handling_error(server, 405));
 	}
 	std::cout << "TEST6" << std::endl;
 	std::string path = getPath(rep.url, server, loc);
@@ -458,7 +460,8 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 			return response.str();
 		}
 
-		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>ERROR 404 Not Found</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// return "HTTP/1.1 404 Not Found\r\n\r\n<h1>ERROR 404 Not Found</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		return (ft_handling_error(server, 404));
 	}
 
 	std::string temp_path = loc._config_path;
@@ -485,7 +488,8 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 	{
 		return handleDELETE(rep, server, loc);
 	}
-	return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
+	// return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
+	return (ft_handling_error(server, 405));
 }
 
 //Retourne le type mime en fonction de l'extension du fichier
@@ -632,7 +636,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 			}
 		}
 		std::cout << "Fichier not found: " << path << std::endl;
-		
+		/*
 		std::map<int, std::string>::const_iterator it = server._config_error_page.find(404);
 		std::string body;
 		
@@ -678,8 +682,9 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 				 << "Connection: close\r\n"
 				 << "\r\n"
 				 << body;
-		
-		return response.str();
+		*/
+		// return response.str();
+		return (ft_handling_error(server, 404));
 	}
 	//protec
 
@@ -1038,7 +1043,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	script_path.open(temp_cgi_path.c_str());
 	if (!script_path.is_open())
 	{
-		return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
+		return (ft_handling_error(server, 404));
+		// return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
 	}
 	script_path.close();
 
