@@ -62,7 +62,7 @@ std::string ft_handling_error(const ServerConfig &server, int code)
 			body = std::string((std::istreambuf_iterator<char>(error_file)), 
 								std::istreambuf_iterator<char>());
 			error_file.close();
-			std::cout << body << std::endl;
+			// std::cout << body << std::endl;
 		}
 	}
 	if (body.empty())

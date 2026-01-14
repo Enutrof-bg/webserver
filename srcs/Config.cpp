@@ -285,7 +285,7 @@ void Config::parseLocation(std::istringstream &str, Location &location)
 
 void Config::parseServer(std::istringstream &str, ServerConfig &server)
 {
-	server._config_listen = 80;
+	server._config_listen = 8080;
 	server._config_server_name = "localhost";
 	server._config_root = "./html";
 	server._config_index = "index.html"; //par defaut 

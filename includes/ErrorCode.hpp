@@ -4,7 +4,7 @@
 #include "Response.hpp"
 #include "webserv.hpp"
 
-struct ServerConfig;
+class ServerConfig;
 // class ErrorCode
 // {
 

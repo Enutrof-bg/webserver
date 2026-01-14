@@ -4,17 +4,20 @@
 #include "Server.hpp"
 #include "webserv.hpp"
 
-struct ServerConfig;
-struct Location;
+class ServerConfig;
+class Location;
 class Server;
-struct ClientState;
+class ClientState;
 
-struct ParseURL
+class ParseURL
 {
+public:
 	std::string path_script;
 	std::string path_info;
 	std::string query_string;
 	std::string url;
+	std::string loc_left;
+	std::string loc_right;
 };
 
 class Response
@@ -35,13 +38,3 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 std::string handlePOST(const Response &rep, const ServerConfig &server);
 std::string handleDELETE(const Response &rep, const ServerConfig &server, Location &loc);
 std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc, const ParseURL &parsed_url, Server &srv, ClientState &client_state);
-
-// {
-// 	Response rep;
-// 	std::istringstream stream(request);
-// 	std::string line;
-
-
-
-// 	return rep;
-// }

@@ -2,8 +2,9 @@
 
 #include "webserv.hpp"
 
-struct Location
+class Location
 {
+public:
 	std::string 				_config_path;
 	bool 						_config_autoindex;
 	std::vector<std::string> 	_config_allowed_methods;
@@ -17,8 +18,9 @@ struct Location
 	size_t 						_config_client_max_body_size;
 };
 
-struct ServerConfig
+class ServerConfig
 {
+public:
 	int 						_config_listen;
 	std::string 				_config_server_name;
 	std::string 				_config_root;

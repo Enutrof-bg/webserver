@@ -4,9 +4,8 @@
 #include "Response.hpp"
 #include "webserv.hpp"
 
-struct ServerConfig;
 class Config;
-struct ServerConfig;
+class ServerConfig;
 
 // #define IDLE -1
 // #define STATE_READING_REQUEST 0
@@ -14,8 +13,9 @@ struct ServerConfig;
 // #define STATE_CGI_PROCESSING 2
 #define TIMEOUT_SECONDS 3
 
-struct ClientState
+class ClientState
 {
+public:
 	int fd_client;
 	int fd_cgi;
 	pid_t cgi_pid;

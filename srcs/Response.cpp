@@ -131,12 +131,25 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 
 	std::string path_root = server._config_root;
 	if (!location._config_root.empty())
+	{
 		path_root = location._config_root;
+		//remove location._config_path from url
+		if (location._config_path != "/" && url.find(location._config_path) == 0)
+		{
+			std::string trimmed_url = url.substr(location._config_path.length());
+			if (trimmed_url.empty())
+				trimmed_url = "/";
+			std::cout << "trimmed_url:" << trimmed_url << std::endl;
+			return getPath(trimmed_url, server, location);
+		}
+	}
 
 	std::string path_index = server._config_index;
 	if (!location._config_index.empty())
+	{
 		path_index = location._config_index;
-	
+	}
+
 	std::string path;
 	if (url == "/" || url[url.length() - 1] == '/')
 	{
@@ -464,6 +477,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 		return (ft_handling_error(server, 404));
 	}
 
+	std::cout << "Final path to serve: " << path << std::endl;
 	std::string temp_path = loc._config_path;
 	// std::string temp_path = parsed_url.path_script;
 	std::cout << "temp_path:" << temp_path << std::endl;
@@ -521,7 +535,8 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 	std::cout << "-----------------------------------HANDLE_GET----------------" <<std::endl;
 	std::cout << "Chemin apth: " << path << std::endl;
 	std::cout << "parsed url: " << parsed_url.url << std::endl;
-	
+	std::cout << "loc autoindex: " << loc._config_autoindex << std::endl;
+	std::cout << "loc config_path: " << loc._config_path << std::endl;
 	std::string temp_content_type = ft_get_extension_file(path);
 
 	DIR *dir = opendir(path.c_str());
@@ -582,21 +597,38 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 	std::ifstream file(path.c_str(), std::ios::binary);
 	if (!file.is_open())
 	{
+		std::cout << "File not found, checking autoindex..." << std::endl;
 		if (loc._config_autoindex == true)
 		{
+			std::cout << "Autoindex activé, listing le répertoire parent..." << std::endl;
 			std::string dir_path;
 			if (!loc._config_root.empty())
 				dir_path = loc._config_root;
 			else
 				dir_path = server._config_root;
-			
-			if (parsed_url.url != "/" && !parsed_url.url.empty())
+			std::cout << "Root path for autoindex: " << dir_path << std::endl;
+
+			std::cout << "parsed_url.url before modification: " << parsed_url.url << std::endl;
+			//remove loc._config_path from parsed_url.url
+			if (loc._config_path != "/" && parsed_url.url.find(loc._config_path) == 0)
+			{
+				std::string trimmed_url = parsed_url.url.substr(loc._config_path.length());
+				if (trimmed_url.empty())
+					trimmed_url = "/";
+				std::cout << "trimmed_url for autoindex: " << trimmed_url << std::endl;
+				if (dir_path[dir_path.length() - 1] != '/' && trimmed_url[0] != '/')
+					dir_path += "/";
+				dir_path += trimmed_url;
+			}
+			// append parsed_url.url to dir_path if loc._config_path is /
+			else if (loc._config_path == "/")
 			{
 				if (dir_path[dir_path.length() - 1] != '/' && parsed_url.url[0] != '/')
 					dir_path += "/";
 				dir_path += parsed_url.url;
 			}
 
+			std::cout << "Directory path for autoindex: " << dir_path << std::endl;
 			DIR *dir2 = opendir(dir_path.c_str());
 			if (dir2 != NULL)
 			{
