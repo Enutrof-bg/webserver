@@ -130,8 +130,9 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 	std::cout << "loc:" << location._config_path << std::endl;
 
 	std::string path_root = server._config_root;
-	if (!location._config_root.empty())
+	if (!location._config_root.empty() && location._config_path != "/")
 	{
+		std::cout << "Using location root" << std::endl;
 		path_root = location._config_root;
 		//remove location._config_path from url
 		if (location._config_path != "/" && url.find(location._config_path) == 0)
@@ -143,12 +144,14 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 			return getPath(trimmed_url, server, location);
 		}
 	}
+	std::cout << "path_root:" << path_root << std::endl;
 
 	std::string path_index = server._config_index;
 	if (!location._config_index.empty())
 	{
 		path_index = location._config_index;
 	}
+	std::cout << "path_index:" << path_index << std::endl;
 
 	std::string path;
 	if (url == "/" || url[url.length() - 1] == '/')
@@ -304,9 +307,20 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 		Location loc = server._config_location[j];
 		if (!loc._config_redirect.empty())
 		{
-			if (parsed_url.url == loc._config_path)
+			std::cout << "Checking redirection for location: " << loc._config_path << std::endl;
+			std::cout << "Parsed URL for redirection check: " << parsed_url.url << std::endl;
+			//if loc.redirect does not start with /, add it
+
+			//gere les redirections avec scheme http:// or https://
+			if ((loc._config_redirect.find("http://") == 0
+				|| loc._config_redirect.find("https://") == 0)
+				&& (parsed_url.url.find(loc._config_path) != std::string::npos
+				|| (loc._config_path == "/" && parsed_url.url == "")))
 			{
+				std::cout << "Redirection found for location: " << loc._config_path << std::endl;
+
 				std::string new_url = loc._config_redirect;
+				//ajoute la query_string si existe
 				if (parsed_url.query_string != "")
 					new_url += "?" + parsed_url.query_string;
 
@@ -322,44 +336,60 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 				
 				return response.str();
 			}
-			else
+			else if (parsed_url.url.find(loc._config_path) != std::string::npos)
 			{
-				//verifie si parsed_url.path_script commence par loc._config_path
-				std::string loc_path = loc._config_path;
-				if (!loc_path.empty() && loc_path[0] == '/')
-					loc_path = loc_path.substr(1);
-				//segmente parsed_url.path_script et verifie si correspond a loc_path
-				std::string temp_right = parsed_url.path_script;
-				std::string temp_left;
-				size_t pos = temp_right.find('/');
-				while (pos != std::string::npos)
-				{
-					temp_left = temp_right.substr(0, pos);
-					temp_right = temp_right.substr(pos + 1);
-					std::cout << "temp_left: " << temp_left << std::endl;
-					std::cout << "temp_right:" << temp_right << std::endl;
-					if (temp_left == loc_path)
-					{
-						std::string new_url = loc._config_redirect + "/" + temp_right;
-						std::cout << "New URL for redirection: " << new_url << std::endl;
-						if (parsed_url.query_string != "")
-							new_url += "?" + parsed_url.query_string;
+				if (loc._config_redirect[0] != '/')
+					loc._config_redirect = "/" + loc._config_redirect;
+				std::cout << "Location redirect path: " << loc._config_redirect << std::endl;
 
-						std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
-						std::ostringstream response;
-						response << "HTTP/1.1 301 Moved Permanently\r\n"
-								<< "Location: " << new_url << "\r\n"
-								<< "Content-Type: text/html; charset=UTF-8\r\n"
-								<< "Content-Length: " << body.length() << "\r\n"
-								<< "Connection: close\r\n"
-								<< "\r\n"
-								<< body;
-						
-						return response.str();
+				std::cout << "Redirection found for location: " << loc._config_path << std::endl;
+
+				std::string new_url;
+				size_t pos = parsed_url.url.find(loc._config_path);
+				
+				if (pos == 0)
+				{
+					std::string remaining = parsed_url.url.substr(loc._config_path.length());
+					new_url = loc._config_redirect + remaining;
+					
+					size_t double_slash_pos;
+					while ((double_slash_pos = new_url.find("//")) != std::string::npos)
+					{
+						new_url = new_url.substr(0, double_slash_pos) + new_url.substr(double_slash_pos + 1);
 					}
-					pos = temp_right.find('/');
+					
+					if (parsed_url.url.length() > 1 
+						&& parsed_url.url[parsed_url.url.length() - 1] != '/'
+						&& new_url.length() > 1 
+						&& new_url[new_url.length() - 1] == '/')
+					{
+						new_url = new_url.substr(0, new_url.length() - 1);
+					}
 				}
-			}	
+				else
+				{
+					// loc._config_path n'est pas au début, simple remplacement
+					new_url = parsed_url.url;
+					new_url.replace(pos, loc._config_path.length(), loc._config_redirect);
+				}
+				std::cout << "New URL for redirection: " << new_url << std::endl;
+				
+				//ajoute la query_string si existe
+				if (parsed_url.query_string != "")
+					new_url += "?" + parsed_url.query_string;
+
+				std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+				std::ostringstream response;
+				response << "HTTP/1.1 301 Moved Permanently\r\n"
+						 << "Location: " << new_url << "\r\n"
+						 << "Content-Type: text/html; charset=UTF-8\r\n"
+						 << "Content-Length: " << body.length() << "\r\n"
+						 << "Connection: close\r\n"
+						 << "\r\n"
+						 << body;
+				
+				return response.str();
+			}
 		}
 	}
 	return "";
@@ -861,10 +891,10 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 
 			std::cout << "Taille du fichier: " << part_body.length() << " octets" << std::endl;
 			std::cout << "Premiers octets (hex): ";
-			for (size_t i = 0; i < 20 && i < part_body.length(); i++)
-			{
-				printf("%02X ", (unsigned char)part_body[i]);
-			}
+			// for (size_t i = 0; i < 20 && i < part_body.length(); i++)
+			// {
+			// 	printf("%02X ", (unsigned char)part_body[i]);
+			// }
 			std::cout << std::endl;
 
 
@@ -895,10 +925,6 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 					output.close();
 				}
 			}
-
-			//extraire filename si present
-			//
-
 		}
 
 		//extraire filename avec COntenDispoitiotn
@@ -917,15 +943,7 @@ std::string handlePOST(const Response &rep, const ServerConfig &server)
 			 << body.str();
 		return (response.str());
 	}
-	// else if (post_content_type == "multipart/form-data")
-	// else if (post_content_type.find("multipart/form-data"))
-	// {
-	// 	return ("CACA");
-	// }
-	// else
-	// {
-		return "PROUST";
-	// }
+	return "PROUST";
 }
 
 std::string handleDELETE(const Response &rep, const ServerConfig &server, Location &loc)
