@@ -141,3 +141,14 @@ std::string intToString(size_t n)
 	oss << n;
 	return oss.str();
 }
+
+//Check if a path is a directory(true) or not(false)
+bool is_directory(const std::string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (dir != NULL) {
+        closedir(dir);
+		return true;
+    }
+    return false;
+}

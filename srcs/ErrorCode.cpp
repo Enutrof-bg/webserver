@@ -1,22 +1,60 @@
 #include "../includes/ErrorCode.hpp"
-#include <sstream>
+
 
 std::string ft_get_default_error_header(int code, const std::string &body)
 {
+	std::stringstream return_ss;
+
 	std::stringstream ss;
 	ss << body.length();
 	switch (code)
 	{
+	case 400:
+		return_ss << "HTTP/1.1 400 Bad Request\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str()
+				<< "\r\n\r\n";
+		return return_ss.str();
+		break;
+
+	case 403:
+		return_ss << "HTTP/1.1 403 Forbidden\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str()
+				<< "\r\n\r\n";
+		return return_ss.str();
+		break;
+
 	case 404:
-		return "HTTP/1.1 404 Not Found\r\nContent-Length: " + ss.str() + "\r\n\r\n";
+		return_ss << "HTTP/1.1 404 Not Found\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str()
+				<< "\r\n\r\n";
+		return return_ss.str();
 		break;
 	
 	case 405:
-		return "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
+		return_ss << "HTTP/1.1 405 Method Not Allowed\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str()
+				<< "\r\n\r\n";
+		return return_ss.str();
 		break;
 
 	case 413:
-		return "HTTP/1.1 413 Payload Too Large\r\n\r\n";
+		return_ss << "HTTP/1.1 413 Payload Too Large\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str()
+				<< "\r\n\r\n";
+		return return_ss.str();
+		break;
+
+	case 500: 
+		return_ss << "HTTP/1.1 500 Internal Server Error\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str()
+				<< "\r\n\r\n";
+		return return_ss.str();
 		break;
 
 	default:
@@ -29,16 +67,29 @@ std::string ft_get_default_error_body(int code)
 {
 	switch (code)
 	{
+	case 400:
+		return "<h1>ERROR 400 Bad Request</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		break;
+		
+	case 403:
+		return "<h1>ERROR 403 Forbidden</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		break;
+
 	case 404:
 		return "<h1>ERROR 404 Not found</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
 		break;
+
 	case 405:
 		return "<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		break;
+
 	case 413:
 		return "<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		break;
 
+	case 500: 
+		return "<h1>ERROR 500 Internal Server Error</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		break;
 	default:
 		return "";
 		break;

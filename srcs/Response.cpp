@@ -106,16 +106,6 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	return (empty_loc);
 }
 
-//Check if a path is a directory(true) or not(false)
-bool is_directory(const std::string &path) {
-    DIR *dir = opendir(path.c_str());
-    if (dir != NULL) {
-        closedir(dir);
-		return true;
-    }
-    return false;
-}
-
 //Retourne le path absolu du fichier a servir
 //Cherche dans la config server et location le root et index
 //Si url se termine par / , verifie que c'est un dossier puis ajoute l'index
@@ -209,12 +199,12 @@ int ft_check_method(const Location &loc, const Response &rep)
 //Parse l'url pour trouver le path_script, path_info et query_string
 //Utilise les infos de server pour trouver les extensions cgi
 //Retourne une structure ParseURL
-ParseURL parseURL(const std::string &url, const Response &rep, const ServerConfig &server)
+ParseURL parseURL(const Response &rep, const ServerConfig &server)
 {
 	(void)rep;
 	(void)server;
 	ParseURL result;
-	
+	std::string url = rep.url;
 	size_t query_pos = url.find('?');
 	if (query_pos != std::string::npos)
 	{
@@ -283,7 +273,8 @@ std::string ft_check_body_size(const Response &rep, const ServerConfig &server, 
 		{
 			std::cout << "Body size exceeded" << std::endl;
 			std::cout << "content_length:" << content_length << std::endl;
-			return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+			// return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+			return (ft_handling_error(server, 413));
 		}
 	}
 
@@ -291,7 +282,8 @@ std::string ft_check_body_size(const Response &rep, const ServerConfig &server, 
 	{
 		std::cout << "Body size exceeded" << std::endl;
 		std::cout << "rep.body.length():" << rep.body.length() << std::endl;
-		return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		return (ft_handling_error(server, 413));
 	}
 
 	return "";
@@ -396,24 +388,24 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 }
 
 
-std::string getRequest(const Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state)
+std::string getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state)
 {
 	(void)client_state;
 	std::cout << "-------------------GET REQUEST------------------------" << std::endl;
 
-	ParseURL parsed_url = parseURL(rep.url, rep, server);
+	rep.parsed_url = parseURL(rep, server);
 	std::cout << "Parsed URL:" << std::endl;
-	std::cout << "  Full URL: " <<  "{"<< parsed_url.url << "}" << std::endl;
-	std::cout << "  Script Path: " <<  "{"<< parsed_url.path_script << "}" << std::endl;
-	std::cout << "  Path Info: " <<  "{"<< parsed_url.path_info << "}" << std::endl;
-	std::cout << "  Query String: " << "{"<< parsed_url.query_string << "}" << std::endl;
+	std::cout << "  Full URL: " <<  "{"<< rep.parsed_url.url << "}" << std::endl;
+	std::cout << "  Script Path: " <<  "{"<< rep.parsed_url.path_script << "}" << std::endl;
+	std::cout << "  Path Info: " <<  "{"<< rep.parsed_url.path_info << "}" << std::endl;
+	std::cout << "  Query String: " << "{"<< rep.parsed_url.query_string << "}" << std::endl;
 
 	//verification des redirections
-	std::string test_redir = ft_redirection(server, parsed_url);
+	std::string test_redir = ft_redirection(server, rep.parsed_url);
 	if (!test_redir.empty())
 		return test_redir;
 
-	Location loc = getLocation(parsed_url.path_script, server);
+	Location loc = getLocation(rep.parsed_url.path_script, server);
 	std::cout << "loc path:"<<loc._config_path << std::endl;
 	std::cout << "method size:"<<loc._config_allowed_methods.size() << std::endl;
 	std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
@@ -463,6 +455,7 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 			}
 		}
 		const_cast<Response&>(rep).body = body;
+		// rep.body = body;
 	}
 	std::cout << rep.body << std::endl;
 	std::cout << "Reconstructed body length:" << rep.body.length() << std::endl;
@@ -513,16 +506,16 @@ std::string getRequest(const Response &rep, const ServerConfig &server, Server &
 	std::cout << "temp_path:" << temp_path << std::endl;
 
 	if (temp_path.length() > 1
-		&& parsed_url.path_script.length() >= temp_path.length()
-		&& parsed_url.path_script.compare(parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
-		&& parsed_url.path_script.find(".") != std::string::npos)
+		&& rep.parsed_url.path_script.length() >= temp_path.length()
+		&& rep.parsed_url.path_script.compare(rep.parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
+		&& rep.parsed_url.path_script.find(".") != std::string::npos)
 	{
 		std::cout << "going to handleCGI" << std::endl;
-		return handleCGI(rep, server, path, loc, parsed_url, srv, client_state);
+		return handleCGI(rep, server, path, loc, rep.parsed_url, srv, client_state);
 	}
 	if (rep.method == "GET")
 	{
-		return handleGET(path, server, loc, parsed_url);
+		return handleGET(path, server, loc, rep.parsed_url);
 	}
 	else if (rep.method == "POST")
 	{
@@ -610,16 +603,7 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 		else
 		{
 			closedir(dir);
-			// Autoindex desactive
-			std::string body = "<h1>403 Forbidden</h1><p>Directory listing not allowed</p>";
-			std::ostringstream response;
-			response << "HTTP/1.1 403 Forbidden\r\n"
-					 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
-					 << "Content-Length: " << body.length() << "\r\n"
-					 << "Connection: close\r\n"
-					 << "\r\n"
-					 << body;
-			return response.str();
+			return (ft_handling_error(server, 403));
 		}
 	}
 	
@@ -698,54 +682,6 @@ std::string handleGET(const std::string &path, const ServerConfig &server, const
 			}
 		}
 		std::cout << "Fichier not found: " << path << std::endl;
-		/*
-		std::map<int, std::string>::const_iterator it = server._config_error_page.find(404);
-		std::string body;
-		
-		if (it != server._config_error_page.end() && !it->second.empty())
-		{
-			std::string path_error = it->second;
-			std::cout << "Page erreur:" << path_error << std::endl;
-			
-			std::ifstream error_file(path_error.c_str(), std::ios::binary);
-			if (error_file.is_open())
-			{
-				body = std::string((std::istreambuf_iterator<char>(error_file)), 
-									std::istreambuf_iterator<char>());
-				// while (getline(error_file, line))
-				// {
-				// 	body << line;
-				// }
-				error_file.close();
-
-				std::cout << "--------------asdasd----" << std::endl;
-				std::cout << body << std::endl;
-			}
-		}
-	
-		if (body.empty())
-		{
-			//default page si error404.html nest pas defini
-			body = 
-				"<!DOCTYPE html>\n"
-				"<html>\n"
-				"<head><title>404 Not Found</title></head>\n"
-				"<body>\n"
-				"<h1>404 Not Found</h1>\n"
-				"<p>Le fichier demandé n'existe pas.</p>\n"
-				"</body>\n"
-				"</html>\n";
-		}
-		
-		std::ostringstream response;
-		response << "HTTP/1.1 404 Not Found\r\n"
-				 << "Content-Type: " << "text/html" << "; charset=UTF-8\r\n"
-				 << "Content-Length: " << body.length() << "\r\n"
-				 << "Connection: close\r\n"
-				 << "\r\n"
-				 << body;
-		*/
-		// return response.str();
 		return (ft_handling_error(server, 404));
 	}
 	//protec
@@ -962,37 +898,39 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server, Locati
 	//path end with '/'
 	if (path[path.length() -1] == '/')
 	{
-		newbody << "<!DOCTYPE html>\n"
-			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
-			<< "<body>\n"
-			<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
-			<< "<ul>\n";
-		response << "HTTP/1.1 400 Bad Request\r\n"
-			<< "Content-Type: text/html; charset=UTF-8\r\n"
-			<< "Content-Length: " << newbody.str().length() << "\r\n"
-			<< "Connection: close\r\n"
-			<< "\r\n"
-			<< newbody.str();
-		std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
-		return response.str();
+		// newbody << "<!DOCTYPE html>\n"
+		// 	<< "<html>\n<head><title>DELETE reçu</title></head>\n"
+		// 	<< "<body>\n"
+		// 	<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
+		// 	<< "<ul>\n";
+		// response << "HTTP/1.1 400 Bad Request\r\n"
+		// 	<< "Content-Type: text/html; charset=UTF-8\r\n"
+		// 	<< "Content-Length: " << newbody.str().length() << "\r\n"
+		// 	<< "Connection: close\r\n"
+		// 	<< "\r\n"
+		// 	<< newbody.str();
+		// std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
+		// return response.str();
+		return (ft_handling_error(server, 400));
 	}
 
 	//delete file
 	if (std::remove(path.c_str()))
 	{
-		newbody << "<!DOCTYPE html>\n"
-			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
-			<< "<body>\n"
-			<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
-			<< "<ul>\n";
-		response << "HTTP/1.1 404 Not Found\r\n"
-			<< "Content-Type: text/html; charset=UTF-8\r\n"
-			<< "Content-Length: " << newbody.str().length() << "\r\n"
-			<< "Connection: close\r\n"
-			<< "\r\n"
-			<< newbody.str();
-		std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
-		return response.str();
+		// newbody << "<!DOCTYPE html>\n"
+		// 	<< "<html>\n<head><title>DELETE reçu</title></head>\n"
+		// 	<< "<body>\n"
+		// 	<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
+		// 	<< "<ul>\n";
+		// response << "HTTP/1.1 404 Not Found\r\n"
+		// 	<< "Content-Type: text/html; charset=UTF-8\r\n"
+		// 	<< "Content-Length: " << newbody.str().length() << "\r\n"
+		// 	<< "Connection: close\r\n"
+		// 	<< "\r\n"
+		// 	<< newbody.str();
+		// std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
+		// return response.str();
+		return (ft_handling_error(server, 404));
 	}
 	else
 	{
@@ -1010,8 +948,6 @@ std::string handleDELETE(const Response &rep, const ServerConfig &server, Locati
 			<< newbody.str();
 	std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
 	return response.str();
-
-	// return "DELETEtest";
 }
 
 
@@ -1043,20 +979,6 @@ char **ft_return_cgi_env(const Response &rep, const ServerConfig &server,
 	// newenv = ft_add_double_tab(const_cast<char*>(("SERVER_PROTOCOL=" + rep.version).c_str()), newenv);
 	newenv = ft_add_double_tab(const_cast<char*>(("PATH_INFO=" + parsed_url.path_info).c_str()), newenv);
 	return (newenv);
-}
-
-void ft_print_rep(const Response &rep)
-{
-	std::cout << "=======================PRINT RESPONSE================" << std::endl;
-	std::cout << "method:"  << rep.method << std::endl;
-	std::cout << "url:" << rep.url << std::endl;
-	std::cout << "version:"  << rep.version << std::endl;
-	std::cout << "body:" << rep.body << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = rep.header.begin(); it != rep.header.end(); it++)
-	{
-		std::cout << "header->key: " << it->first << " | header->second: " << it->second << std::endl;
-	}
-	std::cout << "=======================PRINT RESPONSE FIN================\n" << std::endl;
 }
 
 std::string handleCGI(const Response &rep, const ServerConfig &server,
@@ -1102,7 +1024,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	int scriptfd[2];
 	if (pipe(scriptfd) < 0)
 	{
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1><a title=\"GO BACK\" href=\"/\">go back</a>";
+		// return "HTTP/1.1 500Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1><a title=\"GO BACK\" href=\"/\">go back</a>";
+		return (ft_handling_error(server, 500));
 	}
 
 	// Pipe en mode non-bloquant pour utilisation avec poll()
@@ -1116,7 +1039,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 		{
 			close(scriptfd[0]);
 			close(scriptfd[1]);
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
+			// return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Pipe Error</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
+			return (ft_handling_error(server, 500));
 		}
 	}
 
@@ -1125,7 +1049,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 	if (id < 0)
 	{
 		//PROTEC
-		return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Fork Error</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
+		// return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Fork Error</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
+		return (ft_handling_error(server, 500));
 	}
 
 	//processus enfant
@@ -1190,7 +1115,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
 		{
-			return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
+			// return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
+			return (ft_handling_error(server, 500));
 		}
 
 		std::string response = "";
@@ -1199,7 +1125,8 @@ std::string handleCGI(const Response &rep, const ServerConfig &server,
 					//  << buff_output;
 		return response;
 	}
-	return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+	// return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Server error</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+	return (ft_handling_error(server, 500));
 	// return ("caca");
 }
 

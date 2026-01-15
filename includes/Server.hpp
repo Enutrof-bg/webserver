@@ -7,10 +7,7 @@
 class Config;
 class ServerConfig;
 
-// #define IDLE -1
-// #define STATE_READING_REQUEST 0
-// #define STATE_WRITING_RESPONSE 1
-// #define STATE_CGI_PROCESSING 2
+
 #define TIMEOUT_SECONDS 3
 
 class ClientState

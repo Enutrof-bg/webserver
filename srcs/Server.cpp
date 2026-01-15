@@ -1,6 +1,5 @@
 #include "../includes/Server.hpp"
 
-
 Server::Server(const Config &conf): _server(conf.getServer())
 {
 }
