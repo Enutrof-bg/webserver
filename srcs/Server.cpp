@@ -234,7 +234,7 @@ void Server::run()
 
 	while(true)
 	{
-		int ret = poll(pollfds.data(), pollfds.size(), 1000); // timeout de 1000 ms
+		int ret = poll(pollfds.data(), pollfds.size(), 100); // timeout de 1000 ms
 		if (ret < 0)
 			throw std::runtime_error("Error: poll failed");
 		
@@ -397,7 +397,7 @@ void Server::run()
 						ServerConfig& server = _server[server_index];
 
 						Resultat resultat;
-						resultat.setMessage(Response::getRequest(rep, server, *this, _clients[pollfds[i].fd]));
+						resultat.setMessage(Resultat::getRequest(rep, server, *this, _clients[pollfds[i].fd]));
 
 						std::string response = resultat.getMessage();
 						// std::cout << response << std::endl;

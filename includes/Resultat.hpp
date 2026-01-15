@@ -33,5 +33,6 @@ public:
 	static std::string handleDELETE(const Response &rep, const ServerConfig &server, Location &loc);
 	static std::string handleCGI(const Response &rep, const ServerConfig &server, std::string path, const Location &loc, const ParseURL &parsed_url, Server &srv, ClientState &client_state);
 
-	void getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state);
+	static std::string getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state);
+// 	void getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state);
 };

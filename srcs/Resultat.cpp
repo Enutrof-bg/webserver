@@ -16,6 +16,150 @@ void Resultat::setMessage(std::string message)
 	_message = message;
 }
 
+std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state)
+{
+	(void)client_state;
+	std::cout << "-------------------GET REQUEST------------------------" << std::endl;
+
+	// rep.parsed_url = parseURL(rep, server);
+	rep.setParsedURL(ParseURL::ft_parseURL(rep, server));
+	std::cout << "Parsed URL:" << std::endl;
+	std::cout << "  Full URL: " <<  "{"<< rep.parsed_url.url << "}" << std::endl;
+	std::cout << "  Script Path: " <<  "{"<< rep.parsed_url.path_script << "}" << std::endl;
+	std::cout << "  Path Info: " <<  "{"<< rep.parsed_url.path_info << "}" << std::endl;
+	std::cout << "  Query String: " << "{"<< rep.parsed_url.query_string << "}" << std::endl;
+
+	//verification des redirections
+	std::string test_redir = ft_redirection(server, rep.parsed_url);
+	if (!test_redir.empty())
+	{
+		return test_redir;
+	}
+	Location loc = getLocation(rep.parsed_url.path_script, server);
+	std::cout << "loc path:"<<loc._config_path << std::endl;
+	std::cout << "method size:"<<loc._config_allowed_methods.size() << std::endl;
+	std::vector<std::string>::const_iterator it = loc._config_allowed_methods.begin();
+	for (; it != loc._config_allowed_methods.end(); it++)
+	{
+		std::cout << "config method:" << *it << std::endl;
+	}
+
+	//gestion transfer-encoding: chunked
+	if (rep.header.find("Transfer-Encoding") != rep.header.end()
+		&& rep.header.at("Transfer-Encoding") == "chunked")
+	{
+		// if (rep.method != "POST" && rep.method != "PUT")
+		// {
+		// 	std::cout << "Chunked encoding only allowed for POST and PUT methods" << std::endl;
+		// 	return "HTTP/1.1 400 Bad Request\r\n\r\n<h1>ERROR 400 Bad Request</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		// }
+		std::string body;
+		size_t pos = 0;
+		while (true)
+		{
+			size_t line_end = rep.body.find("\r\n", pos);
+			if (line_end == std::string::npos)
+				break;
+
+			std::string size_str = rep.body.substr(pos, line_end - pos);
+			size_t chunk_size = std::strtoul(size_str.c_str(), NULL, 16);
+			if (chunk_size == 0)
+				break;
+
+			pos = line_end + 2;
+			body.append(rep.body.substr(pos, chunk_size));
+			pos += chunk_size + 2; // +2 pour \r\n
+
+			//verifie que le chunk depasse pas la taille max autorisee
+			//si location existe, check sa taille max
+			//sinon check server
+			size_t current_body_size = body.length();
+			size_t max_size = server._config_client_max_body_size;
+			if (loc._config_client_max_body_size > 0)
+				max_size = loc._config_client_max_body_size;
+			if (current_body_size > max_size)
+			{
+				std::cout << "Body size exceeded during chunked decoding" << std::endl;
+				// return "HTTP/1.1 413 Payload Too Large\r\n\r\n<h1>ERROR 413 Payload Too Large</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+				return ft_handling_error(server, 413);
+			}
+		}
+		const_cast<Response&>(rep).body = body;
+		// rep.body = body;
+	}
+	std::cout << rep.body << std::endl;
+	std::cout << "Reconstructed body length:" << rep.body.length() << std::endl;
+	
+	//check body size
+	std::string body_size_check = ft_check_body_size(rep, server, loc);
+	if (!body_size_check.empty())
+		return body_size_check;
+
+	if (!loc._config_allowed_methods.empty() && ft_check_method(loc, rep) == 1)
+	{
+		std::cout << "TEST5" << std::endl;
+		// return "HTTP/1.1 405 Method Not Allowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		return (ft_handling_error(server, 405));
+	}
+	std::cout << "TEST6" << std::endl;
+	std::string path = getPath(rep.url, server, loc);
+	if (path.empty())
+	{
+		//verifie si c'est une redirection 301
+		std::string temp_path = server._config_root;
+		if (!loc._config_root.empty())
+			temp_path = loc._config_root;
+
+		if (rep.url[rep.url.length() - 1] != '/')
+		{
+			std::string new_url = rep.url + "/";
+			std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+			std::ostringstream response;
+			response << "HTTP/1.1 301 Moved Permanently\r\n"
+					 << "Location: " << new_url << "\r\n"
+					 << "Content-Type: text/html; charset=UTF-8\r\n"
+					 << "Content-Length: " << body.length() << "\r\n"
+					 << "Connection: close\r\n"
+					 << "\r\n"
+					 << body;
+			
+			return response.str();
+		}
+
+		// return "HTTP/1.1 404 Not Found\r\n\r\n<h1>ERROR 404 Not Found</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		return (ft_handling_error(server, 404));
+	}
+
+	std::cout << "Final path to serve: " << path << std::endl;
+	std::string temp_path = loc._config_path;
+	// std::string temp_path = parsed_url.path_script;
+	std::cout << "temp_path:" << temp_path << std::endl;
+
+	if (temp_path.length() > 1
+		&& rep.parsed_url.path_script.length() >= temp_path.length()
+		&& rep.parsed_url.path_script.compare(rep.parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
+		&& rep.parsed_url.path_script.find(".") != std::string::npos)
+	{
+		std::cout << "going to handleCGI" << std::endl;
+		return Resultat::handleCGI(rep, server, path, loc, rep.parsed_url, srv, client_state);
+	}
+	if (rep.method == "GET")
+	{
+		return Resultat::handleGET(path, server, loc, rep.parsed_url);
+	}
+	else if (rep.method == "POST")
+	{
+		return Resultat::handlePOST(rep, server);
+	}
+	else if (rep.method == "DELETE")
+	{
+		return Resultat::handleDELETE(rep, server, loc);
+	}
+	// return ("HTTP/1.1 405 Method Not ALlowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>");
+	return (ft_handling_error(server, 405));
+}
+
+
 std::string Resultat::handleGET(const std::string &path, const ServerConfig &server, const Location &loc, const ParseURL &parsed_url)
 {
 	(void)server;
@@ -166,7 +310,6 @@ std::string Resultat::handleGET(const std::string &path, const ServerConfig &ser
 	std::cout << "-----------------------------------HANDLE_GET-FIN-------------" <<std::endl;
 	return (response.str());
 }
-
 
 //Gere les requetes POST
 //Si content-type est application/x-www-form-urlencoded, parse les donnees et cree une page html de reponse

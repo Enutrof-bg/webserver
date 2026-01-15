@@ -15,7 +15,7 @@ class ClientState;
 class Response
 {
 private:
-	ParseURL parsed_url;
+	
 
 public:
 	std::string method;
@@ -23,9 +23,9 @@ public:
 	std::string version;
 	std::map<std::string, std::string> header;
 	std::string body;
-	
+	ParseURL parsed_url;
 public:
-	static std::string getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state);
+	// static std::string getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state);
 
 	void setParsedURL(const ParseURL &_parsed_url)
 	{
