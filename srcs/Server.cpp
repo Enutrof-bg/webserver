@@ -33,11 +33,12 @@ void Server::setup()
 
 		if (bind(_server_listen_socket[i], (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
 		{
-			strerror(errno);
-			continue;
+			std::cerr << "Bind failed: " << strerror(errno) << std::endl;
+			throw std::runtime_error("Bind failed");
+			// continue;
 		}
 
-		if (listen(_server_listen_socket[i], 10) < 0)
+		if (listen(_server_listen_socket[i], 1024) < 0)
 		{
 			strerror(errno);
 			continue;
@@ -273,6 +274,8 @@ void Server::run()
 			 				break;
 		 				}
 	   				}
+					// continue;
+					// i--;
 				}
 			}
 			else
@@ -395,11 +398,17 @@ void Server::run()
 
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
-
 						Resultat resultat;
-						resultat.setMessage(Resultat::getRequest(rep, server, *this, _clients[pollfds[i].fd]));
-
-						std::string response = resultat.getMessage();
+						std::string response;
+						if (rep.invalid_request)
+						{
+							resultat.setMessage(ft_handling_error(server, 400));
+						}
+						else
+						{
+							resultat.setMessage(Resultat::getRequest(rep, server, *this, _clients[pollfds[i].fd]));
+						}
+						response = resultat.getMessage();
 						// std::cout << response << std::endl;
 						
 						//reinitialiser le buffer pour les prochaines requetes keep-alive

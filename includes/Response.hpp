@@ -24,6 +24,8 @@ public:
 	std::map<std::string, std::string> header;
 	std::string body;
 	ParseURL parsed_url;
+
+	int invalid_request;
 public:
 	// static std::string getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state);
 

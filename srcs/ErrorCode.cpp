@@ -82,7 +82,7 @@ std::string ft_get_default_error_body(int code)
 		break;
 
 	case 404:
-		return "<h1>ERROR 404 Not found</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
+		return "<h1>ERROR 404 Not found</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		break;
 
 	case 405:

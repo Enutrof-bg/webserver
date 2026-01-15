@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-	if (argc != 2)
+	if (argc > 2)
 	{
 		std::cout << "Erreur: expected configuration file" << std::endl;
 		return (1);
@@ -13,7 +13,11 @@ int main(int argc, char **argv)
 	{
 		try
 		{
-			std::string s(argv[1]);
+			std::string s;
+			if (argc == 2)
+				s = argv[1];
+			else
+				s = "config/conf1.conf";
 			Config conf(s);
 			// std::cout << conf.getFilename() << std::endl;
 			conf.readConfig();

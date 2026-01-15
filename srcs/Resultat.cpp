@@ -149,7 +149,7 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 	}
 	else if (rep.method == "POST")
 	{
-		return Resultat::handlePOST(rep, server);
+		return Resultat::handlePOST(rep, server, loc);
 	}
 	else if (rep.method == "DELETE")
 	{
@@ -315,7 +315,7 @@ std::string Resultat::handleGET(const std::string &path, const ServerConfig &ser
 //Si content-type est application/x-www-form-urlencoded, parse les donnees et cree une page html de reponse
 //Si content-type est multipart/form-data, parse les donnees et affiche dans la console les parties recues
 //Retourne la reponse HTTP
-std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server)
+std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server, const Location &loc)
 {
 	(void)rep;
 	(void)server;
@@ -324,12 +324,12 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 	std::string post_content_type;
 
 	//verifie transfer-encoding dans le header vaut chunked
-	if (rep.header.find("Transfer-Encoding") != rep.header.end()
-		/*&& rep.header.at("Transfer-Encoding") == "chunked"*/)
-	{
-		std::cout << "POST with chunked transfer-encoding not supported yet" << std::endl;
-		return "HTTP/1.1 501 Not Implemented\r\n\r\n<h1>ERROR 501 Not Implemented</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
-	}
+	// if (rep.header.find("Transfer-Encoding") != rep.header.end()
+	// 	/*&& rep.header.at("Transfer-Encoding") == "chunked"*/)
+	// {
+	// 	std::cout << "POST with chunked transfer-encoding not supported yet" << std::endl;
+	// 	return "HTTP/1.1 501 Not Implemented\r\n\r\n<h1>ERROR 501 Not Implemented</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+	// }
 
 	//check rep.length or error413
 	std::map<std::string, std::string>::const_iterator it_len = rep.header.find("Content-Length");
@@ -389,9 +389,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 		std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
 		return response.str();
 	}
-	std::cout << "TEST:"<<post_content_type << std::endl;
-
-	if (post_content_type.find("multipart/form-data;") != std::string::npos)
+	else if (post_content_type.find("multipart/form-data;") != std::string::npos)
 	{
 		std::cout << "TEST:"<<post_content_type << std::endl;
 		//extraire boundary
@@ -461,7 +459,30 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				}
 				std::cout << "-------------part_body_boundary----------" <<std::endl; 
 				std::cout << part_body << std::endl;
-				std::string upload_path = "./uploads/" + new_filename;
+
+				//split new_filename to store extension
+				size_t ext_pos = new_filename.find_last_of(".");
+				std::string extension;
+				if (ext_pos != std::string::npos)
+				{
+					extension = new_filename.substr(ext_pos);
+					new_filename = new_filename.substr(0, ext_pos);
+				}
+				else
+				{
+					extension = ".bin";
+				}
+				new_filename = new_filename + intToString(time(NULL)) + extension;
+
+				std::string upload_path;
+				if (!loc._config_upload_path.empty())
+				{
+					upload_path = loc._config_upload_path + "/" + new_filename;
+				}
+				else
+				{
+					upload_path = "./uploads/" + new_filename;
+				}
 				std::cout << "test_test_new_filename:"<<  upload_path << std::endl;
 
 				std::ofstream output(upload_path.c_str(), std::ios::binary);
@@ -469,6 +490,24 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				{
 					output.write(part_body.c_str(), part_body.length());
 					output.close();
+
+					std::ostringstream body;
+					body << "<body><h1>Upload réussi!</h1>"
+						<< "<p><a title=\"Retour\" href=\"/\">go back</a></p></body>";
+
+					std::ostringstream response;
+					response << "HTTP/1.1 201 Created\r\n"
+						<< "Content-Type: text/html; charset=UTF-8\r\n"
+						<< "Content-Length: " << body.str().length() <<"\r\n"
+						<< "Connection: close\r\n"
+						<< "\r\n"
+						<< body.str();
+					return (response.str());
+				}
+				else
+				{
+					std::cout << "Erreur lors de l'ouverture du fichier en écriture: " << upload_path << std::endl;
+					return ft_handling_error(server, 500);
 				}
 			}
 		}
@@ -477,20 +516,33 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 		//lire le sdonne binaire
 		//ecrire dans un fichier dans /upload ?
 		//retourner 201 Created avec le chemin du fichier?
-		std::ostringstream body;
-		body << "<body><h1>Upload réussi!</h1>"
-			 << "<p><a title=\"Retour\" href=\"/\">go back</a></p></body>";
-
-		std::ostringstream response;
-		response << "HTTP/1.1 201 Created\r\n"
-			 << "Content-Type: text/html; charset=UTF-8\r\n"
-			 << "Content-Length: " << body.str().length() <<"\r\n"
-			 << "Connection: close\r\n"
-			 << "\r\n"
-			 << body.str();
-		return (response.str());
+		
 	}
-	return "PROUST";
+	else
+	{
+		std::cout << "Type inconnu ou absent, traitement comme binaire brut." << std::endl;
+
+		std::string filename = "uploads/raw_post_" + intToString(time(NULL)) + ".bin";
+		std::ofstream raw_file(filename.c_str(), std::ios::binary);
+
+		if (raw_file.is_open())
+		{
+			raw_file.write(rep.body.c_str(), rep.body.length());
+			raw_file.close();
+			
+			std::ostringstream response;
+			response << "HTTP/1.1 201 Created\r\n"
+					<< "Content-Type: text/plain\r\n"
+					<< "Content-Length: 0\r\n"
+					<< "Location: /" << filename << "\r\n\r\n";
+			return response.str();
+		}
+		else
+		{
+			return ft_handling_error(server, 500);
+		}
+	}
+	return ft_handling_error(server, 400);
 }
 
 

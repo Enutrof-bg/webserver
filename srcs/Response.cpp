@@ -10,6 +10,7 @@ Response parseRequest(const std::string &request)
 	if (header_end == std::string::npos)
 	{
 		std::cerr << "Erreur: header imcomplet" << std::endl;
+		rep.invalid_request = 1;
 		return rep;
 	}
 	std::string part_header = request.substr(0, header_end);
