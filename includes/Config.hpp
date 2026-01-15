@@ -1,10 +1,11 @@
 #pragma once
 
-#include "webserv.hpp"
+#include <string>
+#include <vector>
+#include <map>
 
-class Location
+struct Location
 {
-public:
 	std::string 				_config_path;
 	bool 						_config_autoindex;
 	std::vector<std::string> 	_config_allowed_methods;
@@ -18,9 +19,8 @@ public:
 	size_t 						_config_client_max_body_size;
 };
 
-class ServerConfig
+struct ServerConfig
 {
-public:
 	int 						_config_listen;
 	std::string 				_config_server_name;
 	std::string 				_config_root;

@@ -4,6 +4,6 @@
 #include "Response.hpp"
 #include "webserv.hpp"
 
-class ServerConfig;
+struct ServerConfig;
 
 std::string ft_handling_error(const ServerConfig &server, int code);

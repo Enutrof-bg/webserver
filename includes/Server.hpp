@@ -2,30 +2,17 @@
 
 #include "Config.hpp"
 #include "Response.hpp"
+#include "Resultat.hpp"
 #include "webserv.hpp"
+#include "ClientState.hpp"
 
+class ClientState;
 class Config;
-class ServerConfig;
-
+struct ServerConfig;
+class Resultat;
 
 #define TIMEOUT_SECONDS 3
 
-class ClientState
-{
-public:
-	int fd_client;
-	int fd_cgi;
-	pid_t cgi_pid;
-	std::string request_buffer;
-	std::string response_buffer;
-
-	time_t last_activity;
-
-	// int state;
-	enum State { IDLE, READING_REQ, WRITING_CGI, READING_CGI, WRITING_RES, TIMEOUT } state;
-
-	ClientState(): fd_client(-1), fd_cgi(-1), cgi_pid(-1), request_buffer(""), response_buffer(""), state(IDLE) {}
-};
 
 class Server
 {
@@ -51,9 +38,8 @@ private:
 	int actual_port;
 
 	std::map<int, ClientState> _clients;
-public:
 	
-
+public:
 	Server(const Config &conf);
 	~Server();
 

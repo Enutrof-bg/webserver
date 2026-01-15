@@ -396,7 +396,10 @@ void Server::run()
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
 
-						std::string response = getRequest(rep, server, *this, _clients[pollfds[i].fd]);
+						Resultat resultat;
+						resultat.setMessage(Response::getRequest(rep, server, *this, _clients[pollfds[i].fd]));
+
+						std::string response = resultat.getMessage();
 						// std::cout << response << std::endl;
 						
 						//reinitialiser le buffer pour les prochaines requetes keep-alive

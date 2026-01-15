@@ -1,4 +1,5 @@
 #include "../includes/Config.hpp"
+#include "../includes/webserv.hpp"
 
 Config::Config(std::string filename): _filename(filename)
 {
