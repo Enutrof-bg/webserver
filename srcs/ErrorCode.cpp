@@ -12,7 +12,8 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 	case 400:
 		return_ss << "HTTP/1.1 400 Bad Request\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << ss.str()
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
 				<< "\r\n\r\n";
 		return return_ss.str();
 		break;
@@ -20,7 +21,8 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 	case 403:
 		return_ss << "HTTP/1.1 403 Forbidden\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << ss.str()
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
 				<< "\r\n\r\n";
 		return return_ss.str();
 		break;
@@ -28,7 +30,8 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 	case 404:
 		return_ss << "HTTP/1.1 404 Not Found\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << ss.str()
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
 				<< "\r\n\r\n";
 		return return_ss.str();
 		break;
@@ -36,7 +39,8 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 	case 405:
 		return_ss << "HTTP/1.1 405 Method Not Allowed\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << ss.str()
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
 				<< "\r\n\r\n";
 		return return_ss.str();
 		break;
@@ -44,7 +48,8 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 	case 413:
 		return_ss << "HTTP/1.1 413 Payload Too Large\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << ss.str()
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
 				<< "\r\n\r\n";
 		return return_ss.str();
 		break;
@@ -52,7 +57,8 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 	case 500: 
 		return_ss << "HTTP/1.1 500 Internal Server Error\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << ss.str()
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
 				<< "\r\n\r\n";
 		return return_ss.str();
 		break;
