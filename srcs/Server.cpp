@@ -234,7 +234,7 @@ void Server::run()
 
 	while(true)
 	{
-		int ret = poll(pollfds.data(), pollfds.size(), 100); // timeout de 1000 ms
+		int ret = poll(pollfds.data(), pollfds.size(), 0); // timeout de 1000 ms
 		if (ret < 0)
 			throw std::runtime_error("Error: poll failed");
 		
