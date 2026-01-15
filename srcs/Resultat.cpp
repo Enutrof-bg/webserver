@@ -485,6 +485,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 		response << "HTTP/1.1 201 Created\r\n"
 			 << "Content-Type: text/html; charset=UTF-8\r\n"
 			 << "Content-Length: " << body.str().length() <<"\r\n"
+			 << "Connection: close\r\n"
 			 << "\r\n"
 			 << body.str();
 		return (response.str());
