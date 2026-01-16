@@ -13,7 +13,7 @@ public:
 	time_t last_activity;
 
 	// int state;
-	enum State { IDLE, READING_REQ, WRITING_CGI, READING_CGI, WRITING_RES, TIMEOUT } state;
+	enum State { IDLE, READING_REQ, WRITING_CGI, READING_CGI, WRITING_RES, TIMEOUT, FAILED_CGI } state;
 
 public:
 	ClientState();

@@ -19,7 +19,7 @@ void Server::setup()
 			continue;
 		}
 		_server_listen_socket.push_back(listenfd);
-		std::cout << listenfd << std::endl;
+		// std::cout << listenfd << std::endl;
 
 		sockaddr_in serverAddress;
 		serverAddress.sin_family = AF_INET;
@@ -33,15 +33,16 @@ void Server::setup()
 
 		if (bind(_server_listen_socket[i], (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
 		{
-			std::cerr << "Bind failed: " << strerror(errno) << std::endl;
+			// std::cerr << "Bind failed: " << strerror(errno) << std::endl;
 			throw std::runtime_error("Bind failed");
 			// continue;
 		}
 
 		if (listen(_server_listen_socket[i], 1024) < 0)
 		{
-			strerror(errno);
-			continue;
+			// std::cerr << "Listen failed: " << strerror(errno) << std::endl;
+			throw std::runtime_error("Listen failed");
+			// continue;
 		}
 	}
 }
@@ -310,18 +311,40 @@ void Server::run()
 							close(it->second.fd_cgi);
 							pollfds.erase(pollfds.begin() + i);
 							i--;
-							waitpid(it->second.cgi_pid, NULL, WNOHANG);
-							_client_responses[it->second.fd_client] = it->second.response_buffer;
-
-							for (size_t j = 0; j < pollfds.size(); j++)
+							int status = 0;
+							waitpid(it->second.cgi_pid, &status, WNOHANG);
+							if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
 							{
-								if (pollfds[j].fd == it->second.fd_client)
+								// return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
+								std::cerr << "CGI script execution failed." << std::endl;
+								_client_responses[it->second.fd_client] = 
+									ft_handling_error(_server[_client_to_server[it->second.fd_client]], 500);
+								// return (ft_handling_error(*this, 500));
+								for (size_t j = 0; j < pollfds.size(); j++)
 								{
-									pollfds[j].events = POLLOUT;
-									_clients[pollfds[i].fd].state = ClientState::WRITING_RES;
-									break;
+									if (pollfds[j].fd == it->second.fd_client)
+									{
+										pollfds[j].events = POLLOUT;
+										_clients[pollfds[i].fd].state = ClientState::FAILED_CGI;
+										break;
+									}
 								}
 							}
+							else
+							{
+								_client_responses[it->second.fd_client] = it->second.response_buffer;
+								for (size_t j = 0; j < pollfds.size(); j++)
+								{
+									if (pollfds[j].fd == it->second.fd_client)
+									{
+										pollfds[j].events = POLLOUT;
+										_clients[pollfds[i].fd].state = ClientState::WRITING_RES;
+										break;
+									}
+								}
+							}
+
+							
 						}
 					}
 				}
@@ -407,6 +430,7 @@ void Server::run()
 						else
 						{
 							resultat.setMessage(Resultat::getRequest(rep, server, *this, _clients[pollfds[i].fd]));
+							// resultat.getRequest(rep, server, *this, _clients[pollfds[i].fd]);
 						}
 						response = resultat.getMessage();
 						// std::cout << response << std::endl;
@@ -452,6 +476,7 @@ void Server::run()
 								<< response_2;
 						response_2 = response.str();
 					}
+
 
 					std::cout << response_2 << std::endl;
 					// size_t n = write(pollfds[i].fd, response_2.c_str(), response_2.length());

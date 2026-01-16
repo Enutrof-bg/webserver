@@ -33,8 +33,13 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 	std::string test_redir = ft_redirection(server, rep.parsed_url);
 	if (!test_redir.empty())
 	{
+		std::cout << "Redirection detected, sending 301 response" << std::endl;
 		return test_redir;
+		
+		// this->setMessage(test_redir);
+		// return this->getMessage();
 	}
+
 	Location loc = getLocation(rep.parsed_url.path_script, server);
 	std::cout << "loc path:"<<loc._config_path << std::endl;
 	std::cout << "method size:"<<loc._config_allowed_methods.size() << std::endl;
@@ -87,8 +92,8 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 		const_cast<Response&>(rep).body = body;
 		// rep.body = body;
 	}
-	std::cout << rep.body << std::endl;
-	std::cout << "Reconstructed body length:" << rep.body.length() << std::endl;
+	// std::cout << rep.body << std::endl;
+	// std::cout << "Reconstructed body length:" << rep.body.length() << std::endl;
 	
 	//check body size
 	std::string body_size_check = ft_check_body_size(rep, server, loc);
@@ -97,11 +102,11 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 
 	if (!loc._config_allowed_methods.empty() && ft_check_method(loc, rep) == 1)
 	{
-		std::cout << "TEST5" << std::endl;
+		// std::cout << "TEST5" << std::endl;
 		// return "HTTP/1.1 405 Method Not Allowed\r\n\r\n<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		return (ft_handling_error(server, 405));
 	}
-	std::cout << "TEST6" << std::endl;
+	// std::cout << "TEST6" << std::endl;
 	std::string path = getPath(rep.url, server, loc);
 	if (path.empty())
 	{
@@ -113,17 +118,18 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 		if (rep.url[rep.url.length() - 1] != '/')
 		{
 			std::string new_url = rep.url + "/";
-			std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
-			std::ostringstream response;
-			response << "HTTP/1.1 301 Moved Permanently\r\n"
-					 << "Location: " << new_url << "\r\n"
-					 << "Content-Type: text/html; charset=UTF-8\r\n"
-					 << "Content-Length: " << body.length() << "\r\n"
-					 << "Connection: close\r\n"
-					 << "\r\n"
-					 << body;
+			// std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+			// std::ostringstream response;
+			// response << "HTTP/1.1 301 Moved Permanently\r\n"
+			// 		 << "Location: " << new_url << "\r\n"
+			// 		 << "Content-Type: text/html; charset=UTF-8\r\n"
+			// 		 << "Content-Length: " << body.length() << "\r\n"
+			// 		 << "Connection: close\r\n"
+			// 		 << "\r\n"
+			// 		 << body;
 			
-			return response.str();
+			// return response.str();
+			return ft_move_code(server, 301, new_url);
 		}
 
 		// return "HTTP/1.1 404 Not Found\r\n\r\n<h1>ERROR 404 Not Found</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
@@ -177,38 +183,42 @@ std::string Resultat::handleGET(const std::string &path, const ServerConfig &ser
 	{
 		if (loc._config_autoindex == true)
 		{
-			std::cout << "Autoindex activé pour le répertoire: " << path << std::endl;
-			std::ostringstream body;
-			body << "<!DOCTYPE html>\n"
-				 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
-				 << "<body>\n"
-				 << "<h1>Index of " << parsed_url.url << "</h1>\n"
-				 << "<ul>\n";
-
-			struct dirent *ent;
-			while ((ent = readdir(dir)) != NULL)
-			{
-				std::string filename = ent->d_name;
-				if (filename == ".")
-					continue;
-				body << "<li><a href=\"" << parsed_url.url;
-				if (parsed_url.url[parsed_url.url.length() - 1] != '/')
-					body << "/";
-				body << filename << "\">" << filename << "</a></li>\n";
-			}
-			closedir(dir);
-
-			body << "</ul>\n</body>\n</html>\n";
-
-			std::ostringstream response;
-			response << "HTTP/1.1 200 OK\r\n"
-					 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
-					 << "Content-Length: " << body.str().length() << "\r\n"
-					 << "Connection: close\r\n"
-					 << "\r\n"
-					 << body.str();
 			
-			return response.str();
+			std::cout << "Autoindex activé pour le répertoire: " << path << std::endl;
+			// std::ostringstream body;
+			// body << "<!DOCTYPE html>\n"
+			// 	 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
+			// 	 << "<body>\n"
+			// 	 << "<h1>Index of " << parsed_url.url << "</h1>\n"
+			// 	 << "<ul>\n";
+
+			// struct dirent *ent;
+			// while ((ent = readdir(dir)) != NULL)
+			// {
+			// 	std::string filename = ent->d_name;
+			// 	if (filename == ".")
+			// 		continue;
+			// 	body << "<li><a href=\"" << parsed_url.url;
+			// 	if (parsed_url.url[parsed_url.url.length() - 1] != '/')
+			// 		body << "/";
+			// 	body << filename << "\">" << filename << "</a></li>\n";
+			// }
+			// closedir(dir);
+
+			// body << "</ul>\n</body>\n</html>\n";
+
+			// std::ostringstream response;
+			// response << "HTTP/1.1 200 OK\r\n"
+			// 		 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
+			// 		 << "Content-Length: " << body.str().length() << "\r\n"
+			// 		 << "Connection: close\r\n"
+			// 		 << "\r\n"
+			// 		 << body.str();
+			
+			// return response.str();
+			std::string body = ft_generate_autoindex_body(server, path, parsed_url.url);
+			return ft_generate_autoindex_page(server, 200, body);
+			
 		}
 		else
 		{
@@ -253,62 +263,51 @@ std::string Resultat::handleGET(const std::string &path, const ServerConfig &ser
 			}
 
 			std::cout << "Directory path for autoindex: " << dir_path << std::endl;
-			DIR *dir2 = opendir(dir_path.c_str());
-			if (dir2 != NULL)
-			{
-				std::ostringstream body;
-				body << "<!DOCTYPE html>\n"
-					 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
-					 << "<body>\n"
-					 << "<h1>Index of " << parsed_url.url << "</h1>\n"
-					 << "<ul>\n";
+			// DIR *dir2 = opendir(dir_path.c_str());
+			// if (dir2 != NULL)
+			// {
+			// 	std::ostringstream body;
+			// 	body << "<!DOCTYPE html>\n"
+			// 		 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
+			// 		 << "<body>\n"
+			// 		 << "<h1>Index of " << parsed_url.url << "</h1>\n"
+			// 		 << "<ul>\n";
 
-				struct dirent *ent;
-				while ((ent = readdir(dir2)) != NULL)
-				{
-					std::string filename = ent->d_name;
-					if (filename == ".")
-						continue;
-					body << "<li><a href=\"" << parsed_url.url;
-					if (!parsed_url.url.empty() && parsed_url.url[parsed_url.url.length() - 1] != '/')
-						body << "/";
-					body << filename << "\">" << filename << "</a></li>\n";
-				}
-				closedir(dir2);
+			// 	struct dirent *ent;
+			// 	while ((ent = readdir(dir2)) != NULL)
+			// 	{
+			// 		std::string filename = ent->d_name;
+			// 		if (filename == ".")
+			// 			continue;
+			// 		body << "<li><a href=\"" << parsed_url.url;
+			// 		if (!parsed_url.url.empty() && parsed_url.url[parsed_url.url.length() - 1] != '/')
+			// 			body << "/";
+			// 		body << filename << "\">" << filename << "</a></li>\n";
+			// 	}
+			// 	closedir(dir2);
 
-				body << "</ul>\n</body>\n</html>\n";
-
+			// 	body << "</ul>\n</body>\n</html>\n";
+			
 				
-				std::ostringstream response;
-				response << "HTTP/1.1 200 OK\r\n"
-						 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
-						 << "Content-Length: " << body.str().length() << "\r\n"
-						 << "Connection: close\r\n"
-						 << "\r\n"
-						 << body.str();
+				// std::ostringstream response;
+				// response << "HTTP/1.1 200 OK\r\n"
+				// 		 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
+				// 		 << "Content-Length: " << body.str().length() << "\r\n"
+				// 		 << "Connection: close\r\n"
+				// 		 << "\r\n"
+				// 		 << body.str();
 				
-				std::cout << "-----------------------------------HANDLE_GET-FIN------------" << std::endl;
-				return response.str();
-			}
+				// std::cout << "-----------------------------------HANDLE_GET-FIN------------" << std::endl;
+				// return response.str();
+			std::string body = ft_generate_autoindex_body(server, dir_path, parsed_url.url);
+			return ft_generate_autoindex_page(server, 200, body);
 		}
 		std::cout << "Fichier not found: " << path << std::endl;
 		return (ft_handling_error(server, 404));
 	}
-	//protec
-
-	//a changer
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	file.close();
-
-	std::ostringstream response;
-	response << "HTTP/1.1 200 OK\r\n"
-			<<"Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
-			<<"Content-Length: " << content.length()<<"\r\n"
-			<<"Connection: close\r\n"
-			<<"\r\n"
-			<< content;
-	std::cout << "-----------------------------------HANDLE_GET-FIN-------------" <<std::endl;
-	return (response.str());
+	std::cout << "File found, serving file: " << path << std::endl;
+	return ft_serve_file(server, path, 200, temp_content_type);
 }
 
 //Gere les requetes POST
@@ -491,18 +490,19 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 					output.write(part_body.c_str(), part_body.length());
 					output.close();
 
-					std::ostringstream body;
-					body << "<body><h1>Upload réussi!</h1>"
-						<< "<p><a title=\"Retour\" href=\"/\">go back</a></p></body>";
+					// std::ostringstream body;
+					// body << "<body><h1>Upload réussi!</h1>"
+					// 	<< "<p><a title=\"Retour\" href=\"/\">go back</a></p></body>";
 
-					std::ostringstream response;
-					response << "HTTP/1.1 201 Created\r\n"
-						<< "Content-Type: text/html; charset=UTF-8\r\n"
-						<< "Content-Length: " << body.str().length() <<"\r\n"
-						<< "Connection: close\r\n"
-						<< "\r\n"
-						<< body.str();
-					return (response.str());
+					// std::ostringstream response;
+					// response << "HTTP/1.1 201 Created\r\n"
+					// 	<< "Content-Type: text/html; charset=UTF-8\r\n"
+					// 	<< "Content-Length: " << body.str().length() <<"\r\n"
+					// 	<< "Connection: close\r\n"
+					// 	<< "\r\n"
+					// 	<< body.str();
+					// return (response.str());
+					return ft_move_code(server, 201, upload_path);
 				}
 				else
 				{
@@ -530,12 +530,14 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 			raw_file.write(rep.body.c_str(), rep.body.length());
 			raw_file.close();
 			
-			std::ostringstream response;
-			response << "HTTP/1.1 201 Created\r\n"
-					<< "Content-Type: text/plain\r\n"
-					<< "Content-Length: 0\r\n"
-					<< "Location: /" << filename << "\r\n\r\n";
-			return response.str();
+			// std::ostringstream response;
+			// response << "HTTP/1.1 201 Created\r\n"
+			// 		<< "Content-Type: text/plain\r\n"
+			// 		<< "Content-Length: 0\r\n"
+			// 		<< "Location: /" << filename << "\r\n\r\n";
+			// return response.str();
+			std::string temp_filename = "/" + filename;
+			return ft_move_code(server, 201, temp_filename);
 		}
 		else
 		{
@@ -578,9 +580,7 @@ std::string Resultat::handleDELETE(const Response &rep, const ServerConfig &serv
 		// return response.str();
 		return (ft_handling_error(server, 400));
 	}
-
-	//delete file
-	if (std::remove(path.c_str()))
+	else if (std::remove(path.c_str()))
 	{
 		// newbody << "<!DOCTYPE html>\n"
 		// 	<< "<html>\n<head><title>DELETE reçu</title></head>\n"
@@ -599,20 +599,9 @@ std::string Resultat::handleDELETE(const Response &rep, const ServerConfig &serv
 	}
 	else
 	{
-		newbody << "<!DOCTYPE html>\n"
-			<< "<html>\n<head><title>DELETE reçu</title></head>\n"
-			<< "<body>\n"
-			<< "<h1>deleted "<< rep.url <<" </h1>\n"
-			<< "<ul>\n";
+		std::string temp_content_type = "";
+		return ft_serve_no_body(server, 204, temp_content_type);
 	}
-	response << "HTTP/1.1 204 No Content\r\n"
-			<< "Content-Type: text/html; charset=UTF-8\r\n"
-			<< "Content-Length: " << newbody.str().length() << "\r\n"
-			<< "Connection: close\r\n"
-			<< "\r\n"
-			<< newbody.str();
-	std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
-	return response.str();
 }
 
 
@@ -715,9 +704,11 @@ std::string Resultat::handleCGI(const Response &rep, const ServerConfig &server,
 		// dup2(scriptfd[0], 0);
 		
 		//executer le script
+		std::cerr << "Executing CGI script: " << temp_cgi_path << std::endl;
 		execve(temp_cgi_path.c_str(), argv, envp);
 		//execve fail
 		ft_free_double_tab(envp);
+		std::cerr << "Execve failed for CGI script: " << temp_cgi_path << std::endl;
 		// std::string error_msg = "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
 		// write(1, error_msg.c_str(), error_msg.length());
 		exit(EXIT_FAILURE);
@@ -733,10 +724,10 @@ std::string Resultat::handleCGI(const Response &rep, const ServerConfig &server,
 			close(bodyfd[1]);
 		}
 
-		client_state.cgi_pid = id;
-		client_state.fd_cgi = scriptfd[0];
-		client_state.state = ClientState::READING_CGI;
-		client_state.last_activity = time(NULL);
+		// client_state.cgi_pid = id;
+		// client_state.fd_cgi = scriptfd[0];
+		// client_state.state = ClientState::READING_CGI;
+		// client_state.last_activity = time(NULL);
 
 		//wait processus enfant
 		int status = 0;
@@ -747,12 +738,18 @@ std::string Resultat::handleCGI(const Response &rep, const ServerConfig &server,
 		std::cout << "================parent==READ_FIN===============" << std::endl;
 
 		std::cout << "================parent==FIN===============" << std::endl;
-
+		// waitpid(id, &status, WNOHANG);
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 1)
 		{
 			// return "HTTP/1.1 500 Internal Server Error\r\n\r\n<h1>ERROR 500 Execve Error</h1>";
+			std::cerr << "CGI script execution failed." << std::endl;
 			return (ft_handling_error(server, 500));
 		}
+
+		client_state.cgi_pid = id;
+		client_state.fd_cgi = scriptfd[0];
+		client_state.state = ClientState::READING_CGI;
+		client_state.last_activity = time(NULL);
 
 		std::string response = "";
 		// std::ostringstream response;

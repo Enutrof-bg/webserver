@@ -13,36 +13,6 @@ e\r
 message envoye\r
 d\r
 par morceaux.\r
-4\r
-Ceci\r
-7\r
-est un \r
-8\r
-test de \r
-e\r
-message envoye\r
-d\r
-par morceaux.\r
-4\r
-Ceci\r
-7\r
-est un \r
-8\r
-test de \r
-e\r
-message envoye\r
-d\r
-par morceaux.\r
-4\r
-Ceci\r
-7\r
-est un \r
-8\r
-test de \r
-e\r
-message envoye\r
-d\r
-par morceaux.\r
 0\r
 \r
 ' | nc localhost 8080

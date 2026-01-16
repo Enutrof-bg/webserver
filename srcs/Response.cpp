@@ -4,6 +4,7 @@
 Response parseRequest(const std::string &request)
 {
 	Response rep;
+	rep.invalid_request = 0;
 
 	std::cout << "-------------------PARSE REQUEST------------------------" << std::endl;
 	size_t header_end = request.find("\r\n\r\n");
@@ -61,50 +62,97 @@ Response parseRequest(const std::string &request)
 
 //Cherche la location correspondant a l'url
 //Retourne la location correspondante ou la location par defaut / si definie
+// Location getLocation(const std::string &url, const ServerConfig &server)
+// {
+// 	if (url.empty())
+// 		std::cout << "ERREUR" << std::endl;
+// 	std::cout << url << std::endl;
+// 	std::string temp_url(url);
+// 	// if (temp_url.size() > 1)
+// 		// temp_url = rtrim(temp_url, "/");
+// 	std::cout << "temp_url:" << temp_url << std::endl;
+
+// 	// if (temp_url.size() > 1)
+// 	// {
+// 		for (size_t j = 0; j < server._config_location.size(); ++j)
+// 		{
+// 			std::cout << "Location config path:" << server._config_location[j]._config_path << std::endl;
+// 			//verifie que temp_url est un prefix de la location
+// 			if (server._config_location[j]._config_path.length() <= temp_url.length()
+// 				&& temp_url.compare(0, server._config_location[j]._config_path.length(), server._config_location[j]._config_path) == 0
+// 				&& server._config_location[j]._config_path != "/")
+// 			{
+// 				std::cout << "Location returned" << std::endl;
+// 				return (server._config_location[j]);
+// 			}
+			
+// 			std::string temp_path = server._config_location[j]._config_path;
+// 			if (temp_path.length() < url.length()
+// 				&& temp_path.find(".") != std::string::npos)
+// 			{
+// 				if (url.compare(url.length() - temp_path.length(), temp_path.length(), temp_path) == 0)
+// 					return (server._config_location[j]);
+// 			}
+// 		}
+// 	// }
+
+// 	//return default location / sinon vide
+// 	for (size_t j = 0; j < server._config_location.size(); ++j)
+// 	{
+// 		if (server._config_location[j]._config_path == "/")
+// 		{
+// 			return (server._config_location[j]);
+// 		}
+// 	}
+// 	Location empty_loc;
+// 	return (empty_loc);
+// }
+
+// On parcourt toutes les locations du serveur
+// On vérifie si l'URL commence par le chemin de la location
+// Si ce prefixe est plus long que le précédent trouvé
+// Si on a trouvé une location spécifique, on la retourne
+// On retourne si on trouve une location de cgi
+// Sinon, on peut retourner une location par défaut (souvent "/" si elle existe)
+// ou une location vide pour signaler qu'on utilise la config globale du serveur
 Location getLocation(const std::string &url, const ServerConfig &server)
 {
-	if (url.empty())
-		std::cout << "ERREUR" << std::endl;
-	std::cout << url << std::endl;
-	std::string temp_url(url);
-	// if (temp_url.size() > 1)
-		// temp_url = rtrim(temp_url, "/");
-	std::cout << "temp_url:" << temp_url << std::endl;
+	Location best_match;
+	size_t longest_prefix = 0;
+	bool found = false;
 
-	// if (temp_url.size() > 1)
-	// {
-		for (size_t j = 0; j < server._config_location.size(); ++j)
-		{
-			std::cout << "Location config path:" << server._config_location[j]._config_path << std::endl;
-			//verifie que temp_url est un prefix de la location
-			if (server._config_location[j]._config_path.length() <= temp_url.length()
-				&& temp_url.compare(0, server._config_location[j]._config_path.length(), server._config_location[j]._config_path) == 0
-				&& server._config_location[j]._config_path != "/")
-			{
-				std::cout << "Location returned" << std::endl;
-				return (server._config_location[j]);
-			}
-			
-			std::string temp_path = server._config_location[j]._config_path;
-			if (temp_path.length() < url.length()
-				&& temp_path.find(".") != std::string::npos)
-			{
-				if (url.compare(url.length() - temp_path.length(), temp_path.length(), temp_path) == 0)
-					return (server._config_location[j]);
-			}
-		}
-	// }
 
-	//return default location / sinon vide
 	for (size_t j = 0; j < server._config_location.size(); ++j)
 	{
-		if (server._config_location[j]._config_path == "/")
+		const std::string &loc_path = server._config_location[j]._config_path;
+
+		
+		if (url.compare(0, loc_path.length(), loc_path) == 0)
 		{
-			return (server._config_location[j]);
+			
+			if (loc_path.length() >= longest_prefix)
+			{
+				longest_prefix = loc_path.length();
+				best_match = server._config_location[j];
+				found = true;
+			}
+		}
+
+		std::string temp_path = server._config_location[j]._config_path;
+		if (temp_path.length() < url.length()
+			&& temp_path.find(".") != std::string::npos)
+		{
+			if (url.compare(url.length() - temp_path.length(), temp_path.length(), temp_path) == 0)
+				return (server._config_location[j]);
 		}
 	}
-	Location empty_loc;
-	return (empty_loc);
+
+	
+	if (found)
+		return best_match;
+
+	
+	return Location(); 
 }
 
 //Retourne le path absolu du fichier a servir
@@ -123,15 +171,18 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 	std::string path_root = server._config_root;
 	if (!location._config_root.empty() && location._config_path != "/")
 	{
-		std::cout << "Using location root" << std::endl;
+		// std::cout << "Using location root" << std::endl;
 		path_root = location._config_root;
 		//remove location._config_path from url
+		std::cout << "location._config_path:" << location._config_path << std::endl;
 		if (location._config_path != "/" && url.find(location._config_path) == 0)
 		{
 			std::string trimmed_url = url.substr(location._config_path.length());
 			if (trimmed_url.empty())
 				trimmed_url = "/";
 			std::cout << "trimmed_url:" << trimmed_url << std::endl;
+			if (trimmed_url[0] != '/')
+				trimmed_url = "/" + trimmed_url;
 			return getPath(trimmed_url, server, location);
 		}
 	}
@@ -182,6 +233,7 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 	std::cout << "-------------------GET PATH FIN 2------------------------" << std::endl;
 	return path;
 }
+
 //Verifie si la methode de la requete est autorisee dans la location
 //Retourne 0 si ok, 1 sinon
 int ft_check_method(const Location &loc, const Response &rep)
@@ -267,17 +319,18 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 				if (parsed_url.query_string != "")
 					new_url += "?" + parsed_url.query_string;
 
-				std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
-				std::ostringstream response;
-				response << "HTTP/1.1 301 Moved Permanently\r\n"
-						 << "Location: " << new_url << "\r\n"
-						 << "Content-Type: text/html; charset=UTF-8\r\n"
-						 << "Content-Length: " << body.length() << "\r\n"
-						 << "Connection: close\r\n"
-						 << "\r\n"
-						 << body;
+				// std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+				// std::ostringstream response;
+				// response << "HTTP/1.1 301 Moved Permanently\r\n"
+				// 		 << "Location: " << new_url << "\r\n"
+				// 		 << "Content-Type: text/html; charset=UTF-8\r\n"
+				// 		 << "Content-Length: " << body.length() << "\r\n"
+				// 		 << "Connection: close\r\n"
+				// 		 << "\r\n"
+				// 		 << body;
 				
-				return response.str();
+				// return response.str();
+				return ft_move_code(server, 302, new_url);
 			}
 			// else if (parsed_url.url.find(loc._config_path) != std::string::npos)
 			else if (loc._config_path.length() <= parsed_url.url.length()
@@ -323,17 +376,18 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 				// if (parsed_url.query_string != "")
 				// 	new_url += "?" + parsed_url.query_string;
 
-				std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
-				std::ostringstream response;
-				response << "HTTP/1.1 301 Moved Permanently\r\n"
-						 << "Location: " << new_url << "\r\n"
-						 << "Content-Type: text/html; charset=UTF-8\r\n"
-						 << "Content-Length: " << body.length() << "\r\n"
-						 << "Connection: close\r\n"
-						 << "\r\n"
-						 << body;
+				// std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
+				// std::ostringstream response;
+				// response << "HTTP/1.1 301 Moved Permanently\r\n"
+				// 		 << "Location: " << new_url << "\r\n"
+				// 		 << "Content-Type: text/html; charset=UTF-8\r\n"
+				// 		 << "Content-Length: " << body.length() << "\r\n"
+				// 		 << "Connection: close\r\n"
+				// 		 << "\r\n"
+				// 		 << body;
 				
-				return response.str();
+				// return response.str();
+				return ft_move_code(server, 302, new_url);
 			}
 		}
 	}

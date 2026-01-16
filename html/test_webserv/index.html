@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv Tester - 42</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🚀 Webserv Tester</h1>
+        <p>Test complet de toutes les fonctionnalités</p>
+    </header>
+
+    <nav>
+        <a href="#get">GET</a>
+        <a href="#post">POST</a>
+        <a href="#delete">DELETE</a>
+        <a href="#upload">Upload</a>
+        <a href="#redirect">Redirections</a>
+        <a href="#autoindex">Autoindex</a>
+        <a href="#errors">Erreurs</a>
+        <a href="#cgi">CGI</a>
+    </nav>
+
+    <main>
+        <!-- Section GET -->
+        <section id="get" class="test-section">
+            <h2>📥 Méthode GET</h2>
+            <div class="test-card">
+                <h3>Test GET simple</h3>
+                <p>Récupérer une page statique</p>
+                <button onclick="testGET('/test_webserv/static.html')">GET /static.html</button>
+                <button onclick="testGET('/test_webserv/data.json')">GET /data.json</button>
+                <button onclick="testGET('/test_webserv/image.png')">GET /image.png</button>
+                <div class="result" id="get-result"></div>
+            </div>
+            
+            <div class="test-card">
+                <h3>Test GET avec Query String</h3>
+                <input type="text" id="query-name" placeholder="Nom">
+                <input type="text" id="query-value" placeholder="Valeur">
+                <button onclick="testGETQuery()">Envoyer GET avec query</button>
+                <div class="result" id="get-query-result"></div>
+            </div>
+        </section>
+
+        <!-- Section POST -->
+        <section id="post" class="test-section">
+            <h2>📤 Méthode POST</h2>
+            
+            <div class="test-card">
+                <h3>POST application/x-www-form-urlencoded</h3>
+                <form id="form-urlencoded">
+                    <input type="text" name="username" placeholder="Username" required>
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="text" name="message" placeholder="Message">
+                    <button type="submit">Envoyer POST urlencoded</button>
+                </form>
+                <div class="result" id="post-urlencoded-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>POST JSON</h3>
+                <textarea id="json-data" placeholder='{"key": "value"}'></textarea>
+                <button onclick="testPOSTJSON()">Envoyer POST JSON</button>
+                <div class="result" id="post-json-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>POST avec données volumineuses</h3>
+                <input type="number" id="data-size" placeholder="Taille en octets" value="1000">
+                <button onclick="testPOSTLarge()">Envoyer gros POST</button>
+                <p class="info">Test du client_max_body_size</p>
+                <div class="result" id="post-large-result"></div>
+            </div>
+        </section>
+
+        <!-- Section DELETE -->
+        <section id="delete" class="test-section">
+            <h2>🗑️ Méthode DELETE</h2>
+            <div class="test-card">
+                <h3>Supprimer un fichier</h3>
+                <input type="text" id="delete-path" placeholder="/uploads/fichier.txt">
+                <button onclick="testDELETE()">DELETE</button>
+                <div class="result" id="delete-result"></div>
+            </div>
+            
+            <div class="test-card">
+                <h3>Test DELETE interdit</h3>
+                <button onclick="testDELETEForbidden()">DELETE sur fichier protégé</button>
+                <div class="result" id="delete-forbidden-result"></div>
+            </div>
+        </section>
+
+        <!-- Section Upload -->
+        <section id="upload" class="test-section">
+            <h2>📁 Upload de fichiers</h2>
+            
+            <div class="test-card">
+                <h3>Upload simple</h3>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <input type="file" name="file" id="upload-file" required>
+                    <button type="submit">Upload</button>
+                </form>
+                <div class="result" id="upload-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Upload multiple</h3>
+                <form id="upload-multi-form" enctype="multipart/form-data">
+                    <input type="file" name="files" id="upload-files" multiple>
+                    <button type="submit">Upload multiples</button>
+                </form>
+                <div class="result" id="upload-multi-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Upload gros fichier</h3>
+                <p class="info">Test dépassement client_max_body_size</p>
+                <input type="file" name="bigfile" id="upload-big">
+                <button onclick="testBigUpload()">Upload gros fichier</button>
+                <div class="result" id="upload-big-result"></div>
+            </div>
+        </section>
+
+        <!-- Section Redirections -->
+        <section id="redirect" class="test-section">
+            <h2>🔄 Redirections</h2>
+            
+            <div class="test-card">
+                <h3>Redirection 301 (Permanent)</h3>
+                <button onclick="testRedirect('/old-page')">Test 301</button>
+                <div class="result" id="redirect-301-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Redirection 302 (Temporary)</h3>
+                <button onclick="testRedirect('/temp-redirect')">Test 302</button>
+                <div class="result" id="redirect-302-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Redirection vers URL externe</h3>
+                <button onclick="window.location.href='/redirect-external'">Redirection externe</button>
+            </div>
+
+            <div class="test-card">
+                <h3>Test trailing slash</h3>
+                <button onclick="testRedirect('/test_webserv/subdir')">Sans slash final</button>
+                <p class="info">Devrait rediriger vers /test_webserv/subdir/</p>
+                <div class="result" id="redirect-slash-result"></div>
+            </div>
+        </section>
+
+        <!-- Section Autoindex -->
+        <section id="autoindex" class="test-section">
+            <h2>📂 Autoindex</h2>
+            
+            <div class="test-card">
+                <h3>Listing de répertoire</h3>
+                <button onclick="window.open('/test_webserv/autoindex_test/', '_blank')">Voir autoindex</button>
+                <button onclick="testGET('/test_webserv/autoindex_test/')">GET autoindex</button>
+                <div class="result" id="autoindex-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Autoindex désactivé</h3>
+                <button onclick="testGET('/test_webserv/no_autoindex/')">Test 403</button>
+                <p class="info">Devrait retourner 403 Forbidden</p>
+                <div class="result" id="autoindex-off-result"></div>
+            </div>
+        </section>
+
+        <!-- Section Erreurs -->
+        <section id="errors" class="test-section">
+            <h2>⚠️ Pages d'erreur</h2>
+            
+            <div class="test-card error-tests">
+                <h3>Test des codes d'erreur</h3>
+                <button onclick="testError(400)">400 Bad Request</button>
+                <button onclick="testError(403)">403 Forbidden</button>
+                <button onclick="testError(404)">404 Not Found</button>
+                <button onclick="testError(405)">405 Method Not Allowed</button>
+                <button onclick="testError(413)">413 Payload Too Large</button>
+                <button onclick="testError(500)">500 Internal Error</button>
+                <div class="result" id="error-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Requête malformée</h3>
+                <button onclick="testMalformed()">Envoyer requête invalide</button>
+                <div class="result" id="malformed-result"></div>
+            </div>
+        </section>
+
+        <!-- Section CGI -->
+        <section id="cgi" class="test-section">
+            <h2>⚙️ CGI</h2>
+            
+            <div class="test-card">
+                <h3>CGI Python - GET</h3>
+                <input type="text" id="cgi-name" placeholder="Votre nom">
+                <button onclick="testCGIGet()">Exécuter CGI GET</button>
+                <div class="result" id="cgi-get-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>CGI Python - POST</h3>
+                <form id="cgi-form">
+                    <input type="text" name="firstname" placeholder="Prénom">
+                    <input type="text" name="lastname" placeholder="Nom">
+                    <button type="submit">Exécuter CGI POST</button>
+                </form>
+                <div class="result" id="cgi-post-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>CGI avec PATH_INFO</h3>
+                <button onclick="testCGIPathInfo()">Test PATH_INFO</button>
+                <div class="result" id="cgi-pathinfo-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>CGI Timeout</h3>
+                <button onclick="testCGITimeout()">Test CGI lent (timeout)</button>
+                <p class="info">Script qui prend trop de temps</p>
+                <div class="result" id="cgi-timeout-result"></div>
+            </div>
+        </section>
+
+        <!-- Section Tests avancés -->
+        <section id="advanced" class="test-section">
+            <h2>🔬 Tests avancés</h2>
+            
+            <div class="test-card">
+                <h3>Keep-Alive</h3>
+                <button onclick="testKeepAlive()">Test connexions multiples</button>
+                <div class="result" id="keepalive-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Chunked Transfer</h3>
+                <button onclick="testChunked()">Envoyer données chunked</button>
+                <div class="result" id="chunked-result"></div>
+            </div>
+
+            <div class="test-card">
+                <h3>Stress Test</h3>
+                <input type="number" id="stress-count" value="10" min="1" max="100">
+                <button onclick="stressTest()">Lancer stress test</button>
+                <div class="result" id="stress-result"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Webserv Tester - Projet 42</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
