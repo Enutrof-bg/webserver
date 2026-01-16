@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 			if (argc == 2)
 				s = argv[1];
 			else
-				s = "config/conf1.conf";
+				s = "config/default.conf";
 			Config conf(s);
 			// std::cout << conf.getFilename() << std::endl;
 			conf.readConfig();

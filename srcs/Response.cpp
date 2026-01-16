@@ -62,51 +62,53 @@ Response parseRequest(const std::string &request)
 
 //Cherche la location correspondant a l'url
 //Retourne la location correspondante ou la location par defaut / si definie
-// Location getLocation(const std::string &url, const ServerConfig &server)
-// {
-// 	if (url.empty())
-// 		std::cout << "ERREUR" << std::endl;
-// 	std::cout << url << std::endl;
-// 	std::string temp_url(url);
-// 	// if (temp_url.size() > 1)
-// 		// temp_url = rtrim(temp_url, "/");
-// 	std::cout << "temp_url:" << temp_url << std::endl;
+/*
+Location getLocation(const std::string &url, const ServerConfig &server)
+{
+	if (url.empty())
+		std::cout << "ERREUR" << std::endl;
+	std::cout << url << std::endl;
+	std::string temp_url(url);
+	// if (temp_url.size() > 1)
+		// temp_url = rtrim(temp_url, "/");
+	std::cout << "temp_url:" << temp_url << std::endl;
 
-// 	// if (temp_url.size() > 1)
-// 	// {
-// 		for (size_t j = 0; j < server._config_location.size(); ++j)
-// 		{
-// 			std::cout << "Location config path:" << server._config_location[j]._config_path << std::endl;
-// 			//verifie que temp_url est un prefix de la location
-// 			if (server._config_location[j]._config_path.length() <= temp_url.length()
-// 				&& temp_url.compare(0, server._config_location[j]._config_path.length(), server._config_location[j]._config_path) == 0
-// 				&& server._config_location[j]._config_path != "/")
-// 			{
-// 				std::cout << "Location returned" << std::endl;
-// 				return (server._config_location[j]);
-// 			}
+	// if (temp_url.size() > 1)
+	// {
+		for (size_t j = 0; j < server._config_location.size(); ++j)
+		{
+			std::cout << "Location config path:" << server._config_location[j]._config_path << std::endl;
+			//verifie que temp_url est un prefix de la location
+			if (server._config_location[j]._config_path.length() <= temp_url.length()
+				&& temp_url.compare(0, server._config_location[j]._config_path.length(), server._config_location[j]._config_path) == 0
+				&& server._config_location[j]._config_path != "/")
+			{
+				std::cout << "Location returned" << std::endl;
+				return (server._config_location[j]);
+			}
 			
-// 			std::string temp_path = server._config_location[j]._config_path;
-// 			if (temp_path.length() < url.length()
-// 				&& temp_path.find(".") != std::string::npos)
-// 			{
-// 				if (url.compare(url.length() - temp_path.length(), temp_path.length(), temp_path) == 0)
-// 					return (server._config_location[j]);
-// 			}
-// 		}
-// 	// }
+			std::string temp_path = server._config_location[j]._config_path;
+			if (temp_path.length() < url.length()
+				&& temp_path.find(".") != std::string::npos)
+			{
+				if (url.compare(url.length() - temp_path.length(), temp_path.length(), temp_path) == 0)
+					return (server._config_location[j]);
+			}
+		}
+	// }
 
-// 	//return default location / sinon vide
-// 	for (size_t j = 0; j < server._config_location.size(); ++j)
-// 	{
-// 		if (server._config_location[j]._config_path == "/")
-// 		{
-// 			return (server._config_location[j]);
-// 		}
-// 	}
-// 	Location empty_loc;
-// 	return (empty_loc);
-// }
+	//return default location / sinon vide
+	for (size_t j = 0; j < server._config_location.size(); ++j)
+	{
+		if (server._config_location[j]._config_path == "/")
+		{
+			return (server._config_location[j]);
+		}
+	}
+	Location empty_loc;
+	return (empty_loc);
+}
+*/
 
 // On parcourt toutes les locations du serveur
 // On vérifie si l'URL commence par le chemin de la location
