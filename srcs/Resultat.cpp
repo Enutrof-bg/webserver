@@ -16,6 +16,22 @@ void Resultat::setMessage(std::string message)
 	_message = message;
 }
 
+bool ft_endWith(const std::string &fullString, const std::vector<std::string> &endings)
+{
+	std::cout << "ft_endWith: fullString = " << fullString << std::endl;
+	for (size_t i = 0; i < endings.size(); i++)
+	{
+		const std::string &ending = endings[i];
+		std::cout << "Checking if \"" << fullString << "\" ends with \"" << ending << "\"" << std::endl;
+		if (fullString.length() >= ending.length() &&
+			fullString.compare(fullString.length() - ending.length(), ending.length(), ending) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Server &srv, ClientState &client_state)
 {
 	(void)client_state;
@@ -141,10 +157,28 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 	// std::string temp_path = parsed_url.path_script;
 	std::cout << "temp_path:" << temp_path << std::endl;
 
-	if (temp_path.length() > 1
-		&& rep.parsed_url.path_script.length() >= temp_path.length()
-		&& rep.parsed_url.path_script.compare(rep.parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
-		&& rep.parsed_url.path_script.find(".") != std::string::npos)
+	// if (temp_path.length() > 1
+	// 	&& rep.parsed_url.path_script.length() >= temp_path.length()
+	// 	&& rep.parsed_url.path_script.compare(rep.parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
+	// 	&& rep.parsed_url.path_script.find(".") != std::string::npos)
+
+	//verifie si la location est une location cgi
+	// if (loc._config_cgi_path != ""
+	// 	&& loc._config_cgi_ext.find(ft_get_extension_file(rep.parsed_url.path_script)) != loc._config_cgi_ext.end())
+	// if (loc._config_cgi_path != ""
+	// 	&& !loc._config_cgi_ext.empty()
+	// 	&& endsWith(rep.parsed_url.path_script, loc._config_cgi_ext)) //pour l'instant on check que la premiere extension
+
+	std::cout << "Checking if CGI handling is needed..." << std::endl;
+	std::cout << "loc._config_cgi_ext size:" << loc._config_cgi_ext.size() << std::endl;
+	std::cout << "rep.parsed_url.path_script:" << rep.parsed_url.path_script << std::endl;
+	std::cout << "loc._config_cgi_ext:" << std::endl;
+	for (size_t i = 0; i < loc._config_cgi_ext.size(); i++)
+	{
+		std::cout << loc._config_cgi_ext[i] << std::endl;
+	}
+
+	if (ft_endWith(rep.parsed_url.path_script, loc._config_cgi_ext))
 	{
 		std::cout << "going to handleCGI" << std::endl;
 		return Resultat::handleCGI(rep, server, path, loc, rep.parsed_url, srv, client_state);
@@ -631,14 +665,19 @@ std::string Resultat::handleCGI(const Response &rep, const ServerConfig &server,
 
 	std::cout << "PathCGI1:" << path << std::endl;
 
-	std::string temp_cgi_path = loc._config_cgi_path;
+	// std::string temp_cgi_path = loc._config_cgi_path;
+	std::string temp_cgi_path = rep.parsed_url.path_script;
 	std::cout << "PathCGI2:" << temp_cgi_path << std::endl;
 
+	if (temp_cgi_path[0] == '/')
+		temp_cgi_path = "." + temp_cgi_path;
+	std::cout << "PathCGI3:" << temp_cgi_path << std::endl;
 	//check le path script si existe
 	std::ifstream script_path;
 	script_path.open(temp_cgi_path.c_str());
 	if (!script_path.is_open())
 	{
+		std::cout << "CGI script not found: " << temp_cgi_path << std::endl;
 		return (ft_handling_error(server, 404));
 		// return "HTTP/1.1 404 Not Found\r\n\r\n<h1>Script not found</h1><ap><a title=\"GO BACK\" href=\"/\">go back</a>";
 	}
@@ -682,7 +721,7 @@ std::string Resultat::handleCGI(const Response &rep, const ServerConfig &server,
 	{
 		std::cout << "==============execve_enfant==========" << std::endl;
 		//def envp du cgi
-		char *argv[] = {const_cast<char*>(path.c_str()), NULL};
+		char *argv[] = {const_cast<char*>(temp_cgi_path.c_str()), NULL};
 		// char *envp[] = {NULL};
 		char **envp = ft_return_cgi_env(rep, server, path, loc, parsed_url);
 		ft_print_double_tab(envp);

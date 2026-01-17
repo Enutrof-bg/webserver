@@ -123,15 +123,13 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	size_t longest_prefix = 0;
 	bool found = false;
 
-
 	for (size_t j = 0; j < server._config_location.size(); ++j)
 	{
-		const std::string &loc_path = server._config_location[j]._config_path;
-
-		
-		if (url.compare(0, loc_path.length(), loc_path) == 0)
+		const std::string &loc_path = server._config_location[j]._config_path;		
+		if (url.compare(0, loc_path.length(), loc_path) == 0
+			&& (url[loc_path.length()] == '\0'
+				|| url[loc_path.length()] == '/'))
 		{
-			
 			if (loc_path.length() >= longest_prefix)
 			{
 				longest_prefix = loc_path.length();
@@ -139,6 +137,7 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 				found = true;
 			}
 		}
+		std::cout << "Checking for CGI location match, loc path: " << loc_path << std::endl;
 
 		std::string temp_path = server._config_location[j]._config_path;
 		if (temp_path.length() < url.length()
@@ -148,12 +147,8 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 				return (server._config_location[j]);
 		}
 	}
-
-	
 	if (found)
 		return best_match;
-
-	
 	return Location(); 
 }
 
@@ -312,7 +307,9 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 				||(loc._config_redirect.length() >= 8 //8 for "https://"
 				&& loc._config_redirect.compare(0, 8, "https://") == 0))
 				&& loc._config_path.length() <= parsed_url.url.length()
-				&& parsed_url.url.compare(0, loc._config_path.length(), loc._config_path) == 0)
+				&& parsed_url.url.compare(0, loc._config_path.length(), loc._config_path) == 0
+				&& (parsed_url.url[loc._config_path.length()] == '\0'
+				|| parsed_url.url[loc._config_path.length()] == '/'))
 			{
 				std::cout << "Redirection found for location: " << loc._config_path << std::endl;
 
@@ -336,7 +333,9 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 			}
 			// else if (parsed_url.url.find(loc._config_path) != std::string::npos)
 			else if (loc._config_path.length() <= parsed_url.url.length()
-				&& parsed_url.url.compare(0, loc._config_path.length(), loc._config_path) == 0)
+				&& parsed_url.url.compare(0, loc._config_path.length(), loc._config_path) == 0
+				&& (parsed_url.url[loc._config_path.length()] == '\0'
+				|| parsed_url.url[loc._config_path.length()] == '/'))
 			{
 				if (loc._config_redirect[0] != '/')
 					loc._config_redirect = "/" + loc._config_redirect;
@@ -345,50 +344,7 @@ std::string ft_redirection(const ServerConfig &server, ParseURL &parsed_url)
 				std::cout << "Redirection found for location: " << loc._config_path << std::endl;
 
 				std::string new_url = loc._config_redirect;
-				// size_t pos = parsed_url.url.find(loc._config_path);
-				
-				// if (pos == 0)
-				// {
-				// 	std::string remaining = parsed_url.url.substr(loc._config_path.length());
-				// 	new_url = loc._config_redirect + remaining;
-					
-				// 	size_t double_slash_pos;
-				// 	while ((double_slash_pos = new_url.find("//")) != std::string::npos)
-				// 	{
-				// 		new_url = new_url.substr(0, double_slash_pos) + new_url.substr(double_slash_pos + 1);
-				// 	}
-					
-				// 	if (parsed_url.url.length() > 1 
-				// 		&& parsed_url.url[parsed_url.url.length() - 1] != '/'
-				// 		&& new_url.length() > 1 
-				// 		&& new_url[new_url.length() - 1] == '/')
-				// 	{
-				// 		new_url = new_url.substr(0, new_url.length() - 1);
-				// 	}
-				// }
-				// else
-				// {
-				// 	// loc._config_path n'est pas au début, simple remplacement
-				// 	new_url = parsed_url.url;
-				// 	new_url.replace(pos, loc._config_path.length(), loc._config_redirect);
-				// }
-				// std::cout << "New URL for redirection: " << new_url << std::endl;
-				
-				// //ajoute la query_string si existe
-				// if (parsed_url.query_string != "")
-				// 	new_url += "?" + parsed_url.query_string;
 
-				// std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
-				// std::ostringstream response;
-				// response << "HTTP/1.1 301 Moved Permanently\r\n"
-				// 		 << "Location: " << new_url << "\r\n"
-				// 		 << "Content-Type: text/html; charset=UTF-8\r\n"
-				// 		 << "Content-Length: " << body.length() << "\r\n"
-				// 		 << "Connection: close\r\n"
-				// 		 << "\r\n"
-				// 		 << body;
-				
-				// return response.str();
 				return ft_move_code(server, 302, new_url);
 			}
 		}

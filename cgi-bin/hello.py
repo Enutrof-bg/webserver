@@ -15,7 +15,7 @@ if method == 'POST' and content_length > 0:
     # Lire le body depuis STDIN
     post_data = sys.stdin.read(content_length)
     print(f"<p>POST Data: {post_data}</p>")
-time.sleep(10)
+# time.sleep(10)
 print("<a title=\"test\" href=\"/\">go back</a></p>")
 print("</body></html>")
 
