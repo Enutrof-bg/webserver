@@ -123,21 +123,27 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	size_t longest_prefix = 0;
 	bool found = false;
 
-	for (size_t j = 0; j < server._config_location.size(); ++j)
+	std::cout << "url to match location: " << url << std::endl;
+	for (size_t j = 0; j < server._config_location.size(); j++)
 	{
 		const std::string &loc_path = server._config_location[j]._config_path;		
+
+		std::cout << "Checking location match, loc path: " << loc_path << std::endl;
+
+
 		if (url.compare(0, loc_path.length(), loc_path) == 0
-			&& (url[loc_path.length()] == '\0'
-				|| url[loc_path.length()] == '/'))
+			/*&& (url[loc_path.length()] == '\0'
+				|| url[loc_path.length()] == '/')*/)
 		{
 			if (loc_path.length() >= longest_prefix)
 			{
 				longest_prefix = loc_path.length();
 				best_match = server._config_location[j];
 				found = true;
+
+				std::cout << "Location matched: " << loc_path << std::endl;
 			}
 		}
-		std::cout << "Checking for CGI location match, loc path: " << loc_path << std::endl;
 
 		std::string temp_path = server._config_location[j]._config_path;
 		if (temp_path.length() < url.length()
@@ -151,8 +157,9 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 		return best_match;
 	else if (!server._config_location.empty())
 	{
-		for (size_t j = 0; j < server._config_location.size(); ++j)
+		for (size_t j = 0; j < server._config_location.size(); j++)
 		{
+			std::cout << "Checking for default location match, loc path: " << server._config_location[j]._config_path << std::endl;
 			if (server._config_location[j]._config_path == "/")
 			{
 				return (server._config_location[j]);
@@ -206,6 +213,7 @@ std::string getPath(const std::string &url, const ServerConfig &server, Location
 	if (url == "/" || url[url.length() - 1] == '/')
 	{
 		path = path_root + url;
+		std::cout << "path before index append: "<< path << std::endl;
 		//if est un fichier
 		if (is_directory(path) == false)
 		{

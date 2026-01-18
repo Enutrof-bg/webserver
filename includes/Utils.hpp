@@ -16,5 +16,5 @@ void ft_print_double_tab(char **tab);
 std::string intToString(size_t n);
 bool is_directory(const std::string &path);
 std::string url_decode(const std::string &str);
-
-
+std::string ft_get_trim_url(const std::string &url, const Location &loc);
+std::string ft_get_root(const std::string &url, const ServerConfig &server, const Location &loc);

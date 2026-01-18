@@ -178,3 +178,51 @@ std::string url_decode(const std::string &str)
 	}
 	return result;
 }
+
+std::string ft_get_trim_url(const std::string &url, const Location &loc)
+{
+	std::string trimmed_url;
+	if (loc._config_path != "/" && url.find(loc._config_path) == 0)
+	{
+		trimmed_url = url.substr(loc._config_path.length());
+		if (trimmed_url.empty())
+			trimmed_url = "/";
+		if (trimmed_url[0] != '/')
+			trimmed_url = "/" + trimmed_url;
+	}
+	else
+	{
+		trimmed_url = url;
+	}
+	return trimmed_url;
+}
+
+std::string ft_get_root(const std::string &url, const ServerConfig &server, const Location &loc)
+{
+	std::string path;
+	std::string trimmed_url;
+	std::string path_root = server._config_root;
+	if (!loc._config_root.empty() && loc._config_path != "/")
+	{
+		path = loc._config_root;
+		trimmed_url = ft_get_trim_url(url, loc);
+		if (path[path.length() - 1] != '/' && trimmed_url[0] != '/')
+			path = path + "/";
+		path = path + trimmed_url;
+		std::cout << "Trimmed URL for DELETE: " << path << std::endl;
+	}
+	else if (loc._config_path == "/" && !loc._config_root.empty())
+	{
+		path_root = loc._config_root;
+		if (path_root[path_root.length() - 1] != '/' && url[0] != '/')
+			path_root += "/";
+		path = path_root + url;
+		std::cout << "URL for DELETE with loc root: " << path << std::endl;
+	}
+	else
+	{
+		path = path_root + url;
+		std::cout << "URL for DELETE with server root: " << path << std::endl;
+	}
+	return path;
+}

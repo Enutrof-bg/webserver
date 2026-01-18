@@ -211,52 +211,26 @@ std::string Resultat::handleGET(const std::string &path, const ServerConfig &ser
 	std::cout << "loc autoindex: " << loc._config_autoindex << std::endl;
 	std::cout << "loc config_path: " << loc._config_path << std::endl;
 	std::string temp_content_type = ft_get_extension_file(path);
+	std::string path_root;
 
+ 	// path_root = ft_get_root(parsed_url.url, server, loc);
+	// std::cout << "path_root: " << path_root << std::endl;
+	// std::cout << "Serving file at path: " << path << " with content-type: " << temp_content_type << std::endl;
 	DIR *dir = opendir(path.c_str());
 	if (dir != NULL)
 	{
+		closedir(dir);
 		if (loc._config_autoindex == true)
 		{
 			
 			std::cout << "Autoindex activé pour le répertoire: " << path << std::endl;
-			// std::ostringstream body;
-			// body << "<!DOCTYPE html>\n"
-			// 	 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
-			// 	 << "<body>\n"
-			// 	 << "<h1>Index of " << parsed_url.url << "</h1>\n"
-			// 	 << "<ul>\n";
-
-			// struct dirent *ent;
-			// while ((ent = readdir(dir)) != NULL)
-			// {
-			// 	std::string filename = ent->d_name;
-			// 	if (filename == ".")
-			// 		continue;
-			// 	body << "<li><a href=\"" << parsed_url.url;
-			// 	if (parsed_url.url[parsed_url.url.length() - 1] != '/')
-			// 		body << "/";
-			// 	body << filename << "\">" << filename << "</a></li>\n";
-			// }
-			// closedir(dir);
-
-			// body << "</ul>\n</body>\n</html>\n";
-
-			// std::ostringstream response;
-			// response << "HTTP/1.1 200 OK\r\n"
-			// 		 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
-			// 		 << "Content-Length: " << body.str().length() << "\r\n"
-			// 		 << "Connection: close\r\n"
-			// 		 << "\r\n"
-			// 		 << body.str();
-			
-			// return response.str();
 			std::string body = ft_generate_autoindex_body(server, path, parsed_url.url);
 			return ft_generate_autoindex_page(server, 200, body);
 			
 		}
 		else
 		{
-			closedir(dir);
+			
 			return (ft_handling_error(server, 403));
 		}
 	}
@@ -269,70 +243,39 @@ std::string Resultat::handleGET(const std::string &path, const ServerConfig &ser
 		if (loc._config_autoindex == true)
 		{
 			std::cout << "Autoindex activé, listing le répertoire parent..." << std::endl;
-			std::string dir_path;
-			if (!loc._config_root.empty())
-				dir_path = loc._config_root;
-			else
-				dir_path = server._config_root;
-			std::cout << "Root path for autoindex: " << dir_path << std::endl;
 
-			std::cout << "parsed_url.url before modification: " << parsed_url.url << std::endl;
-			//remove loc._config_path from parsed_url.url
-			if (loc._config_path != "/" && parsed_url.url.find(loc._config_path) == 0)
-			{
-				std::string trimmed_url = parsed_url.url.substr(loc._config_path.length());
-				if (trimmed_url.empty())
-					trimmed_url = "/";
-				std::cout << "trimmed_url for autoindex: " << trimmed_url << std::endl;
-				if (dir_path[dir_path.length() - 1] != '/' && trimmed_url[0] != '/')
-					dir_path += "/";
-				dir_path += trimmed_url;
-			}
-			// append parsed_url.url to dir_path if loc._config_path is /
-			else if (loc._config_path == "/")
-			{
-				if (dir_path[dir_path.length() - 1] != '/' && parsed_url.url[0] != '/')
-					dir_path += "/";
-				dir_path += parsed_url.url;
-			}
+			std::string dir_path = ft_get_root(parsed_url.url, server, loc);
+			// if (!loc._config_root.empty())
+			// 	dir_path = loc._config_root;
+			// else
+			// 	dir_path = server._config_root;
+			// std::cout << "Root path for autoindex: " << dir_path << std::endl;
+
+			// std::cout << "parsed_url.url before modification: " << parsed_url.url << std::endl;
+			// //remove loc._config_path from parsed_url.url
+			// // if (loc._config_path != "/" && parsed_url.url.find(loc._config_path) == 0)
+			// // {
+			// // 	std::string trimmed_url = parsed_url.url.substr(loc._config_path.length());
+			// // 	if (trimmed_url.empty())
+			// // 		trimmed_url = "/";
+			// // 	std::cout << "trimmed_url for autoindex: " << trimmed_url << std::endl;
+			// // 	if (dir_path[dir_path.length() - 1] != '/' && trimmed_url[0] != '/')
+			// // 		dir_path += "/";
+			// // 	dir_path += trimmed_url;
+			// // }
+			// // // append parsed_url.url to dir_path if loc._config_path is /
+			// // else if (loc._config_path == "/")
+			// // {
+			// // 	if (dir_path[dir_path.length() - 1] != '/' && parsed_url.url[0] != '/')
+			// // 		dir_path += "/";
+			// // 	dir_path += parsed_url.url;
+			// // }
+			// std::string trimmed_url = ft_get_trim_url(parsed_url.url, loc);
+			// if (dir_path[dir_path.length() - 1] != '/' && trimmed_url[0] != '/')
+			// 	dir_path += "/";
+			// dir_path += trimmed_url;
 
 			std::cout << "Directory path for autoindex: " << dir_path << std::endl;
-			// DIR *dir2 = opendir(dir_path.c_str());
-			// if (dir2 != NULL)
-			// {
-			// 	std::ostringstream body;
-			// 	body << "<!DOCTYPE html>\n"
-			// 		 << "<html>\n<head><title>Index of " << parsed_url.url << "</title></head>\n"
-			// 		 << "<body>\n"
-			// 		 << "<h1>Index of " << parsed_url.url << "</h1>\n"
-			// 		 << "<ul>\n";
-
-			// 	struct dirent *ent;
-			// 	while ((ent = readdir(dir2)) != NULL)
-			// 	{
-			// 		std::string filename = ent->d_name;
-			// 		if (filename == ".")
-			// 			continue;
-			// 		body << "<li><a href=\"" << parsed_url.url;
-			// 		if (!parsed_url.url.empty() && parsed_url.url[parsed_url.url.length() - 1] != '/')
-			// 			body << "/";
-			// 		body << filename << "\">" << filename << "</a></li>\n";
-			// 	}
-			// 	closedir(dir2);
-
-			// 	body << "</ul>\n</body>\n</html>\n";
-			
-				
-				// std::ostringstream response;
-				// response << "HTTP/1.1 200 OK\r\n"
-				// 		 << "Content-Type: " << temp_content_type << "; charset=UTF-8\r\n"
-				// 		 << "Content-Length: " << body.str().length() << "\r\n"
-				// 		 << "Connection: close\r\n"
-				// 		 << "\r\n"
-				// 		 << body.str();
-				
-				// std::cout << "-----------------------------------HANDLE_GET-FIN------------" << std::endl;
-				// return response.str();
 			std::string body = ft_generate_autoindex_body(server, dir_path, parsed_url.url);
 			return ft_generate_autoindex_page(server, 200, body);
 		}
@@ -563,13 +506,6 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 		{
 			raw_file.write(rep.body.c_str(), rep.body.length());
 			raw_file.close();
-			
-			// std::ostringstream response;
-			// response << "HTTP/1.1 201 Created\r\n"
-			// 		<< "Content-Type: text/plain\r\n"
-			// 		<< "Content-Length: 0\r\n"
-			// 		<< "Location: /" << filename << "\r\n\r\n";
-			// return response.str();
 			std::string temp_filename = "/" + filename;
 			return ft_move_code(server, 201, temp_filename);
 		}
@@ -581,55 +517,71 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 	return ft_handling_error(server, 400);
 }
 
+// std::string ft_get_trim_url(const std::string &url, const Location &loc)
+// {
+// 	std::string trimmed_url;
+// 	if (loc._config_path != "/" && url.find(loc._config_path) == 0)
+// 	{
+// 		trimmed_url = url.substr(loc._config_path.length());
+// 		if (trimmed_url.empty())
+// 			trimmed_url = "/";
+// 		if (trimmed_url[0] != '/')
+// 			trimmed_url = "/" + trimmed_url;
+// 	}
+// 	else
+// 	{
+// 		trimmed_url = url;
+// 	}
+// 	return trimmed_url;
+// }
 
+// std::string ft_get_root(const std::string &url, const ServerConfig &server, const Location &loc)
+// {
+// 	std::string path;
+// 	std::string trimmed_url;
+// 	std::string path_root = server._config_root;
+// 	if (!loc._config_root.empty() && loc._config_path != "/")
+// 	{
+// 		path = loc._config_root;
+// 		trimmed_url = ft_get_trim_url(url, loc);
+// 		if (path[path.length() - 1] != '/' && trimmed_url[0] != '/')
+// 			path = path + "/";
+// 		path = path + trimmed_url;
+// 		std::cout << "Trimmed URL for DELETE: " << path << std::endl;
+// 	}
+// 	else if (loc._config_path == "/" && !loc._config_root.empty())
+// 	{
+// 		path_root = loc._config_root;
+// 		path = path_root + url;
+// 		std::cout << "URL for DELETE with loc root: " << path << std::endl;
+// 	}
+// 	else
+// 	{
+// 		path = path_root + url;
+// 		std::cout << "URL for DELETE with server root: " << path << std::endl;
+// 	}
+// 	return path;
+// }
 
 std::string Resultat::handleDELETE(const Response &rep, const ServerConfig &server, Location &loc)
 {
-	(void)rep;
-	(void)server;
 	std::cout << "-----------------------------------HANDLE_DELETE-------------" <<std::endl;
-	std::cout << "URL1:" <<rep.url.c_str() << std::endl;
-	std::string path = getPath(rep.url.c_str(), server, loc);
-	std::cout << "URL2:" << path << std::endl;
-	// path = "../" + path;
-	// std::cout << "URL3:" << path << std::endl;
-	std::ostringstream newbody;
-	std::ostringstream response;
+	std::string path = ft_get_root(rep.url, server, loc);
 
-	//path end with '/'
-	if (path[path.length() -1] == '/')
+	//if is a directory return 409
+	if (path[path.length() -1] == '/' || is_directory(path))
 	{
-		// newbody << "<!DOCTYPE html>\n"
-		// 	<< "<html>\n<head><title>DELETE reçu</title></head>\n"
-		// 	<< "<body>\n"
-		// 	<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
-		// 	<< "<ul>\n";
-		// response << "HTTP/1.1 400 Bad Request\r\n"
-		// 	<< "Content-Type: text/html; charset=UTF-8\r\n"
-		// 	<< "Content-Length: " << newbody.str().length() << "\r\n"
-		// 	<< "Connection: close\r\n"
-		// 	<< "\r\n"
-		// 	<< newbody.str();
-		// std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
-		// return response.str();
-		return (ft_handling_error(server, 400));
+		return (ft_handling_error(server, 409));
 	}
-	else if (std::remove(path.c_str()))
+	// if file not exist return 404
+	else if (access(path.c_str(), F_OK) != 0)
 	{
-		// newbody << "<!DOCTYPE html>\n"
-		// 	<< "<html>\n<head><title>DELETE reçu</title></head>\n"
-		// 	<< "<body>\n"
-		// 	<< "<h1>Deletion didnt work "<< rep.url <<" </h1>\n"
-		// 	<< "<ul>\n";
-		// response << "HTTP/1.1 404 Not Found\r\n"
-		// 	<< "Content-Type: text/html; charset=UTF-8\r\n"
-		// 	<< "Content-Length: " << newbody.str().length() << "\r\n"
-		// 	<< "Connection: close\r\n"
-		// 	<< "\r\n"
-		// 	<< newbody.str();
-		// std::cout << "-----------------------------------HANDLE_DELETE-FIN---------" <<std::endl;
-		// return response.str();
 		return (ft_handling_error(server, 404));
+	}
+	//try to delete file fail 500
+	else if (std::remove(path.c_str()) != 0)
+	{
+		return (ft_handling_error(server, 500));
 	}
 	else
 	{
@@ -637,7 +589,6 @@ std::string Resultat::handleDELETE(const Response &rep, const ServerConfig &serv
 		return ft_serve_no_body(server, 204, temp_content_type);
 	}
 }
-
 
 std::string Resultat::handleCGI(const Response &rep, const ServerConfig &server,
 						std::string path, const Location &loc,
