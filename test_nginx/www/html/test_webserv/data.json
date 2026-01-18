@@ -1,0 +1,13 @@
+{
+    "status": "success",
+    "message": "Test JSON endpoint",
+    "data": {
+        "id": 1,
+        "name": "Test",
+        "values": [1, 2, 3, 4, 5],
+        "nested": {
+            "key": "value"
+        }
+    },
+    "timestamp": "2025-01-16T12:00:00Z"
+}

@@ -149,6 +149,16 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	}
 	if (found)
 		return best_match;
+	else if (!server._config_location.empty())
+	{
+		for (size_t j = 0; j < server._config_location.size(); ++j)
+		{
+			if (server._config_location[j]._config_path == "/")
+			{
+				return (server._config_location[j]);
+			}
+		}
+	}
 	return Location(); 
 }
 

@@ -15,5 +15,6 @@ char **ft_add_double_tab(char *str, char **tab);
 void ft_print_double_tab(char **tab);
 std::string intToString(size_t n);
 bool is_directory(const std::string &path);
+std::string url_decode(const std::string &str);
 
 

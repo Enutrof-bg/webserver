@@ -45,6 +45,15 @@ std::string ft_get_default_error_header(int code, const std::string &body)
 		return return_ss.str();
 		break;
 
+	case 409: 
+		return_ss << "HTTP/1.1 409 Conflict\r\n"
+				<< "Content-Type: text/html; charset=UTF-8\r\n"
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
+				<< "\r\n\r\n";
+		return return_ss.str();
+		break;
+		
 	case 413:
 		return_ss << "HTTP/1.1 413 Payload Too Large\r\n"
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
@@ -87,6 +96,10 @@ std::string ft_get_default_error_body(int code)
 
 	case 405:
 		return "<h1>ERROR 405 Method Not Allowed</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
+		break;
+
+	case 409:
+		return "<h1>ERROR 409 Conflict</h1><p><a title=\"GO BACK\" href=\"/\">go back</a></p>";
 		break;
 
 	case 413:
@@ -161,14 +174,23 @@ std::string ft_get_default_header(int code, const std::string &body, const std::
 
 	std::stringstream ss;
 	ss << body.length();
+	
+	// Ne pas ajouter charset pour les fichiers binaires (images, etc.)
+	bool is_binary = (new_url.find("image/") == 0 || 
+					  new_url.find("application/octet-stream") == 0 ||
+					  new_url.find("application/pdf") == 0);
+	std::string content_type_header = new_url;
+	if (!is_binary)
+		content_type_header += "; charset=UTF-8";
+	
 	switch (code)
 	{
 	case 200:
 		return_ss << "HTTP/1.1 200 OK\r\n"
-				<< "Content-Type: " << new_url << "; charset=UTF-8\r\n"
+				<< "Content-Type: " << content_type_header << "\r\n"
 				<< "Content-Length: " << ss.str() << "\r\n"
 				<< "Connection: close\r\n"
-				<< "\r\n\r\n";
+				<< "\r\n";
 		return return_ss.str();
 		break;
 
@@ -178,7 +200,7 @@ std::string ft_get_default_header(int code, const std::string &body, const std::
 				<< "Content-Length: " << ss.str() << "\r\n"
 				<< "Location: " << new_url << "\r\n"
 				<< "Connection: close\r\n"
-				<< "\r\n\r\n";
+				<< "\r\n";
 		return return_ss.str();
 		break;
 
@@ -186,7 +208,7 @@ std::string ft_get_default_header(int code, const std::string &body, const std::
 		return_ss << "HTTP/1.1 204 No Content\r\n"
 				<< "Content-Length: 0\r\n"
 				<< "Connection: close\r\n"
-				<< "\r\n\r\n";
+				<< "\r\n";
 		return return_ss.str();
 		break;
 
@@ -196,7 +218,7 @@ std::string ft_get_default_header(int code, const std::string &body, const std::
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
 				<< "Content-Length: " << ss.str() << "\r\n"
 				<< "Connection: close\r\n"
-				<< "\r\n\r\n";
+				<< "\r\n";
 		return return_ss.str();
 		break;
 
@@ -206,7 +228,7 @@ std::string ft_get_default_header(int code, const std::string &body, const std::
 				<< "Content-Type: text/html; charset=UTF-8\r\n"
 				<< "Content-Length: " << ss.str() << "\r\n"
 				<< "Connection: close\r\n"
-				<< "\r\n\r\n";
+				<< "\r\n";
 		return return_ss.str();
 		break;
 		

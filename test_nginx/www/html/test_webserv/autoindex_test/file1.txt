@@ -1,0 +1,2 @@
+Ce fichier est dans le dossier autoindex_test.
+Il sera listé si autoindex est activé.

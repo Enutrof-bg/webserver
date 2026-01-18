@@ -152,3 +152,29 @@ bool is_directory(const std::string &path)
     }
     return false;
 }
+
+//Decode URL encoded string (%XX -> character)
+std::string url_decode(const std::string &str)
+{
+	std::string result;
+	for (size_t i = 0; i < str.length(); i++)
+	{
+		if (str[i] == '%' && i + 2 < str.length())
+		{
+			int hex_val;
+			std::istringstream hex_stream(str.substr(i + 1, 2));
+			if (hex_stream >> std::hex >> hex_val)
+			{
+				result += static_cast<char>(hex_val);
+				i += 2;
+			}
+			else
+				result += str[i];
+		}
+		else if (str[i] == '+')
+			result += ' ';
+		else
+			result += str[i];
+	}
+	return result;
+}

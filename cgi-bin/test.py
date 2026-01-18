@@ -3,12 +3,14 @@ import os
 import sys
 import time
 method = os.environ.get('REQUEST_METHOD', '')
+query_string = os.environ.get('QUERY_STRING', '')
 content_length = int(os.environ.get('CONTENT_LENGTH', 0))
 
-time.sleep(2)
+# time.sleep(2)
 # print("Content-Type: text/html\r\n\r\n", end='')
 print("<html><body>")
 print(f"<h1>Method: {method}</h1>")
+print(f"<p>Query String: {query_string}</p>")
 # time.sleep(3)
 if method == 'POST' and content_length > 0:
     # Lire le body depuis STDIN
