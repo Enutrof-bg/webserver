@@ -134,17 +134,6 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 		if (rep.url[rep.url.length() - 1] != '/')
 		{
 			std::string new_url = rep.url + "/";
-			// std::string body = "<h1>301 Moved Permanently</h1><p>The document has moved <a href=\"" + new_url + "\">here</a>.</p>";
-			// std::ostringstream response;
-			// response << "HTTP/1.1 301 Moved Permanently\r\n"
-			// 		 << "Location: " << new_url << "\r\n"
-			// 		 << "Content-Type: text/html; charset=UTF-8\r\n"
-			// 		 << "Content-Length: " << body.length() << "\r\n"
-			// 		 << "Connection: close\r\n"
-			// 		 << "\r\n"
-			// 		 << body;
-			
-			// return response.str();
 			return ft_move_code(server, 301, new_url);
 		}
 
@@ -157,18 +146,6 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 	// std::string temp_path = parsed_url.path_script;
 	std::cout << "temp_path:" << temp_path << std::endl;
 
-	// if (temp_path.length() > 1
-	// 	&& rep.parsed_url.path_script.length() >= temp_path.length()
-	// 	&& rep.parsed_url.path_script.compare(rep.parsed_url.path_script.length() - temp_path.length(), temp_path.length(), temp_path) == 0
-	// 	&& rep.parsed_url.path_script.find(".") != std::string::npos)
-
-	//verifie si la location est une location cgi
-	// if (loc._config_cgi_path != ""
-	// 	&& loc._config_cgi_ext.find(ft_get_extension_file(rep.parsed_url.path_script)) != loc._config_cgi_ext.end())
-	// if (loc._config_cgi_path != ""
-	// 	&& !loc._config_cgi_ext.empty()
-	// 	&& endsWith(rep.parsed_url.path_script, loc._config_cgi_ext)) //pour l'instant on check que la premiere extension
-
 	std::cout << "Checking if CGI handling is needed..." << std::endl;
 	std::cout << "loc._config_cgi_ext size:" << loc._config_cgi_ext.size() << std::endl;
 	std::cout << "rep.parsed_url.path_script:" << rep.parsed_url.path_script << std::endl;
@@ -177,7 +154,6 @@ std::string Resultat::getRequest(Response &rep, const ServerConfig &server, Serv
 	{
 		std::cout << loc._config_cgi_ext[i] << std::endl;
 	}
-
 	if (ft_endWith(rep.parsed_url.path_script, loc._config_cgi_ext))
 	{
 		std::cout << "going to handleCGI" << std::endl;
@@ -296,9 +272,10 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 	(void)rep;
 	(void)server;
 	std::cout << "-----------------------------------HANDLE_POST_BODY----------------" <<std::endl;
-	std::cout << "rep.body:" << rep.body  << std::endl;
+	// std::cout << "rep.body:" << rep.body  << std::endl;
 	std::string post_content_type;
-
+	size_t content_length;
+	std::string upload_path;
 	//verifie transfer-encoding dans le header vaut chunked
 	// if (rep.header.find("Transfer-Encoding") != rep.header.end()
 	// 	/*&& rep.header.at("Transfer-Encoding") == "chunked"*/)
@@ -311,7 +288,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 	std::map<std::string, std::string>::const_iterator it_len = rep.header.find("Content-Length");
 	if (it_len != rep.header.end())
 	{
-		size_t content_length = atoi(it_len->second.c_str());
+		content_length = atoi(it_len->second.c_str());
 		std::cout << "content_length_test:"<< content_length << std::endl;
 	}
 
@@ -333,51 +310,49 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 			size_t pos = line.find('=');
 			if (pos != std::string::npos)
 			{
-				std::string key = line.substr(0, pos);
-				std::string value = line.substr(pos + 1);
+				std::string key = url_decode(line.substr(0, pos));
+				std::string value = url_decode(line.substr(pos + 1));
 				data[key] = value;
 			}
 		}
 		//create html 
-		std::ostringstream newbody;
-		newbody << "<!DOCTYPE html>\n"
-			<< "<html>\n<head><title>POST recu</title></head>\n"
-			<< "<body>\n"
-			<< "<h1>Donnees recue</h1>\n"
-			<< "<ul>\n";
+		// std::ostringstream newbody;
+		// newbody << "<!DOCTYPE html>\n"
+		// 	<< "<html>\n<head><title>POST recu</title></head>\n"
+		// 	<< "<body>\n"
+		// 	<< "<h1>Donnees recue</h1>\n"
+		// 	<< "<ul>\n";
 
-		for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
-		{
-			newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
-		}
-		newbody << "</ul>\n"
-			<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
-			<< "<br><p><a title=\"Motherfucking Website\" href=\"/\">go back</a></p></br>\n"
-			<< "</body>\n</html>\n";
+		// for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
+		// {
+		// 	newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
+		// }
+		// newbody << "</ul>\n"
+		// 	<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
+		// 	<< "<br><p><a title=\"Motherfucking Website\" href=\"/\">go back</a></p></br>\n"
+		// 	<< "</body>\n</html>\n";
 
-		std::ostringstream response;
-		response << "HTTP/1.1 201 Created\r\n"
-				<< "Content-Type: text/html; charset=UTF-8\r\n"
-				<< "Content-Length: " << newbody.str().length() << "\r\n"
-				<< "Connection: close\r\n"
-				<< "\r\n"
-				<< newbody.str();
-		std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
-		return response.str();
+		// std::ostringstream response;
+		// response << "HTTP/1.1 201 Created\r\n"
+		// 		<< "Content-Type: text/html; charset=UTF-8\r\n"
+		// 		<< "Content-Length: " << newbody.str().length() << "\r\n"
+		// 		<< "Connection: close\r\n"
+		// 		<< "\r\n"
+		// 		<< newbody.str();
+		// std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
+		// return response.str();
+		return ft_generate_form_page(server, 201, rep.body, rep.url, data);
 	}
 	else if (post_content_type.find("multipart/form-data;") != std::string::npos)
 	{
-		std::cout << "TEST:"<<post_content_type << std::endl;
+		// std::cout << "TEST:"<<post_content_type << std::endl;
 		//extraire boundary
+		// std::vector<std::string> upload_paths_all;
+
 		size_t pos_boundary = post_content_type.find("boundary=");
 		std::string boundary = post_content_type.substr(pos_boundary + 9);
 		std::string delimiter = "--" + boundary;
-		std::cout << "==========BOUNDARY_TEST:==============" << std::endl;
-		std::cout << boundary << std::endl;
-		std::cout << delimiter << std::endl;
-		std::cout << "==========BOUNDARY_TEST_end:==========\n\n"  << std::endl;
-		
-		//parser body grace au boundary
+
 		size_t pos = 0;
 		while ((pos = rep.body.find(delimiter, pos)) != std::string::npos)
 		{
@@ -387,12 +362,12 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				// break;
 			
 			std::string newbody = rep.body.substr(pos, end_pos - pos);
-			std::cout << "=====TEST_PRINT_BOUNDARY_BODY========" << std::endl;
-			std::cout << newbody << std::endl;
-			std::cout << "=====TEST_PRINT_BOUNDARY_BODY_END====\n\n" << std::endl;
+			// std::cout << "=====TEST_PRINT_BOUNDARY_BODY========" << std::endl;
+			// std::cout << newbody << std::endl;
+			// std::cout << "=====TEST_PRINT_BOUNDARY_BODY_END====\n\n" << std::endl;
 
 			//separer header et contenu
-			std::cout << "=====TEST_PRINT_separete_BODY========" << std::endl;
+			// std::cout << "=====TEST_PRINT_separete_BODY========" << std::endl;
 			size_t pos_header = newbody.find("\r\n\r\n");
 			if (pos_header == std::string::npos)
 			{	
@@ -403,29 +378,29 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 			std::string part_header = newbody.substr(0, pos_header);
 			std::string part_body = newbody.substr(pos_header + 4);
 
-			std::cout << "-------------part_header_boundary----------" <<std::endl;
-			std::cout << part_header << std::endl;
-			std::cout << "-------------part_body_boundary----------" <<std::endl;
-			std::cout << part_body << std::endl;
-			std::cout << "part_body_length:"<< part_body.length() << std::endl;
+			// std::cout << "-------------part_header_boundary----------" <<std::endl;
+			// std::cout << part_header << std::endl;
+			// std::cout << "-------------part_body_boundary----------" <<std::endl;
+			// std::cout << part_body << std::endl;
+			// std::cout << "part_body_length:"<< part_body.length() << std::endl;
 
-			std::cout << "Taille du fichier: " << part_body.length() << " octets" << std::endl;
-			std::cout << "Premiers octets (hex): ";
+			// std::cout << "Taille du fichier: " << part_body.length() << " octets" << std::endl;
+			// std::cout << "Premiers octets (hex): ";
 			// for (size_t i = 0; i < 20 && i < part_body.length(); i++)
 			// {
 			// 	printf("%02X ", (unsigned char)part_body[i]);
 			// }
-			std::cout << std::endl;
+			// std::cout << std::endl;
 
 
-			std::cout << "=====TEST_PRINT_separete_BODY_end========" << std::endl;
+			// std::cout << "=====TEST_PRINT_separete_BODY_end========" << std::endl;
 
 			if (part_header.find("filename=") != std::string::npos)
 			{
 				size_t filename_pos = part_header.find("filename=\"");
 				size_t filename_pos_end = part_header.find("\"", filename_pos + 10);
 				std::string new_filename = part_header.substr(filename_pos + 10, filename_pos_end - (filename_pos + 10));
-				std::cout << "test_test_new_filename:"<<  new_filename << std::endl;
+				// std::cout << "test_test_new_filename:"<<  new_filename << std::endl;
 
 				if (part_body.length() >=2
 					&& part_body[part_body.length() - 1] == '\n'
@@ -433,8 +408,8 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				{
 					part_body = part_body.substr(0, part_body.length() - 2);
 				}
-				std::cout << "-------------part_body_boundary----------" <<std::endl; 
-				std::cout << part_body << std::endl;
+				// std::cout << "-------------part_body_boundary----------" <<std::endl; 
+				// std::cout << part_body << std::endl;
 
 				//split new_filename to store extension
 				size_t ext_pos = new_filename.find_last_of(".");
@@ -450,7 +425,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				}
 				new_filename = new_filename + intToString(time(NULL)) + extension;
 
-				std::string upload_path;
+				
 				if (!loc._config_upload_path.empty())
 				{
 					upload_path = loc._config_upload_path + "/" + new_filename;
@@ -465,21 +440,11 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				if (output.is_open())
 				{
 					output.write(part_body.c_str(), part_body.length());
+					// upload_paths_all.push_back(upload_path);
 					output.close();
 
-					// std::ostringstream body;
-					// body << "<body><h1>Upload réussi!</h1>"
-					// 	<< "<p><a title=\"Retour\" href=\"/\">go back</a></p></body>";
 
-					// std::ostringstream response;
-					// response << "HTTP/1.1 201 Created\r\n"
-					// 	<< "Content-Type: text/html; charset=UTF-8\r\n"
-					// 	<< "Content-Length: " << body.str().length() <<"\r\n"
-					// 	<< "Connection: close\r\n"
-					// 	<< "\r\n"
-					// 	<< body.str();
-					// return (response.str());
-					return ft_move_code(server, 201, upload_path);
+					// return ft_move_code(server, 201, upload_path);
 				}
 				else
 				{
@@ -488,6 +453,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				}
 			}
 		}
+		return ft_move_code(server, 201, upload_path);
 
 		//extraire filename avec COntenDispoitiotn
 		//lire le sdonne binaire
@@ -516,52 +482,6 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 	}
 	return ft_handling_error(server, 400);
 }
-
-// std::string ft_get_trim_url(const std::string &url, const Location &loc)
-// {
-// 	std::string trimmed_url;
-// 	if (loc._config_path != "/" && url.find(loc._config_path) == 0)
-// 	{
-// 		trimmed_url = url.substr(loc._config_path.length());
-// 		if (trimmed_url.empty())
-// 			trimmed_url = "/";
-// 		if (trimmed_url[0] != '/')
-// 			trimmed_url = "/" + trimmed_url;
-// 	}
-// 	else
-// 	{
-// 		trimmed_url = url;
-// 	}
-// 	return trimmed_url;
-// }
-
-// std::string ft_get_root(const std::string &url, const ServerConfig &server, const Location &loc)
-// {
-// 	std::string path;
-// 	std::string trimmed_url;
-// 	std::string path_root = server._config_root;
-// 	if (!loc._config_root.empty() && loc._config_path != "/")
-// 	{
-// 		path = loc._config_root;
-// 		trimmed_url = ft_get_trim_url(url, loc);
-// 		if (path[path.length() - 1] != '/' && trimmed_url[0] != '/')
-// 			path = path + "/";
-// 		path = path + trimmed_url;
-// 		std::cout << "Trimmed URL for DELETE: " << path << std::endl;
-// 	}
-// 	else if (loc._config_path == "/" && !loc._config_root.empty())
-// 	{
-// 		path_root = loc._config_root;
-// 		path = path_root + url;
-// 		std::cout << "URL for DELETE with loc root: " << path << std::endl;
-// 	}
-// 	else
-// 	{
-// 		path = path_root + url;
-// 		std::cout << "URL for DELETE with server root: " << path << std::endl;
-// 	}
-// 	return path;
-// }
 
 std::string Resultat::handleDELETE(const Response &rep, const ServerConfig &server, Location &loc)
 {

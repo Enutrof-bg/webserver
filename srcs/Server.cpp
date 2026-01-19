@@ -370,12 +370,12 @@ void Server::run()
 					ssize_t n;
 					n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
 				
-					printf("n:%ld\n", n);
+					// printf("n:%ld\n", n);
 					if (n > 0)
 					{
-						printf("========BUFFER:%s\n", buffer);
+						// printf("========BUFFER:%s\n", buffer);
 						client.request_buffer.append(buffer, n);
-						printf("========request:%s\n", client.request_buffer.c_str());
+						// printf("========request:%s\n", client.request_buffer.c_str());
 					}
 
 					//verifier si la requete est complete
@@ -384,11 +384,11 @@ void Server::run()
 					if (header_end != std::string::npos)
 					{
 						//gestion content-length
-						size_t cl_pos = client.request_buffer.find("Content-Length:");
-						if (cl_pos != std::string::npos)
+						size_t content_len_pos = client.request_buffer.find("Content-Length:");
+						if (content_len_pos != std::string::npos)
 						{
-							size_t cl_end = client.request_buffer.find("\r\n", cl_pos);
-							std::string cl_str = client.request_buffer.substr(cl_pos + 15, cl_end - (cl_pos + 15));
+							size_t content_len_end = client.request_buffer.find("\r\n", content_len_pos);
+							std::string cl_str = client.request_buffer.substr(content_len_pos + 15, content_len_end - (content_len_pos + 15));
 							size_t content_length = std::atoi(cl_str.c_str());
 							
 							size_t total_expected = header_end + 4 + content_length;

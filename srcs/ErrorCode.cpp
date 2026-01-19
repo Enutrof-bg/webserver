@@ -204,6 +204,15 @@ std::string ft_get_default_header(int code, const std::string &body, const std::
 		return return_ss.str();
 		break;
 
+	case 2011:
+		return_ss << "HTTP/1.1 201 Created\r\n"
+				<< "Content-Type: " << content_type_header << "\r\n"
+				<< "Content-Length: " << ss.str() << "\r\n"
+				<< "Connection: close\r\n"
+				<< "\r\n";
+		return return_ss.str();
+		break;
+
 	case 204:
 		return_ss << "HTTP/1.1 204 No Content\r\n"
 				<< "Content-Length: 0\r\n"
@@ -338,4 +347,27 @@ std::string ft_generate_autoindex_page(const ServerConfig &server, int code, con
 	std::string header = ft_get_default_header(code, body, "text/html");
 
 	return (header + body);
+}
+
+std::string ft_generate_form_page(const ServerConfig &server, int code, const std::string &body, const std::string &new_url,std::map<std::string, std::string> data)
+{
+	(void)server;
+	std::ostringstream newbody;
+	newbody << "<!DOCTYPE html>\n"
+		<< "<html>\n<head><title>POST recu</title></head>\n"
+		<< "<body>\n"
+		<< "<h1>Donnees recue</h1>\n"
+		<< "<ul>\n";
+
+	for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
+	{
+		newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
+	}
+	newbody << "</ul>\n"
+		<< "<p>Body brut: <code>" << body << "</code></p>\n"
+		<< "<br><p><a title=\"Motherfucking Website\" href=\"/\">go back</a></p></br>\n"
+		<< "</body>\n</html>\n";
+
+	std::string header = ft_get_default_header(code, newbody.str(), new_url);
+	return (header + newbody.str());
 }
