@@ -221,6 +221,58 @@ void Server::ft_check_timeout()
 	}
 }
 
+// Location Server::getLocation(const std::string &path, const ServerConfig &server)
+// {
+// 	Location best_match;
+// 	size_t best_length = 0;
+
+// 	for (size_t i = 0; i < server._locations.size(); i++)
+// 	{
+// 		const Location &loc = server._locations[i];
+// 		if (path.compare(0, loc._config_path.length(), loc._config_path) == 0)
+// 		{
+// 			if (loc._config_path.length() > best_length)
+// 			{
+// 				best_length = loc._config_path.length();
+// 				best_match = loc;
+// 			}
+// 		}
+// 	}
+// 	return best_match;
+// }
+
+bool Server::ft_check_body_size(int fd, const ClientState &client)
+{
+	Location loc;
+	size_t server_index = _client_to_server[fd];
+	ServerConfig& server = _server[server_index];
+	Response rep = parseRequest(client.request_buffer);
+	rep.setParsedURL(ParseURL::ft_parseURL(rep, server));
+	loc = getLocation(rep.parsed_url.path_script, server);
+	std::cout << "Location found for body size check: " << loc._config_path << std::endl;
+	size_t max_size = server._config_client_max_body_size;
+	if (loc._config_client_max_body_size > 0)
+		max_size = loc._config_client_max_body_size;
+	std::cout << "Current request buffer size: " << client.request_buffer.length() << ", Max allowed size: " << max_size << std::endl;
+	if (client.request_buffer.length() > max_size)
+	{
+		return true;
+	}
+	return false;
+
+}
+// Location loc;
+// size_t server_index = _client_to_server[pollfds[i].fd];
+// ServerConfig& server = _server[server_index];
+// Response rep = parseRequest(client.request_buffer);
+// rep.setParsedURL(ParseURL::ft_parseURL(rep, server));
+// loc = getLocation(rep.parsed_url.path_script, server);
+// std::cout << "Location found for body size check: " << loc._config_path << std::endl;
+// size_t max_size = server._config_client_max_body_size;
+// if (loc._config_client_max_body_size > 0)
+// 	max_size = loc._config_client_max_body_size;
+// if (client.request_buffer.length() > max_size)
+
 void Server::run()
 {
 	printListenPorts();
@@ -368,46 +420,76 @@ void Server::run()
 
 					char buffer[4096];
 					ssize_t n;
+					std::cout << "Reading from client fd: " << pollfds[i].fd << std::endl;
 					n = recv(pollfds[i].fd, buffer, sizeof(buffer), 0);
-				
-					// printf("n:%ld\n", n);
+					std::cout << "Read " << n << " bytes from client." << std::endl;
+
 					if (n > 0)
 					{
 						// printf("========BUFFER:%s\n", buffer);
 						client.request_buffer.append(buffer, n);
 						// printf("========request:%s\n", client.request_buffer.c_str());
 					}
-
+					std::cout << "client request buffer: " << client.request_buffer << std::endl;
 					//verifier si la requete est complete
 					bool request_complete = false;
 					size_t header_end = client.request_buffer.find("\r\n\r\n");
 					if (header_end != std::string::npos)
 					{
-						//gestion content-length
-						size_t content_len_pos = client.request_buffer.find("Content-Length:");
-						if (content_len_pos != std::string::npos)
+						std::cout << "Request headers complete." << std::endl;
+						if (ft_check_body_size(pollfds[i].fd, client) == true)
 						{
-							size_t content_len_end = client.request_buffer.find("\r\n", content_len_pos);
-							std::string cl_str = client.request_buffer.substr(content_len_pos + 15, content_len_end - (content_len_pos + 15));
-							size_t content_length = std::atoi(cl_str.c_str());
-							
-							size_t total_expected = header_end + 4 + content_length;
-							
-							//lecture asynchrone- verifie juste si on a tout recu
-							if (client.request_buffer.length() >= total_expected)
+							//body size exceeded
+							size_t server_index = _client_to_server[pollfds[i].fd];
+							ServerConfig& server = _server[server_index];
+
+							char poubelle[4096];
+							ssize_t fd_reste_n;
+							while ((fd_reste_n = recv(pollfds[i].fd, poubelle, sizeof(poubelle), MSG_DONTWAIT)) > 0)
 							{
-								request_complete = true;
+								// On ignore les données restantes
+								// std::cout << "Discarding " << fd_reste_n << " bytes from client fd: " << pollfds[i].fd << std::endl;
 							}
-							//sinon on attend le prochain poll() /  pas de while bloquant
+
+							_client_responses[pollfds[i].fd] = ft_handling_error(server, 413);
+							pollfds[i].events = POLLOUT;
+							client.request_buffer.clear();
+							// request_complete = true;
+							std::cout << "Body size exceeded during request parsing" << std::endl;
+
+							// shutdown(pollfds[i].fd, SHUT_WR);
 						}
 						else
 						{
-							//pas de Content-Length = requete complete apres les headers
-							request_complete = true;
+							//gestion content-length
+							size_t content_len_pos = client.request_buffer.find("Content-Length:");
+							if (content_len_pos != std::string::npos)
+							{
+								size_t content_len_end = client.request_buffer.find("\r\n", content_len_pos);
+								std::string cl_str = client.request_buffer.substr(content_len_pos + 15, content_len_end - (content_len_pos + 15));
+								size_t content_length = std::atoi(cl_str.c_str());
+								
+								size_t total_expected = header_end + 4 + content_length;
+								
+								//lecture asynchrone- verifie juste si on a tout recu
+								if (client.request_buffer.length() >= total_expected)
+								{
+									request_complete = true;
+									client.request_buffer = client.request_buffer.substr(0, total_expected);
+								}
+								//sinon on attend le prochain poll() /  pas de while bloquant
+							}
+							else
+							{
+								request_complete = true;
+							}
 						}
 					}
-					// }
-					printf("im out\n");
+					else
+					{
+						//headers pas encore complets, on attend plus de données
+					}
+
 					if (n <= 0 && client.request_buffer.empty())
 					{
 						_clients.erase(pollfds[i].fd);
@@ -417,13 +499,14 @@ void Server::run()
 					}
 					else if (request_complete)
 					{
+						std::cout << "Complete request received from client fd: " << pollfds[i].fd << std::endl;
 						Response rep = parseRequest(client.request_buffer);
 
 						size_t server_index = _client_to_server[pollfds[i].fd];
 						ServerConfig& server = _server[server_index];
 						Resultat resultat;
 						std::string response;
-						if (rep.invalid_request)
+						if (rep.invalid_request == 1)
 						{
 							resultat.setMessage(ft_handling_error(server, 400));
 						}
@@ -492,6 +575,8 @@ void Server::run()
 					
 					std::cout << "Closing connection to client fd: " << pollfds[i].fd << std::endl;
 					
+					//clean
+
 					close(pollfds[i].fd);
 					pollfds.erase(pollfds.begin() + i);
 					std::cout << "Connection closed for client fd: " << pollfds[i].fd << std::endl;

@@ -29,7 +29,31 @@ Response parseRequest(const std::string &request)
 	std::cout << "Method:" << rep.method << std::endl;
 	std::cout << "URL:" << rep.url << std::endl;
 	std::cout << "VERSION:" << rep.version << std::endl;
-
+	if (rep.method.empty() || rep.url.empty() || rep.version.empty())
+	{
+		std::cerr << "Erreur: requete invalide" << std::endl;
+		rep.invalid_request = 1;
+		return rep;
+	}
+	if (rep.version != "HTTP/1.1" && rep.version != "HTTP/1.0")
+	{
+		std::cerr << "Erreur: version HTTP non supportee" << std::endl;
+		rep.invalid_request = 1;
+		return rep;
+	}
+	if (rep.method != "GET" && rep.method != "POST"
+		&& rep.method != "DELETE")
+	{
+		std::cerr << "Erreur: methode non supportee" << std::endl;
+		rep.invalid_request = 1;
+		return rep;
+	}
+	if (rep.url.find(" ") != std::string::npos)
+	{
+		std::cerr << "Erreur: URL invalide" << std::endl;
+		rep.invalid_request = 1;
+		return rep;
+	}
 	while (std::getline(stream, line))
 	{
 		if (!line.empty() && line[line.length()-1] == '\r')
@@ -47,16 +71,23 @@ Response parseRequest(const std::string &request)
 			rep.header[key] = value;
 		}
 	}
+	// if header ne contien pas de Host
+	if (rep.header.find("Host") == rep.header.end())
+	{
+		std::cerr << "Erreur: header Host manquant" << std::endl;
+		rep.invalid_request = 1;
+		return rep;
+	}
 	std::cout <<"----HEADER------" << std::endl;
 	std::map<std::string, std::string>::iterator it;
 	for (it = rep.header.begin(); it != rep.header.end(); it++)
 	{
 		std::cout << "First: " <<it->first << " | "<<"Second: "<<it->second << std::endl;
 	}
-	std::cout << "----BODY------" << std::endl;
+	// std::cout << "----BODY------" << std::endl;
 
-	std::cout << "-------------rep.body.length():\n" <<rep.body.length() << std::endl;
-	std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
+	// std::cout << "-------------rep.body.length():\n" <<rep.body.length() << std::endl;
+	// std::cout << "-------------------PARSE-REQUEST-FIN---------------------" << std::endl;
 	return rep;
 }
 
@@ -128,7 +159,7 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	{
 		const std::string &loc_path = server._config_location[j]._config_path;		
 
-		std::cout << "Checking location match, loc path: " << loc_path << std::endl;
+		// std::cout << "Checking location match, loc path: " << loc_path << std::endl;
 
 
 		if (url.compare(0, loc_path.length(), loc_path) == 0
@@ -141,7 +172,7 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 				best_match = server._config_location[j];
 				found = true;
 
-				std::cout << "Location matched: " << loc_path << std::endl;
+				// std::cout << "Location matched: " << loc_path << std::endl;
 			}
 		}
 
@@ -159,7 +190,7 @@ Location getLocation(const std::string &url, const ServerConfig &server)
 	{
 		for (size_t j = 0; j < server._config_location.size(); j++)
 		{
-			std::cout << "Checking for default location match, loc path: " << server._config_location[j]._config_path << std::endl;
+			// std::cout << "Checking for default location match, loc path: " << server._config_location[j]._config_path << std::endl;
 			if (server._config_location[j]._config_path == "/")
 			{
 				return (server._config_location[j]);

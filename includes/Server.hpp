@@ -68,6 +68,7 @@ public:
 	{	return actual_port;
 	}	
 	// void stop();
+	bool ft_check_body_size(int fd, const ClientState &client);
 };
 
 void ft_print_map(std::map<int, int> mp);
