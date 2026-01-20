@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirection Test - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>↪️ Test Redirections</h1>
+            <p>Tester les redirections HTTP (301, 302, 307)</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/redirect.html" class="active">Redirections</a></li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <h2>↪️ Types de redirections</h2>
+            
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Nom</th>
+                    <th>Description</th>
+                    <th>Méthode conservée</th>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">301</span></td>
+                    <td>Moved Permanently</td>
+                    <td>Redirection permanente (SEO)</td>
+                    <td>GET uniquement</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">302</span></td>
+                    <td>Found</td>
+                    <td>Redirection temporaire</td>
+                    <td>GET uniquement</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">307</span></td>
+                    <td>Temporary Redirect</td>
+                    <td>Redirection temporaire</td>
+                    <td>Méthode conservée</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">308</span></td>
+                    <td>Permanent Redirect</td>
+                    <td>Redirection permanente</td>
+                    <td>Méthode conservée</td>
+                </tr>
+            </table>
+
+            <h3>Configuration serveur :</h3>
+            <pre>
+location /old-page {
+    return 301 /new-page;
+}
+
+location /temp-redirect {
+    return 302 /index.html;
+}
+            </pre>
+
+            <h3>Test de redirection</h3>
+            <button class="btn btn-warning" onclick="testRedirect('/old-page')">
+                Test 301 Redirect
+            </button>
+            <button class="btn btn-warning" onclick="testRedirect('/temp-redirect')">
+                Test 302 Redirect
+            </button>
+        </div>
+
+        <div class="card">
+            <h2>📤 Réponse</h2>
+            <div id="redirect-response" class="response-box">
+                <span class="status">En attente...</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function testRedirect(path) {
+            const response = await fetch(path, { redirect: 'manual' });
+            const result = {
+                ok: response.ok,
+                status: response.status,
+                statusText: response.statusText,
+                headers: {},
+                duration: 0
+            };
+            
+            for (const [key, value] of response.headers.entries()) {
+                result.headers[key] = value;
+            }
+            
+            displayResponse('redirect-response', result);
+        }
+    </script>
+</body>
+</html>

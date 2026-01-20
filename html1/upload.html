@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📁 Upload de fichiers</h1>
+            <p>Tester l'upload de fichiers (multipart/form-data)</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html" class="active">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/uploads/">Autoindex</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📤 Upload de fichier</h2>
+                
+                <div id="upload-area" class="upload-area">
+                    <div class="icon">📁</div>
+                    <p><strong>Glissez-déposez</strong> un fichier ici</p>
+                    <p>ou <strong>cliquez</strong> pour sélectionner</p>
+                    <input type="file" id="file-input" style="display: none;">
+                </div>
+
+                <div id="upload-progress" class="progress-bar" style="display: none;">
+                    <div class="progress" style="width: 0%;"></div>
+                </div>
+
+                <h3>Upload manuel (formulaire HTML)</h3>
+                <form action="/uploads/" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="manual-file">Fichier :</label>
+                        <input type="file" id="manual-file" name="file" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        📤 Upload (formulaire)
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📋 Fichiers uploadés</h2>
+                <ul id="uploaded-files-list" class="file-list">
+                    <li>Chargement...</li>
+                </ul>
+                <button class="btn btn-primary" onclick="listUploadedFiles()">
+                    🔄 Actualiser
+                </button>
+                <a href="/uploads/" class="btn btn-success">
+                    📂 Voir autoindex
+                </a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Réponse du serveur</h2>
+            <div id="upload-response" class="response-box">
+                <span class="status">En attente d'un upload...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Documentation Upload</h2>
+            
+            <h3>Format multipart/form-data :</h3>
+            <pre>
+POST /uploads/ HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+Content-Length: [taille]
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+[contenu du fichier]
+------WebKitFormBoundary--
+            </pre>
+
+            <h3>Configuration serveur :</h3>
+            <pre>
+location /uploads/ {
+    root /var/www/uploads;
+    allow_methods GET POST DELETE;
+    autoindex on;
+    client_max_body_size 10M;  # Limite de taille
+}
+            </pre>
+
+            <h3>Codes de réponse :</h3>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Signification</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">201</span></td>
+                    <td>Created</td>
+                    <td>Fichier créé avec succès</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">200</span></td>
+                    <td>OK</td>
+                    <td>Upload réussi</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">400</span></td>
+                    <td>Bad Request</td>
+                    <td>Format de requête invalide</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">403</span></td>
+                    <td>Forbidden</td>
+                    <td>Upload non autorisé</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">413</span></td>
+                    <td>Payload Too Large</td>
+                    <td>Fichier trop volumineux</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">500</span></td>
+                    <td>Internal Server Error</td>
+                    <td>Erreur lors de l'écriture</td>
+                </tr>
+            </table>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

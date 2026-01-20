@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test GET - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📥 Test Méthode GET</h1>
+            <p>Tester la récupération de ressources</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html" class="active">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/uploads/">Autoindex</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2><span class="method-badge method-get">GET</span> Tests prédéfinis</h2>
+                
+                <h3>Fichiers statiques</h3>
+                <button class="btn btn-primary" onclick="testGetFile('/')">GET /</button>
+                <button class="btn btn-primary" onclick="testGetFile('/index.html')">GET /index.html</button>
+                <button class="btn btn-primary" onclick="testGetFile('/css/style.css')">GET /css/style.css</button>
+                <button class="btn btn-primary" onclick="testGetFile('/js/app.js')">GET /js/app.js</button>
+                
+                <h3>Autoindex</h3>
+                <button class="btn btn-success" onclick="testGetFile('/uploads/')">GET /uploads/</button>
+                
+                <h3>Pages d'erreur</h3>
+                <button class="btn btn-warning" onclick="testGetFile('/errors/404.html')">GET /errors/404.html</button>
+                <button class="btn btn-warning" onclick="testGetFile('/errors/500.html')">GET /errors/500.html</button>
+                
+                <h3>CGI</h3>
+                <button class="btn btn-success" onclick="testGetFile('/cgi-bin/test.py')">GET /cgi-bin/test.py</button>
+                <button class="btn btn-success" onclick="testGetFile('/cgi-bin/test.py?name=Webserv&test=123')">GET avec Query String</button>
+            </div>
+
+            <div class="card">
+                <h2>🔧 Test personnalisé</h2>
+                <div class="form-group">
+                    <label for="get-url">URL à tester :</label>
+                    <input type="text" id="get-url" placeholder="/chemin/vers/ressource" value="/">
+                </div>
+                <button class="btn btn-primary" onclick="testGetCustom()">
+                    Envoyer GET
+                </button>
+                
+                <h3 style="margin-top: 20px;">Headers de requête</h3>
+                <pre>
+GET [URL] HTTP/1.1
+Host: localhost
+Accept: */*
+User-Agent: Browser
+                </pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Réponse du serveur</h2>
+            <div id="get-response" class="response-box">
+                <span class="status">En attente d'une requête...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Documentation GET</h2>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Signification</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">200</span></td>
+                    <td>OK</td>
+                    <td>Ressource trouvée et renvoyée</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">301</span></td>
+                    <td>Moved Permanently</td>
+                    <td>Redirection permanente</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">304</span></td>
+                    <td>Not Modified</td>
+                    <td>Ressource non modifiée (cache)</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">400</span></td>
+                    <td>Bad Request</td>
+                    <td>Requête malformée</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">403</span></td>
+                    <td>Forbidden</td>
+                    <td>Accès refusé</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">404</span></td>
+                    <td>Not Found</td>
+                    <td>Ressource non trouvée</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">500</span></td>
+                    <td>Internal Server Error</td>
+                    <td>Erreur interne du serveur</td>
+                </tr>
+            </table>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

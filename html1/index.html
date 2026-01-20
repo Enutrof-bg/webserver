@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webserv Test Suite</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Webserv Test Suite</h1>
+            <p>Suite complète de tests pour votre serveur HTTP</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html" class="active">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/uploads/">Autoindex</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📋 Vue d'ensemble</h2>
+                <p>Cette suite de tests vous permet de vérifier le bon fonctionnement de votre serveur HTTP.</p>
+                
+                <h3>Fonctionnalités testées :</h3>
+                <table>
+                    <tr>
+                        <th>Méthode</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td>Récupération de ressources</td>
+                        <td><span class="badge badge-info">À tester</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-post">POST</span></td>
+                        <td>Envoi de données / Upload</td>
+                        <td><span class="badge badge-info">À tester</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-delete">DELETE</span></td>
+                        <td>Suppression de fichiers</td>
+                        <td><span class="badge badge-info">À tester</span></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>🚀 Tests rapides</h2>
+                <p>Lancez tous les tests automatiquement :</p>
+                <button class="btn btn-primary" onclick="runAllTests()">
+                    ▶️ Lancer tous les tests
+                </button>
+                <div id="all-tests-results" class="response-box" style="margin-top: 15px; min-height: 50px;"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📁 Structure du serveur</h2>
+                <pre>
+www/
+├── html/
+│   ├── index.html     (cette page)
+│   ├── get.html       (tests GET)
+│   ├── post.html      (tests POST)
+│   ├── delete.html    (tests DELETE)
+│   ├── upload.html    (upload de fichiers)
+│   ├── errors.html    (pages d'erreur)
+│   ├── cgi.html       (tests CGI)
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── app.js
+├── uploads/           (autoindex activé)
+└── errors/
+    ├── 400.html
+    ├── 403.html
+    ├── 404.html
+    ├── 405.html
+    ├── 413.html
+    ├── 500.html
+    ├── 501.html
+    └── 505.html
+                </pre>
+            </div>
+
+            <div class="card">
+                <h2>ℹ️ Informations</h2>
+                <h3>Serveur</h3>
+                <ul>
+                    <li><strong>URL :</strong> <code id="server-url"></code></li>
+                    <li><strong>Date :</strong> <code id="current-date"></code></li>
+                    <li><strong>User-Agent :</strong> <code id="user-agent"></code></li>
+                </ul>
+                
+                <h3>Tests disponibles</h3>
+                <ul>
+                    <li>✅ Méthode GET (fichiers statiques)</li>
+                    <li>✅ Méthode POST (formulaires, JSON)</li>
+                    <li>✅ Méthode DELETE (suppression)</li>
+                    <li>✅ Upload de fichiers</li>
+                    <li>✅ Pages d'erreur (400, 403, 404, 405, 413, 500, 501, 505)</li>
+                    <li>✅ CGI (Python, PHP, Perl, Shell)</li>
+                    <li>✅ Autoindex (liste des répertoires)</li>
+                    <li>✅ Sessions / Cookies</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.getElementById('server-url').textContent = window.location.origin;
+        document.getElementById('current-date').textContent = new Date().toLocaleString('fr-FR');
+        document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+    </script>
+</body>
+</html>

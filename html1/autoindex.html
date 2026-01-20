@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoindex - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📂 Test Autoindex</h1>
+            <p>Tester la fonctionnalité de listing de répertoires</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/autoindex.html" class="active">Autoindex</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📁 Tester Autoindex</h2>
+                
+                <h3>Répertoires avec autoindex activé :</h3>
+                <button class="btn btn-primary" onclick="testAutoindex('/uploads/')">
+                    📂 /uploads/
+                </button>
+                <button class="btn btn-primary" onclick="testAutoindex('/cgi-bin/')">
+                    📂 /cgi-bin/
+                </button>
+                <button class="btn btn-primary" onclick="testAutoindex('/errors/')">
+                    📂 /errors/
+                </button>
+                
+                <h3 style="margin-top: 20px;">Test personnalisé :</h3>
+                <div class="form-group">
+                    <label for="autoindex-path">Chemin du répertoire :</label>
+                    <input type="text" id="autoindex-path" value="/uploads/" placeholder="/chemin/">
+                </div>
+                <button class="btn btn-success" onclick="testAutoindex(document.getElementById('autoindex-path').value)">
+                    📂 Tester
+                </button>
+
+                <h3 style="margin-top: 20px;">Liens directs :</h3>
+                <ul>
+                    <li><a href="/uploads/" target="_blank">📂 Ouvrir /uploads/</a></li>
+                    <li><a href="/cgi-bin/" target="_blank">📂 Ouvrir /cgi-bin/</a></li>
+                    <li><a href="/errors/" target="_blank">📂 Ouvrir /errors/</a></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>ℹ️ À propos de l'autoindex</h2>
+                <p>L'autoindex génère automatiquement une page HTML listant le contenu d'un répertoire quand aucun fichier index n'est trouvé.</p>
+                
+                <h3>Comportement attendu :</h3>
+                <ul>
+                    <li>✅ Liste tous les fichiers et sous-dossiers</li>
+                    <li>✅ Affiche les noms avec des liens cliquables</li>
+                    <li>✅ Peut afficher la taille et la date de modification</li>
+                    <li>✅ Lien vers le dossier parent (..)</li>
+                </ul>
+
+                <h3>Configuration :</h3>
+                <pre>
+location /uploads/ {
+    autoindex on;
+}
+                </pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Réponse du serveur</h2>
+            <div id="autoindex-response" class="response-box">
+                <span class="status">En attente d'un test...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Documentation Autoindex</h2>
+            
+            <h3>Exemple de réponse autoindex :</h3>
+            <pre>
+HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: [taille]
+
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Index of /uploads/&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Index of /uploads/&lt;/h1&gt;
+&lt;hr&gt;
+&lt;pre&gt;
+&lt;a href="../"&gt;../&lt;/a&gt;
+&lt;a href="file1.txt"&gt;file1.txt&lt;/a&gt;          1024  2024-01-15 10:30
+&lt;a href="file2.jpg"&gt;file2.jpg&lt;/a&gt;          2048  2024-01-15 11:00
+&lt;a href="subdir/"&gt;subdir/&lt;/a&gt;              -     2024-01-15 09:00
+&lt;/pre&gt;
+&lt;hr&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </pre>
+
+            <h3>Priorité de fichiers index :</h3>
+            <p>Si un fichier index existe, il est servi au lieu de l'autoindex :</p>
+            <ol>
+                <li><code>index.html</code></li>
+                <li><code>index.htm</code></li>
+                <li><code>index.php</code> (si CGI configuré)</li>
+            </ol>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

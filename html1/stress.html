@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress Test - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Stress Test</h1>
+            <p>Tester les performances et la robustesse du serveur</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/stress.html" class="active">Stress</a></li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <h2>⚡ Tests de charge</h2>
+            <div class="alert alert-warning">
+                ⚠️ Ces tests peuvent charger le serveur. Utilisez avec précaution !
+            </div>
+
+            <div class="grid">
+                <div>
+                    <h3>Requêtes simultanées</h3>
+                    <div class="form-group">
+                        <label for="concurrent-count">Nombre de requêtes :</label>
+                        <select id="concurrent-count">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-warning" onclick="runConcurrentTest()">
+                        🚀 Lancer test concurrent
+                    </button>
+                </div>
+
+                <div>
+                    <h3>Requêtes séquentielles</h3>
+                    <div class="form-group">
+                        <label for="sequential-count">Nombre de requêtes :</label>
+                        <select id="sequential-count">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="runSequentialTest()">
+                        ▶️ Lancer test séquentiel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Résultats</h2>
+            <div id="stress-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress" id="progress-fill" style="width: 0%;"></div>
+                </div>
+                <p id="progress-text">0 / 0</p>
+            </div>
+            
+            <div id="stress-results">
+                <p>Lancez un test pour voir les résultats.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Statistiques</h2>
+            <div id="stress-stats">
+                <table>
+                    <tr>
+                        <th>Métrique</th>
+                        <th>Valeur</th>
+                    </tr>
+                    <tr>
+                        <td>Requêtes réussies</td>
+                        <td id="stat-success">-</td>
+                    </tr>
+                    <tr>
+                        <td>Requêtes échouées</td>
+                        <td id="stat-failed">-</td>
+                    </tr>
+                    <tr>
+                        <td>Temps total</td>
+                        <td id="stat-total-time">-</td>
+                    </tr>
+                    <tr>
+                        <td>Temps moyen par requête</td>
+                        <td id="stat-avg-time">-</td>
+                    </tr>
+                    <tr>
+                        <td>Temps min</td>
+                        <td id="stat-min-time">-</td>
+                    </tr>
+                    <tr>
+                        <td>Temps max</td>
+                        <td id="stat-max-time">-</td>
+                    </tr>
+                    <tr>
+                        <td>Requêtes/seconde</td>
+                        <td id="stat-rps">-</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🛠️ Tests en ligne de commande</h2>
+            <h3>Avec curl :</h3>
+            <pre>
+# Test simple
+curl -w "@curl-format.txt" -o /dev/null -s http://localhost:8080/
+
+# 100 requêtes séquentielles
+for i in {1..100}; do curl -s http://localhost:8080/ > /dev/null; done
+
+# Avec Apache Benchmark
+ab -n 1000 -c 10 http://localhost:8080/
+
+# Avec siege
+siege -c 10 -t 30s http://localhost:8080/
+            </pre>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let testResults = [];
+
+        async function runConcurrentTest() {
+            const count = parseInt(document.getElementById('concurrent-count').value);
+            testResults = [];
+            
+            showProgress(0, count);
+            
+            const startTime = performance.now();
+            const promises = [];
+            
+            for (let i = 0; i < count; i++) {
+                promises.push(
+                    makeRequest(i).then(result => {
+                        testResults.push(result);
+                        showProgress(testResults.length, count);
+                    })
+                );
+            }
+            
+            await Promise.all(promises);
+            const totalTime = performance.now() - startTime;
+            
+            showResults(totalTime, count);
+        }
+
+        async function runSequentialTest() {
+            const count = parseInt(document.getElementById('sequential-count').value);
+            testResults = [];
+            
+            showProgress(0, count);
+            
+            const startTime = performance.now();
+            
+            for (let i = 0; i < count; i++) {
+                const result = await makeRequest(i);
+                testResults.push(result);
+                showProgress(testResults.length, count);
+            }
+            
+            const totalTime = performance.now() - startTime;
+            showResults(totalTime, count);
+        }
+
+        async function makeRequest(index) {
+            const start = performance.now();
+            try {
+                const response = await fetch(`/index.html?req=${index}&t=${Date.now()}`);
+                const duration = performance.now() - start;
+                return {
+                    index,
+                    ok: response.ok,
+                    status: response.status,
+                    duration
+                };
+            } catch (error) {
+                return {
+                    index,
+                    ok: false,
+                    status: 0,
+                    error: error.message,
+                    duration: performance.now() - start
+                };
+            }
+        }
+
+        function showProgress(current, total) {
+            const progress = document.getElementById('stress-progress');
+            const fill = document.getElementById('progress-fill');
+            const text = document.getElementById('progress-text');
+            
+            progress.style.display = 'block';
+            fill.style.width = (current / total * 100) + '%';
+            text.textContent = `${current} / ${total}`;
+        }
+
+        function showResults(totalTime, count) {
+            const success = testResults.filter(r => r.ok).length;
+            const failed = testResults.filter(r => !r.ok).length;
+            const times = testResults.map(r => r.duration);
+            const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+            const minTime = Math.min(...times);
+            const maxTime = Math.max(...times);
+            const rps = (count / totalTime * 1000).toFixed(2);
+            
+            document.getElementById('stat-success').textContent = success;
+            document.getElementById('stat-failed').textContent = failed;
+            document.getElementById('stat-total-time').textContent = totalTime.toFixed(2) + ' ms';
+            document.getElementById('stat-avg-time').textContent = avgTime.toFixed(2) + ' ms';
+            document.getElementById('stat-min-time').textContent = minTime.toFixed(2) + ' ms';
+            document.getElementById('stat-max-time').textContent = maxTime.toFixed(2) + ' ms';
+            document.getElementById('stat-rps').textContent = rps;
+            
+            let html = '<h3>Détails</h3><table><tr><th>#</th><th>Status</th><th>Temps</th></tr>';
+            testResults.slice(0, 20).forEach(r => {
+                const statusClass = r.ok ? 'badge-success' : 'badge-danger';
+                html += `<tr>
+                    <td>${r.index + 1}</td>
+                    <td><span class="badge ${statusClass}">${r.status}</span></td>
+                    <td>${r.duration.toFixed(2)} ms</td>
+                </tr>`;
+            });
+            if (testResults.length > 20) {
+                html += `<tr><td colspan="3"><em>... et ${testResults.length - 20} autres</em></td></tr>`;
+            }
+            html += '</table>';
+            
+            document.getElementById('stress-results').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

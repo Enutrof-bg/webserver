@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CGI - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Test CGI</h1>
+            <p>Tester l'exécution de scripts CGI</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html" class="active">CGI</a></li>
+                <li><a href="/uploads/">Autoindex</a></li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <h2>🐍 Tests CGI - GET</h2>
+            <div class="grid">
+                <div>
+                    <h3>Python (.py)</h3>
+                    <button class="btn btn-success" onclick="testCGI('python')">
+                        🐍 Test Python
+                    </button>
+                    <a href="/cgi-bin/test.py?name=Test&value=123" target="_blank" class="btn btn-primary">
+                        Ouvrir
+                    </a>
+                </div>
+                <div>
+                    <h3>PHP (.php)</h3>
+                    <button class="btn btn-success" onclick="testCGI('php')">
+                        🐘 Test PHP
+                    </button>
+                    <a href="/cgi-bin/test.php?name=Test" target="_blank" class="btn btn-primary">
+                        Ouvrir
+                    </a>
+                </div>
+                <div>
+                    <h3>Perl (.pl)</h3>
+                    <button class="btn btn-success" onclick="testCGI('perl')">
+                        🐪 Test Perl
+                    </button>
+                    <a href="/cgi-bin/test.pl?name=Test" target="_blank" class="btn btn-primary">
+                        Ouvrir
+                    </a>
+                </div>
+                <div>
+                    <h3>Shell (.sh)</h3>
+                    <button class="btn btn-success" onclick="testCGI('shell')">
+                        🐚 Test Shell
+                    </button>
+                    <a href="/cgi-bin/test.sh" target="_blank" class="btn btn-primary">
+                        Ouvrir
+                    </a>
+                </div>
+                <div>
+                    <h3>Ruby (.rb)</h3>
+                    <button class="btn btn-success" onclick="testCGI('ruby')">
+                        💎 Test Ruby
+                    </button>
+                    <a href="/cgi-bin/test.rb?name=Test" target="_blank" class="btn btn-primary">
+                        Ouvrir
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Tests CGI - POST</h2>
+            <div class="grid">
+                <div>
+                    <button class="btn btn-warning" onclick="testCGIPost('py')">
+                        POST Python
+                    </button>
+                    <button class="btn btn-warning" onclick="testCGIPost('php')">
+                        POST PHP
+                    </button>
+                    <button class="btn btn-warning" onclick="testCGIPost('pl')">
+                        POST Perl
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🍪 Test Session / Cookies</h2>
+            <p>Tester la gestion des sessions via cookies</p>
+            <button class="btn btn-primary" onclick="testSession()">
+                🍪 Tester Session
+            </button>
+            <a href="/cgi-bin/session.py" target="_blank" class="btn btn-success">
+                Ouvrir Session CGI
+            </a>
+            <div id="session-response" class="response-box" style="margin-top: 15px;">
+                <span class="status">En attente...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Réponse CGI</h2>
+            <div id="cgi-response" class="response-box">
+                <span class="status">En attente d'un test...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Documentation CGI</h2>
+            
+            <h3>Variables d'environnement CGI :</h3>
+            <table>
+                <tr>
+                    <th>Variable</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>REQUEST_METHOD</code></td>
+                    <td>Méthode HTTP (GET, POST, etc.)</td>
+                </tr>
+                <tr>
+                    <td><code>QUERY_STRING</code></td>
+                    <td>Paramètres de l'URL (après ?)</td>
+                </tr>
+                <tr>
+                    <td><code>CONTENT_TYPE</code></td>
+                    <td>Type de contenu du body</td>
+                </tr>
+                <tr>
+                    <td><code>CONTENT_LENGTH</code></td>
+                    <td>Taille du body en octets</td>
+                </tr>
+                <tr>
+                    <td><code>SCRIPT_NAME</code></td>
+                    <td>Chemin du script CGI</td>
+                </tr>
+                <tr>
+                    <td><code>PATH_INFO</code></td>
+                    <td>Information de chemin supplémentaire</td>
+                </tr>
+                <tr>
+                    <td><code>SERVER_NAME</code></td>
+                    <td>Nom du serveur</td>
+                </tr>
+                <tr>
+                    <td><code>SERVER_PORT</code></td>
+                    <td>Port du serveur</td>
+                </tr>
+                <tr>
+                    <td><code>HTTP_COOKIE</code></td>
+                    <td>Cookies envoyés par le client</td>
+                </tr>
+                <tr>
+                    <td><code>HTTP_USER_AGENT</code></td>
+                    <td>User-Agent du client</td>
+                </tr>
+            </table>
+
+            <h3>Configuration serveur :</h3>
+            <pre>
+location /cgi-bin/ {
+    root /var/www/cgi-bin;
+    cgi_pass .py /usr/bin/python3;
+    cgi_pass .php /usr/bin/php-cgi;
+    cgi_pass .pl /usr/bin/perl;
+    cgi_pass .sh /bin/bash;
+    cgi_pass .rb /usr/bin/ruby;
+}
+            </pre>
+
+            <h3>Exemple de script CGI Python :</h3>
+            <pre>
+#!/usr/bin/env python3
+import os
+import sys
+
+print("Content-Type: text/html")
+print()
+print("&lt;html&gt;")
+print("&lt;body&gt;")
+print(f"&lt;h1&gt;Hello from CGI!&lt;/h1&gt;")
+print(f"&lt;p&gt;Method: {os.environ.get('REQUEST_METHOD')}&lt;/p&gt;")
+print(f"&lt;p&gt;Query: {os.environ.get('QUERY_STRING')}&lt;/p&gt;")
+print("&lt;/body&gt;")
+print("&lt;/html&gt;")
+            </pre>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

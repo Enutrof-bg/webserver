@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Headers Test - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Test Headers HTTP</h1>
+            <p>Analyser les headers de requête et de réponse</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/headers.html" class="active">Headers</a></li>
+            </ul>
+        </nav>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📤 Headers de Requête</h2>
+                <p>Headers envoyés par le navigateur :</p>
+                <div id="request-headers" class="response-box">
+                    Cliquez sur "Analyser" pour voir les headers
+                </div>
+                <button class="btn btn-primary" onclick="analyzeHeaders()">
+                    🔍 Analyser
+                </button>
+            </div>
+
+            <div class="card">
+                <h2>📥 Headers de Réponse</h2>
+                <p>Headers renvoyés par le serveur :</p>
+                <div id="response-headers" class="response-box">
+                    En attente...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Headers HTTP importants</h2>
+            
+            <h3>Headers de Requête</h3>
+            <table>
+                <tr>
+                    <th>Header</th>
+                    <th>Description</th>
+                    <th>Exemple</th>
+                </tr>
+                <tr>
+                    <td><code>Host</code></td>
+                    <td>Nom de domaine du serveur</td>
+                    <td>localhost:8080</td>
+                </tr>
+                <tr>
+                    <td><code>User-Agent</code></td>
+                    <td>Identification du client</td>
+                    <td>Mozilla/5.0...</td>
+                </tr>
+                <tr>
+                    <td><code>Accept</code></td>
+                    <td>Types MIME acceptés</td>
+                    <td>text/html, application/json</td>
+                </tr>
+                <tr>
+                    <td><code>Content-Type</code></td>
+                    <td>Type du corps de requête</td>
+                    <td>application/x-www-form-urlencoded</td>
+                </tr>
+                <tr>
+                    <td><code>Content-Length</code></td>
+                    <td>Taille du corps en octets</td>
+                    <td>1024</td>
+                </tr>
+                <tr>
+                    <td><code>Cookie</code></td>
+                    <td>Cookies du client</td>
+                    <td>session_id=abc123</td>
+                </tr>
+                <tr>
+                    <td><code>Connection</code></td>
+                    <td>Type de connexion</td>
+                    <td>keep-alive, close</td>
+                </tr>
+            </table>
+
+            <h3>Headers de Réponse</h3>
+            <table>
+                <tr>
+                    <th>Header</th>
+                    <th>Description</th>
+                    <th>Exemple</th>
+                </tr>
+                <tr>
+                    <td><code>Content-Type</code></td>
+                    <td>Type MIME de la réponse</td>
+                    <td>text/html; charset=utf-8</td>
+                </tr>
+                <tr>
+                    <td><code>Content-Length</code></td>
+                    <td>Taille de la réponse</td>
+                    <td>2048</td>
+                </tr>
+                <tr>
+                    <td><code>Server</code></td>
+                    <td>Identification du serveur</td>
+                    <td>webserv/1.0</td>
+                </tr>
+                <tr>
+                    <td><code>Date</code></td>
+                    <td>Date de la réponse</td>
+                    <td>Mon, 01 Jan 2024 12:00:00 GMT</td>
+                </tr>
+                <tr>
+                    <td><code>Set-Cookie</code></td>
+                    <td>Définir un cookie</td>
+                    <td>session_id=xyz; Path=/</td>
+                </tr>
+                <tr>
+                    <td><code>Location</code></td>
+                    <td>URL de redirection</td>
+                    <td>/new-page</td>
+                </tr>
+                <tr>
+                    <td><code>Transfer-Encoding</code></td>
+                    <td>Encodage de transfert</td>
+                    <td>chunked</td>
+                </tr>
+            </table>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        async function analyzeHeaders() {
+            // Request headers (as seen by JavaScript)
+            const requestHeaders = {
+                'User-Agent': navigator.userAgent,
+                'Accept-Language': navigator.language,
+                'Cookie': document.cookie || '(none)',
+                'Referer': document.referrer || '(none)',
+                'Origin': window.location.origin
+            };
+            
+            let reqHtml = '';
+            for (const [key, value] of Object.entries(requestHeaders)) {
+                reqHtml += `<span class="headers">${key}:</span> ${value}\n`;
+            }
+            document.getElementById('request-headers').innerHTML = reqHtml;
+            
+            // Get response headers
+            const response = await fetch('/cgi-bin/test.py?headers=1');
+            let respHtml = `<span class="status">Status: ${response.status} ${response.statusText}</span>\n\n`;
+            
+            for (const [key, value] of response.headers.entries()) {
+                respHtml += `<span class="headers">${key}:</span> ${value}\n`;
+            }
+            document.getElementById('response-headers').innerHTML = respHtml;
+        }
+    </script>
+</body>
+</html>

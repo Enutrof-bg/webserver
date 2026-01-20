@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Erreurs - Webserv</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚠️ Test Pages d'erreur</h1>
+            <p>Tester les différentes pages d'erreur HTTP</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="/index.html">Accueil</a></li>
+                <li><a href="/get.html">GET</a></li>
+                <li><a href="/post.html">POST</a></li>
+                <li><a href="/delete.html">DELETE</a></li>
+                <li><a href="/upload.html">Upload</a></li>
+                <li><a href="/errors.html" class="active">Erreurs</a></li>
+                <li><a href="/cgi.html">CGI</a></li>
+                <li><a href="/uploads/">Autoindex</a></li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <h2>🔴 Erreurs Client (4xx)</h2>
+            <div class="grid">
+                <div>
+                    <h3>400 - Bad Request</h3>
+                    <p>Requête malformée ou invalide</p>
+                    <button class="btn btn-danger" onclick="testError(400)">Tester 400</button>
+                    <a href="/errors/400.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+                <div>
+                    <h3>403 - Forbidden</h3>
+                    <p>Accès refusé à la ressource</p>
+                    <button class="btn btn-danger" onclick="testError(403)">Tester 403</button>
+                    <a href="/errors/403.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+                <div>
+                    <h3>404 - Not Found</h3>
+                    <p>Ressource non trouvée</p>
+                    <button class="btn btn-danger" onclick="testError(404)">Tester 404</button>
+                    <a href="/errors/404.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+                <div>
+                    <h3>405 - Method Not Allowed</h3>
+                    <p>Méthode HTTP non autorisée</p>
+                    <button class="btn btn-danger" onclick="testError(405)">Tester 405</button>
+                    <a href="/errors/405.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+                <div>
+                    <h3>413 - Payload Too Large</h3>
+                    <p>Corps de requête trop volumineux</p>
+                    <button class="btn btn-danger" onclick="testError(413)">Tester 413</button>
+                    <a href="/errors/413.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔴 Erreurs Serveur (5xx)</h2>
+            <div class="grid">
+                <div>
+                    <h3>500 - Internal Server Error</h3>
+                    <p>Erreur interne du serveur</p>
+                    <button class="btn btn-danger" onclick="testError(500)">Tester 500</button>
+                    <a href="/errors/500.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+                <div>
+                    <h3>501 - Not Implemented</h3>
+                    <p>Fonctionnalité non implémentée</p>
+                    <button class="btn btn-danger" onclick="testError(501)">Tester 501</button>
+                    <a href="/errors/501.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+                <div>
+                    <h3>505 - HTTP Version Not Supported</h3>
+                    <p>Version HTTP non supportée</p>
+                    <button class="btn btn-danger" onclick="testError(505)">Tester 505</button>
+                    <a href="/errors/505.html" class="btn btn-warning" target="_blank">Voir page</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📤 Réponse du serveur</h2>
+            <div id="error-response" class="response-box">
+                <span class="status">En attente d'un test...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📚 Configuration des pages d'erreur</h2>
+            <pre>
+server {
+    listen 8080;
+    server_name localhost;
+
+    # Pages d'erreur personnalisées
+    error_page 400 /errors/400.html;
+    error_page 403 /errors/403.html;
+    error_page 404 /errors/404.html;
+    error_page 405 /errors/405.html;
+    error_page 413 /errors/413.html;
+    error_page 500 /errors/500.html;
+    error_page 501 /errors/501.html;
+    error_page 505 /errors/505.html;
+}
+            </pre>
+
+            <h3>Comment générer chaque erreur :</h3>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Comment le déclencher</th>
+                </tr>
+                <tr>
+                    <td>400</td>
+                    <td>Envoyer une requête mal formée (URL invalide, headers incorrects)</td>
+                </tr>
+                <tr>
+                    <td>403</td>
+                    <td>Accéder à un dossier/fichier sans permission</td>
+                </tr>
+                <tr>
+                    <td>404</td>
+                    <td>Demander une ressource qui n'existe pas</td>
+                </tr>
+                <tr>
+                    <td>405</td>
+                    <td>Utiliser une méthode non autorisée (ex: PUT si non configuré)</td>
+                </tr>
+                <tr>
+                    <td>413</td>
+                    <td>Envoyer un payload plus grand que client_max_body_size</td>
+                </tr>
+                <tr>
+                    <td>500</td>
+                    <td>Erreur dans un script CGI ou problème serveur</td>
+                </tr>
+                <tr>
+                    <td>501</td>
+                    <td>Utiliser une méthode non implémentée (ex: PATCH, OPTIONS)</td>
+                </tr>
+                <tr>
+                    <td>505</td>
+                    <td>Utiliser une version HTTP non supportée (HTTP/2.0)</td>
+                </tr>
+            </table>
+        </div>
+
+        <footer>
+            <p>Webserv Test Suite - 42 Project</p>
+        </footer>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
