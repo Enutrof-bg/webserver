@@ -315,39 +315,11 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				data[key] = value;
 			}
 		}
-		//create html 
-		// std::ostringstream newbody;
-		// newbody << "<!DOCTYPE html>\n"
-		// 	<< "<html>\n<head><title>POST recu</title></head>\n"
-		// 	<< "<body>\n"
-		// 	<< "<h1>Donnees recue</h1>\n"
-		// 	<< "<ul>\n";
-
-		// for (std::map<std::string, std::string>::iterator it = data.begin(); it != data.end(); it++)
-		// {
-		// 	newbody << "<li><b>" << it->first << "</b>:" << it->second << "</li>\n";
-		// }
-		// newbody << "</ul>\n"
-		// 	<< "<p>Body brut: <code>" << rep.body << "</code></p>\n"
-		// 	<< "<br><p><a title=\"Motherfucking Website\" href=\"/\">go back</a></p></br>\n"
-		// 	<< "</body>\n</html>\n";
-
-		// std::ostringstream response;
-		// response << "HTTP/1.1 201 Created\r\n"
-		// 		<< "Content-Type: text/html; charset=UTF-8\r\n"
-		// 		<< "Content-Length: " << newbody.str().length() << "\r\n"
-		// 		<< "Connection: close\r\n"
-		// 		<< "\r\n"
-		// 		<< newbody.str();
-		// std::cout << "-----------------------------------HANDLE_POST_FIN----------------" <<std::endl;
-		// return response.str();
 		return ft_generate_form_page(server, 201, rep.body, rep.url, data);
 	}
 	else if (post_content_type.find("multipart/form-data;") != std::string::npos)
 	{
-		// std::cout << "TEST:"<<post_content_type << std::endl;
-		//extraire boundary
-		// std::vector<std::string> upload_paths_all;
+
 
 		size_t pos_boundary = post_content_type.find("boundary=");
 		std::string boundary = post_content_type.substr(pos_boundary + 9);
@@ -362,12 +334,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				// break;
 			
 			std::string newbody = rep.body.substr(pos, end_pos - pos);
-			// std::cout << "=====TEST_PRINT_BOUNDARY_BODY========" << std::endl;
-			// std::cout << newbody << std::endl;
-			// std::cout << "=====TEST_PRINT_BOUNDARY_BODY_END====\n\n" << std::endl;
-
-			//separer header et contenu
-			// std::cout << "=====TEST_PRINT_separete_BODY========" << std::endl;
+	
 			size_t pos_header = newbody.find("\r\n\r\n");
 			if (pos_header == std::string::npos)
 			{	
@@ -378,29 +345,11 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 			std::string part_header = newbody.substr(0, pos_header);
 			std::string part_body = newbody.substr(pos_header + 4);
 
-			// std::cout << "-------------part_header_boundary----------" <<std::endl;
-			// std::cout << part_header << std::endl;
-			// std::cout << "-------------part_body_boundary----------" <<std::endl;
-			// std::cout << part_body << std::endl;
-			// std::cout << "part_body_length:"<< part_body.length() << std::endl;
-
-			// std::cout << "Taille du fichier: " << part_body.length() << " octets" << std::endl;
-			// std::cout << "Premiers octets (hex): ";
-			// for (size_t i = 0; i < 20 && i < part_body.length(); i++)
-			// {
-			// 	printf("%02X ", (unsigned char)part_body[i]);
-			// }
-			// std::cout << std::endl;
-
-
-			// std::cout << "=====TEST_PRINT_separete_BODY_end========" << std::endl;
-
 			if (part_header.find("filename=") != std::string::npos)
 			{
 				size_t filename_pos = part_header.find("filename=\"");
 				size_t filename_pos_end = part_header.find("\"", filename_pos + 10);
 				std::string new_filename = part_header.substr(filename_pos + 10, filename_pos_end - (filename_pos + 10));
-				// std::cout << "test_test_new_filename:"<<  new_filename << std::endl;
 
 				if (part_body.length() >=2
 					&& part_body[part_body.length() - 1] == '\n'
@@ -408,8 +357,6 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				{
 					part_body = part_body.substr(0, part_body.length() - 2);
 				}
-				// std::cout << "-------------part_body_boundary----------" <<std::endl; 
-				// std::cout << part_body << std::endl;
 
 				//split new_filename to store extension
 				size_t ext_pos = new_filename.find_last_of(".");
@@ -440,11 +387,7 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 				if (output.is_open())
 				{
 					output.write(part_body.c_str(), part_body.length());
-					// upload_paths_all.push_back(upload_path);
 					output.close();
-
-
-					// return ft_move_code(server, 201, upload_path);
 				}
 				else
 				{
@@ -455,7 +398,8 @@ std::string Resultat::handlePOST(const Response &rep, const ServerConfig &server
 		}
 		return ft_move_code(server, 201, upload_path);
 
-		//extraire filename avec COntenDispoitiotn
+
+		//extraire filename avec COntenDispoitin
 		//lire le sdonne binaire
 		//ecrire dans un fichier dans /upload ?
 		//retourner 201 Created avec le chemin du fichier?
